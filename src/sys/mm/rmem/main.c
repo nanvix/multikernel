@@ -266,6 +266,8 @@ static inline int do_rmem_free(rpage_t blknum, nanvix_pid_t owner)
  * do_rmem_write()                                                            *
  *============================================================================*/
 
+#ifndef __RMEM_USES_MAILBOX
+
 /**
  * @brief Handles a write request.
  *
@@ -314,9 +316,60 @@ static inline int do_rmem_write(int remote, rpage_t blknum, int remote_port)
 	return (ret);
 }
 
+#else
+
+/**
+ * @brief Handles a write request.
+ *
+ * @param remote Remote client.
+ * @param blknum Number of the target block.
+ */
+static inline int do_rmem_write(rpage_t blknum, size_t offset, const char *payload)
+{
+	int ret = 0;
+	rpage_t _blknum;
+
+	rmem_debug("write() nodenum=%d blknum=%x",
+		remote,
+		blknum
+	);
+
+	_blknum = RMEM_BLOCK_NUM(blknum);
+
+	/* Invalid block number. */
+	if ((_blknum == RMEM_NULL) || (_blknum >= RMEM_NUM_BLOCKS))
+	{
+		uprintf("[nanvix][rmem] invalid block number");
+		return (-EINVAL);
+	}
+
+	/*
+	 * Bad block number. Drop this read and return
+	 * an error. Note that we use the NULL block for this.
+	 */
+	if (!bitmap_check_bit(rmem.bitmap, _blknum))
+	{
+		uprintf("[nanvix][rmem] bad write block");
+		_blknum = 0;
+		ret = -EFAULT;
+	}
+
+	umemcpy(
+		&rmem.blocks[_blknum*RMEM_BLOCK_SIZE + offset],
+		payload,
+		RMEM_PAYLOAD_SIZE
+	);
+
+	return (ret);
+}
+
+#endif
+
 /*============================================================================*
  * do_rmem_read()                                                             *
  *============================================================================*/
+
+#ifndef __RMEM_USES_MAILBOX
 
 /**
  * @brief Handles a read request.
@@ -390,6 +443,77 @@ static inline int do_rmem_read(int remote, rpage_t blknum, int outbox, int outpo
 	return (ret);
 }
 
+#else
+
+/**
+ * @brief Handles a read request.
+ *
+ * @param remote Remote client.
+ * @param blknum Number of the target block.
+ * @param outbox Output mailbox to remote client.
+ *
+ * @returns Upon successful completion, zero is returned. Upon
+ * failure, a negative error code is returned instead.
+ */
+static inline int do_rmem_read(rpage_t blknum, int outbox)
+{
+	int ret = 0;
+	rpage_t _blknum;
+	struct rmem_message msg;
+
+	/* Build operation header. */
+	msg.header.source = knode_get_num();
+	msg.header.opcode = RMEM_ACK;
+	msg.blknum = blknum;
+
+	rmem_debug("read() nodenum=%d blknum=%x",
+		remote,
+		blknum
+	);
+
+	_blknum = RMEM_BLOCK_NUM(blknum);
+
+	/* Invalid block number. */
+	if ((_blknum == RMEM_NULL) || (_blknum >= RMEM_NUM_BLOCKS))
+	{
+		uprintf("[nanvix][rmem] invalid block number");
+		return (-EINVAL);
+	}
+
+	/*
+	 * Bad block number. Let us send a null block
+	 * and return an error instead.
+	 */
+	if (!bitmap_check_bit(rmem.bitmap, _blknum))
+	{
+		uprintf("[nanvix][rmem] bad read block");
+		_blknum = 0;
+		ret = -EFAULT;
+	}
+
+	for (size_t i = 0; i < RMEM_BLOCK_SIZE; i += RMEM_PAYLOAD_SIZE)
+	{
+		msg.offset = i;
+
+		umemcpy(
+			&msg.payload,
+			&rmem.blocks[_blknum*RMEM_BLOCK_SIZE + i],
+			RMEM_PAYLOAD_SIZE
+		);
+
+		uassert(
+			kmailbox_write(
+				outbox,
+				&msg, sizeof(struct rmem_message)
+			) == sizeof(struct rmem_message)
+		);
+	}
+
+	return (ret);
+}
+
+#endif
+
 /*============================================================================*
  * do_rmem_loop()                                                             *
  *============================================================================*/
@@ -433,7 +557,11 @@ static int do_rmem_loop(void)
 			case RMEM_WRITE:
 				stats.nwrites++;
 				kclock(&t0);
+					#ifndef __RMEM_USES_MAILBOX
 					msg.errcode = do_rmem_write(msg.header.source, msg.blknum, msg.header.portal_port);
+					#else
+					msg.errcode = do_rmem_write(msg.blknum, msg.offset, msg.payload);
+					#endif
 					uassert((source = kmailbox_open(msg.header.source, msg.header.mailbox_port)) >= 0);
 					uassert(kmailbox_write(source, &msg, sizeof(struct rmem_message)) == sizeof(struct rmem_message));
 					uassert(kmailbox_close(source) == 0);
@@ -446,7 +574,11 @@ static int do_rmem_loop(void)
 				stats.nreads++;
 				kclock(&t0);
 					uassert((source = kmailbox_open(msg.header.source, msg.header.mailbox_port)) >= 0);
+					#ifndef __RMEM_USES_MAILBOX
 					msg.errcode = do_rmem_read(msg.header.source, msg.blknum, source, msg.header.portal_port);
+					#else
+					msg.errcode = do_rmem_read(msg.blknum, source);
+					#endif
 					uassert(kmailbox_write(source, &msg, sizeof(struct rmem_message)) == sizeof(struct rmem_message));
 					uassert(kmailbox_close(source) == 0);
 				kclock(&t1);
@@ -525,6 +657,11 @@ static int do_rmem_startup(struct nanvix_semaphore *lock)
 
 	/* Messages should be small enough. */
 	uassert(sizeof(struct rmem_message) <= NANVIX_MAILBOX_MESSAGE_SIZE);
+
+	/* Payload should have a good size. */
+#ifdef __RMEM_USES_MAILBOX
+	uassert((RMEM_BLOCK_SIZE%RMEM_PAYLOAD_SIZE) == 0);
+#endif
 
 	/* Bitmap word should be large enough. */
 	uassert(sizeof(rpage_t) >= sizeof(bitmap_t));
