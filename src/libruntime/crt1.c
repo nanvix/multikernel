@@ -24,6 +24,7 @@
 
 #include <nanvix/runtime/runtime.h>
 #include <nanvix/runtime/stdikc.h>
+#include <nanvix/sys/noc.h>
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
 
@@ -69,6 +70,7 @@ int __main2(int argc, const char *argv[])
 		__main3(argc, argv);
 
 		uassert(name_unlink(pname) == 0);
+		uassert(stdsync_fence() == 0);
 
 		nanvix_shutdown();
 

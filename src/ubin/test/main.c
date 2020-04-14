@@ -62,6 +62,7 @@ int __main2(int argc, const char *argv[])
 #endif
 
 		uprintf("[nanvix][test] shutting down server");
+		uassert(stdsync_fence() == 0);
 
 	nanvix_shutdown();
 
