@@ -281,7 +281,7 @@ static int do_name_heartbeat(const struct name_message *request)
 	timestamp = request->op.heartbeat.timestamp;
 	nodenum = request->header.source;
 
-	name_debug("heartbeat nodenum=%d name=%l", nodenum, timestamp);
+	name_debug("heartbeat nodenum=%d timestap=%l", nodenum, timestamp);
 
 	/* Invalid node number. */
 	if (!proc_is_valid(nodenum))
