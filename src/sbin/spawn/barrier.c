@@ -72,7 +72,7 @@ void spawn_barrier_setup(void)
 	};
 
 	/* Leader. */
-	if (cluster_get_num() == SPAWN_SERVER_0_NODE)
+	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_MASTER)
 	{
 		for (int i = 1 ; i < SPAWNERS_NUM; i++)
 		{
@@ -97,7 +97,7 @@ void spawn_barrier_setup(void)
 void spawn_barrier_cleanup(void)
 {
 	/* Leader. */
-	if (cluster_get_num() == SPAWN_SERVER_0_NODE)
+	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_MASTER)
 	{
 		for (int i = 1 ; i < SPAWNERS_NUM; i++)
 			uassert(kmailbox_close(barrier.mailboxes[i]) == 0);
