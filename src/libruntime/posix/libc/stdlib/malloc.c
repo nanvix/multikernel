@@ -37,7 +37,7 @@
 /**
  * @brief Size of block structure.
  */
-#define SIZEOF_BLOCK (sizeof(struct block))
+#define BLOCK_SIZE (sizeof(struct block))
 
 /**
  * @brief Memory block.
@@ -120,7 +120,7 @@ static void *expand(unsigned nblocks)
 	if (nblocks < NALLOC)
 		nblocks = NALLOC;
 
-	n = TRUNCATE(nblocks*SIZEOF_BLOCK, PAGE_SIZE)/PAGE_SIZE;
+	n = TRUNCATE(nblocks*BLOCK_SIZE, PAGE_SIZE)/PAGE_SIZE;
 
 	/* Request more memory to the kernel. */
 	if ((p = nanvix_vmem_alloc(n)) == NULL)
@@ -153,7 +153,7 @@ void *nanvix_malloc(size_t size)
 	if (size == 0)
 		return (NULL);
 
-	nblocks = (size + (SIZEOF_BLOCK - 1))/SIZEOF_BLOCK + 1;
+	nblocks = (size + (BLOCK_SIZE - 1))/BLOCK_SIZE + 1;
 
 	/* Create free list. */
 	if ((prevp = freep) == NULL)
