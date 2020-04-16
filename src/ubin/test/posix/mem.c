@@ -26,13 +26,42 @@
 #include <nanvix/ulib.h>
 #include "../test.h"
 
+/* Import definitions. */
+extern void *nanvix_malloc(size_t size);
+extern void nanvix_free(void *ptr);
+
+/**
+ * @brief Number of blocks for stress tests.
+ */
+#define NUM_BLOCKS 256
+
+/**
+ * @brief Number of pages for stress tests.
+ */
+#define NUM_PAGES (4*RMEM_CACHE_SIZE*PAGE_SIZE)
+
 /**
  * @brief Magic number.
  */
 const unsigned MAGIC = 0xdeadbeef;
 
-extern void *nanvix_malloc(size_t size);
-extern void nanvix_free(void *ptr);
+/*============================================================================*
+ * API Test: Alloc/Free                                                       *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Alloc/Free
+ */
+static void test_api_mem_alloc_free(void)
+{
+	unsigned *ptr;
+	unsigned *ptr2;
+
+	TEST_ASSERT((ptr = nanvix_malloc(sizeof(unsigned))) != NULL);
+	nanvix_free(ptr);
+	TEST_ASSERT((ptr2 = nanvix_malloc(sizeof(unsigned))) != NULL);
+	nanvix_free(ptr2);
+}
 
 /*============================================================================*
  * API Test: Read/Write                                                       *
@@ -45,7 +74,7 @@ static void test_api_mem_read_write(void)
 {
 	unsigned *ptr;
 
-	TEST_ASSERT((ptr = nanvix_malloc(sizeof(unsigned))) != RMEM_NULL);
+	TEST_ASSERT((ptr = nanvix_malloc(sizeof(unsigned))) != NULL);
 
 	*ptr = MAGIC;
 
@@ -55,12 +84,88 @@ static void test_api_mem_read_write(void)
 	nanvix_free(ptr);
 }
 
+/*============================================================================*
+ * Stress Test: Consistency                                                   *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Consistency
+ */
+static void test_stress_mem_consistency(void)
+{
+	unsigned *ptr;
+	unsigned length = NUM_PAGES*(PAGE_SIZE/sizeof(unsigned));
+	size_t size = length*sizeof(unsigned);
+
+	TEST_ASSERT((ptr = nanvix_malloc(size)) != NULL);
+
+	for (unsigned i = 0; i < length; i++)
+	{
+		ptr[i] = i;
+		TEST_ASSERT(ptr[i] == i);
+	}
+
+	nanvix_free(ptr);
+}
+
+/*============================================================================*
+ * Stress Test: Consistency 2-Step                                            *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Consistency 2-Step
+ */
+static void test_stress_mem_consistency2(void)
+{
+	unsigned *ptr;
+	unsigned length = NUM_PAGES*(PAGE_SIZE/sizeof(unsigned));
+	size_t size = length*sizeof(unsigned);
+
+	TEST_ASSERT((ptr = nanvix_malloc(size)) != NULL);
+
+	for (unsigned i = 0; i < length; i++)
+		ptr[i] = i;
+
+	for (unsigned i = 0; i < length; i++)
+		TEST_ASSERT(ptr[i] == i);
+
+	nanvix_free(ptr);
+}
+
+/*============================================================================*
+ * Stress Test: Consistency 2-Step Reverse                                    *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Consistency 2-Step Reverse
+ */
+static void test_stress_mem_consistency2r(void)
+{
+	unsigned *ptr;
+	unsigned length = NUM_PAGES*(PAGE_SIZE/sizeof(unsigned));
+	size_t size = length*sizeof(unsigned);
+
+	TEST_ASSERT((ptr = nanvix_malloc(size)) != NULL);
+
+	for (unsigned i = 0; i < length; i++)
+		buffer[i] = i;
+
+	for (unsigned i = 0; i < length; i++)
+		TEST_ASSERT(buffer[(length - 1) - i] == (length - i);
+
+	nanvix_free(buffer);
+}
+
 /*============================================================================*/
 
 /**
  * @brief Unit tests.
  */
 struct test tests_mem_api[] = {
-	{ test_api_mem_read_write, "memory read/write" },
-	{ NULL,                     NULL               },
+	{ test_api_mem_alloc_free,       "memory alloc/free         "  },
+	{ test_api_mem_read_write,       "memory read/write         "  },
+	{ test_stress_mem_consistency,   "consistency               "  },
+	{ test_stress_mem_consistency2,  "consistency 2-step        "  },
+	{ test_stress_mem_consistency2r, "consistency 2-step reverse"  },
+	{ NULL,                          NULL                          },
 };
