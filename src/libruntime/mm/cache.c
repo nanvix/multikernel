@@ -586,7 +586,7 @@ int nanvix_rcache_flush(rpage_t pgnum)
 		return (-EFAULT);
 
 	/* Write page back to remote memory. */
-	if ((err = nanvix_rmem_write((rpage_t)(pgnum), cache_lines[slot+block].pages)) < 0)
+	if ((err = nanvix_rmem_write(pgnum, cache_lines[slot+block].pages)) < 0)
 		return (err);
 
 #ifdef CACHE_DEBUG

@@ -26,13 +26,32 @@
 #include <nanvix/ulib.h>
 #include "../test.h"
 
-/**
- * @brief Magic number.
- */
-const unsigned MAGIC = 0xdeadbeef;
-
+/* Import definitions. */
 extern void *nanvix_malloc(size_t size);
 extern void nanvix_free(void *ptr);
+
+/**
+ * @brief Maximum value of unsigned char.
+ */
+#define UCHAR_MAX 255
+
+/*============================================================================*
+ * API Test: Alloc/Free                                                       *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Alloc/Free
+ */
+static void test_api_mem_alloc_free(void)
+{
+	unsigned char *ptr;
+
+	for (unsigned i = 0; i < 4; i++)
+	{
+		TEST_ASSERT((ptr = nanvix_malloc(sizeof(unsigned char))) != NULL);
+		nanvix_free(ptr);
+	}
+}
 
 /*============================================================================*
  * API Test: Read/Write                                                       *
@@ -43,14 +62,36 @@ extern void nanvix_free(void *ptr);
  */
 static void test_api_mem_read_write(void)
 {
-	unsigned *ptr;
+	unsigned char *ptr;
 
-	TEST_ASSERT((ptr = nanvix_malloc(sizeof(unsigned))) != RMEM_NULL);
+	for (unsigned i = 0; i < 4; i++)
+	{
+		TEST_ASSERT((ptr = nanvix_malloc(sizeof(unsigned char))) != NULL);
+		TEST_ASSERT((*ptr = UCHAR_MAX) == UCHAR_MAX);
+		nanvix_free(ptr);
+	}
+}
 
-	*ptr = MAGIC;
+/*============================================================================*
+ * Stress Test: Read/Write                                                    *
+ *============================================================================*/
 
-	/* Checksum. */
-	TEST_ASSERT(*ptr == MAGIC);
+/**
+ * @brief Stress Test: Read/Write
+ */
+static void test_stress_mem_read_write(void)
+{
+	unsigned char *ptr;
+	unsigned size = 2*RMEM_CACHE_SIZE*PAGE_SIZE;
+
+	/* Allocate twice the size of the cache (in bytes). */
+	TEST_ASSERT((ptr = nanvix_malloc(size)) != NULL);
+
+	for (unsigned i = 0; i < size; i++)
+		ptr[i] = i % (UCHAR_MAX + 1);
+
+	for (unsigned i = 0; i < size; i++)
+		TEST_ASSERT(ptr[i] == i % (UCHAR_MAX + 1));
 
 	nanvix_free(ptr);
 }
@@ -61,6 +102,8 @@ static void test_api_mem_read_write(void)
  * @brief Unit tests.
  */
 struct test tests_mem_api[] = {
-	{ test_api_mem_read_write, "memory read/write" },
-	{ NULL,                     NULL               },
+	{ test_api_mem_alloc_free,    "memory alloc/free" },
+	{ test_api_mem_read_write,    "memory read/write" },
+	{ test_stress_mem_read_write, "stress read/write" },
+	{ NULL,                       NULL                },
 };
