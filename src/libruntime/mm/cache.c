@@ -92,7 +92,7 @@ static unsigned cache_time = 0;
  * @brief Default cache replacement policy.
  */
 #ifndef __RMEM_CACHE_DEFAULT_REPLACEMENT
-#define __RMEM_CACHE_DEFAULT_REPLACEMENT RMEM_CACHE_FIFO
+#define __RMEM_CACHE_DEFAULT_REPLACEMENT RMEM_CACHE_BYPASS
 #endif
 
 /**
