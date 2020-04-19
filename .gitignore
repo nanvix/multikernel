@@ -38,7 +38,14 @@ include/nanvix/cc.h
 include/nanvix/const.h
 include/nanvix/hal.h
 include/nanvix/hlib.h
-include/posix/
+include/posix/sys/
+include/posix/decl.h
+include/posix/errno.h
+include/posix/stdarg.h
+include/posix/stdbool.h
+include/posix/stddef.h
+include/posix/stdint.h
+
 
 # Kernel Headers
 include/dev/
