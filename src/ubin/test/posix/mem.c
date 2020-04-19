@@ -23,12 +23,9 @@
  */
 
 #include <nanvix/runtime/rmem.h>
+#include <posix/stdlib.h>
 #include <nanvix/ulib.h>
 #include "../test.h"
-
-/* Import definitions. */
-extern void *nanvix_malloc(size_t size);
-extern void nanvix_free(void *ptr);
 
 /**
  * @brief Maximum value of unsigned char.
