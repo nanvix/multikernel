@@ -119,6 +119,7 @@ int __main2(int argc, const char *argv[])
 		}
 
 		uassert(stdsync_fence() == 0);
+		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][%s] waiting shutdown signal...", spawner_name);
 
 		/* Wait for servers. */
