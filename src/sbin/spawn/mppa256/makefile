@@ -23,50 +23,58 @@
 #
 
 #===============================================================================
-# Toolchain Configuration
+# Binaries Sources and Objects
 #===============================================================================
 
-# Compiler Options
-ifneq ($(LIBLWIP),)
-export CFLAGS += -I $(INCDIR)/posix
-endif
-
-# Modules
-export MODULES := $(LIBDIR)/nanvix-hello.$(OBJ_SUFFIX).a \
-                  $(LIBDIR)/nanvix-rmem.$(OBJ_SUFFIX).a  \
-                  $(LIBDIR)/nanvix-name.$(OBJ_SUFFIX).a
-
-# Libraries
-export LIBS := -Wl,--whole-archive
-export LIBS += $(LIBDIR)/$(LIBHAL)
-export LIBS += $(LIBDIR)/$(LIBKERNEL)
-export LIBS += -Wl,--no-whole-archive
-export LIBS += $(MODULES)
-export LIBS += $(LIBDIR)/$(LIBRUNTIME)
-export LIBS += $(LIBDIR)/$(LIBC)
-export LIBS += $(LIBDIR)/$(LIBNANVIX)
-ifneq ($(LIBLWIP),)
-export LIBS += $(LIBDIR)/$(LIBLWIP)
-endif
-export LIBS += $(LIBDIR)/$(BARELIB) $(THEIR_LIBS)
+# Object Files
+OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)
 
 #===============================================================================
-# Sources
-#===============================================================================
 
-# C Source Files
-export SRC = $(wildcard $(CURDIR)/*.c)
-
-#===============================================================================
+LINKER_SCRIPT = -L $(LINKERDIR)/ -T link.ld
 
 # Builds All Object Files
-all:
-	cd $(TARGET) && $(MAKE) all
+all: spawn0 spawn1
+
+spawn0: $(OBJ) spawn0.$(OBJ_SUFFIX).o
+ifeq ($(VERBOSE), no)
+	@echo [CC] nanvix-$@.$(OBJ_SUFFIX)
+	@$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
+else
+	$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
+endif
+
+spawn1: $(OBJ) spawn1.$(OBJ_SUFFIX).o
+ifeq ($(VERBOSE), no)
+	@echo [CC] nanvix-$@.$(OBJ_SUFFIX)
+	@$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
+else
+	$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
+endif
 
 # Cleans All Object Files
 clean:
-	cd $(TARGET) && $(MAKE) clean
+ifeq ($(VERBOSE), no)
+	@echo [CLEAN] $(OBJ)
+	@rm -rf $(OBJ)
+else
+	rm -rf $(OBJ)
+endif
 
 # Cleans Everything
 distclean: clean
-	cd $(TARGET) && $(MAKE) distclean
+ifeq ($(VERBOSE), no)
+	@echo [CLEAN] nanvix-spawn?.$(OBJ_SUFFIX)
+	@rm -rf $(BINDIR)/nanvix-spawn?.$(OBJ_SUFFIX)
+else
+	rm -rf $(BINDIR)/nanvix-spawn?.$(OBJ_SUFFIX)
+endif
+
+# Builds a C source file.
+%.$(OBJ_SUFFIX).o: %.c
+ifeq ($(VERBOSE), no)
+	@echo [CC] $@
+	@$(CC) $(CFLAGS) $< -c -o $@
+else
+	$(CC) $(CFLAGS) $< -c -o $@
+endif
