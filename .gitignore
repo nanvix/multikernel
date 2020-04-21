@@ -59,4 +59,4 @@ include/nanvix/sys/
 include/nanvix/ulib.h
 
 # Excludes
-!img/*
+!img/*.img
