@@ -25,11 +25,9 @@
 #ifndef NANVIX_LIMITS_PM_H_
 #define NANVIX_LIMITS_PM_H_
 
-	#include <nanvix/sys/noc.h>
-
 	/**
-	 * @brief Number of NoC nodes.
+	 * @brief Maximum number of processes.
 	 */
-	#define NANVIX_PROC_MAX PROCESSOR_NOC_NODES_NUM
+	#define NANVIX_PROC_MAX 256
 
 #endif /* NANVIX_LIMITS_PM_H_ */
