@@ -39,6 +39,9 @@ int nanvix_shutdown(void)
 	/* Broadcast shutdown signal. */
 	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_LEADER)
 	{
+		uprintf("[nanvix][%d] shutting down NOW",
+			PROCESSOR_CLUSTERNUM_LEADER
+		);
 		__runtime_setup(SPAWN_RING_LAST);
 
 		uassert(nanvix_rmem_shutdown() == 0);
