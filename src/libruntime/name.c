@@ -25,10 +25,10 @@
 #define __NAME_SERVICE
 
 #include <nanvix/servers/name.h>
-#include <nanvix/servers/spawn.h>
 #include <nanvix/runtime/stdikc.h>
 #include <nanvix/sys/mailbox.h>
 #include <nanvix/sys/mutex.h>
+#include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 #include <posix/stdbool.h>

@@ -22,17 +22,45 @@
  * SOFTWARE.
  */
 
-#include <nanvix/config.h>
+#ifndef NANVIX_CONFIG_UNIX64_H_
+#define NANVIX_CONFIG_UNIX64_H_
 
-/**
- * @brief Table of RMem Servers.
- */
-struct rmem_servers_info
-{
-	int nodenum;
-	int portnum;
-	const char *name;
-} rmem_servers[RMEM_SERVERS_NUM] = {
-	{ RMEM_SERVER_0_NODE, RMEM_SERVER_0_PORT_NUM, "/rmem0" },
-	{ RMEM_SERVER_1_NODE, RMEM_SERVER_1_PORT_NUM, "/rmem1" },
-};
+	/**
+	 * @name Number of Servers
+	 */
+	/**@{*/
+	#define SPAWNERS_NUM      4 /**< Spawn Servers */
+	#define NAME_SERVERS_NUM  1 /**< Name Servers  */
+	#define RMEM_SERVERS_NUM  2 /**< RMem Servers  */
+	/**@}*/
+
+	/**
+	 * @name Map of Spawn Servers
+	 */
+	/**@{*/
+	#define SPAWN_SERVER_0_NODE 0 /**< Spawn Server 0 */
+	#define SPAWN_SERVER_1_NODE 1 /**< Spawn Server 1 */
+	#define SPAWN_SERVER_2_NODE 2 /**< Spawn Server 1 */
+	#define SPAWN_SERVER_3_NODE 3 /**< Spawn Server 1 */
+	/**@}*/
+
+	/**
+	 * @name Map of Servers
+	 */
+	/**@{*/
+	#define NAME_SERVER_NODE    0 /**< Name Server  */
+	#define RMEM_SERVER_0_NODE  1 /**< RMem Server  */
+	#define RMEM_SERVER_1_NODE  2 /**< RMem Server  */
+	#define HELLO_SERVER_NODE   3 /**< Hello Server */
+	/**@}*/
+
+	/**
+	 * @name Map of Port Numbers
+	 */
+	/**@{*/
+	#define NAME_SERVER_PORT_NUM   2 /**< Name Server   */
+	#define RMEM_SERVER_0_PORT_NUM 2 /**< RMem Server 0 */
+	#define RMEM_SERVER_1_PORT_NUM 2 /**< RMem Server 1 */
+	/**@}*/
+
+#endif /* NANVIX_CONFIG_UNIX64_H_ */

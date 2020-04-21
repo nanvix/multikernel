@@ -22,17 +22,13 @@
  * SOFTWARE.
  */
 
-#include <nanvix/config.h>
+#ifndef NANVIX_CONFIG_H_
+#define NANVIX_CONFIG_H_
 
-/**
- * @brief Table of RMem Servers.
- */
-struct rmem_servers_info
-{
-	int nodenum;
-	int portnum;
-	const char *name;
-} rmem_servers[RMEM_SERVERS_NUM] = {
-	{ RMEM_SERVER_0_NODE, RMEM_SERVER_0_PORT_NUM, "/rmem0" },
-	{ RMEM_SERVER_1_NODE, RMEM_SERVER_1_PORT_NUM, "/rmem1" },
-};
+	#if defined(__mppa256__)
+	#include <nanvix/config/mppa256.h>
+	#elif defined(__unix64__)
+	#include <nanvix/config/unix64.h>
+	#endif
+
+#endif /* NANVIX_CONFIG_H_ */
