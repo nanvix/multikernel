@@ -22,31 +22,42 @@
  * SOFTWARE.
  */
 
-#define __NEED_MM_STUB
+#ifndef NANVIX_CONFIG_MPPA256_H_
+#define NANVIX_CONFIG_MPPA256_H_
 
-#include <nanvix/servers/spawn.h>
-#include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/rmem.h>
-#include <nanvix/sys/noc.h>
-#include <nanvix/ulib.h>
+	/**
+	 * @name Number of Servers
+	 */
+	/**@{*/
+	#define SPAWNERS_NUM      2 /**< Spawn Servers */
+	#define NAME_SERVERS_NUM  1 /**< Name Servers  */
+	#define RMEM_SERVERS_NUM  2 /**< RMem Servers  */
+	/**@}*/
 
-/**
- * The nanvix_shutdown() function shuts down sends a shutdown signal
- * to all system services, asking them to terminate.
- */
-int nanvix_shutdown(void)
-{
-	/* Broadcast shutdown signal. */
-	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_LEADER)
-	{
-		uprintf("[nanvix][%d] shutting down NOW",
-			PROCESSOR_CLUSTERNUM_LEADER
-		);
-		__runtime_setup(SPAWN_RING_LAST);
+	/**
+	 * @name Map of Spawn Servers
+	 */
+	/**@{*/
+	#define SPAWN_SERVER_0_NODE 0 /**< Spawn Server 0 */
+	#define SPAWN_SERVER_1_NODE 4 /**< Spawn Server 1 */
+	/**@}*/
 
-		uassert(nanvix_rmem_shutdown() == 0);
-		uassert(name_shutdown() == 0);
-	}
+	/**
+	 * @name Map of Servers
+	 */
+	/**@{*/
+	#define NAME_SERVER_NODE   0 /**< Name Server */
+	#define RMEM_SERVER_0_NODE 4 /**< RMem Server */
+	#define RMEM_SERVER_1_NODE 0 /**< RMem Server */
+	/**@}*/
 
-	return (0);
-}
+	/**
+	 * @name Map of Port Numbers
+	 */
+	/**@{*/
+	#define NAME_SERVER_PORT_NUM   2 /**< Name Server   */
+	#define RMEM_SERVER_0_PORT_NUM 2 /**< RMem Server 0 */
+	#define RMEM_SERVER_1_PORT_NUM 3 /**< RMem Server 1 */
+	/**@}*/
+
+#endif /* NANVIX_CONFIG_MPPA256_H_ */

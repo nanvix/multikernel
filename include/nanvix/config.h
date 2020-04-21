@@ -22,31 +22,13 @@
  * SOFTWARE.
  */
 
-#define __NEED_MM_STUB
+#ifndef NANVIX_CONFIG_H_
+#define NANVIX_CONFIG_H_
 
-#include <nanvix/servers/spawn.h>
-#include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/rmem.h>
-#include <nanvix/sys/noc.h>
-#include <nanvix/ulib.h>
+	#if defined(__mppa256__)
+	#include <nanvix/config/mppa256.h>
+	#elif defined(__unix64__)
+	#include <nanvix/config/unix64.h>
+	#endif
 
-/**
- * The nanvix_shutdown() function shuts down sends a shutdown signal
- * to all system services, asking them to terminate.
- */
-int nanvix_shutdown(void)
-{
-	/* Broadcast shutdown signal. */
-	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_LEADER)
-	{
-		uprintf("[nanvix][%d] shutting down NOW",
-			PROCESSOR_CLUSTERNUM_LEADER
-		);
-		__runtime_setup(SPAWN_RING_LAST);
-
-		uassert(nanvix_rmem_shutdown() == 0);
-		uassert(name_shutdown() == 0);
-	}
-
-	return (0);
-}
+#endif /* NANVIX_CONFIG_H_ */

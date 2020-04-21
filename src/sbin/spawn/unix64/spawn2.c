@@ -22,31 +22,26 @@
  * SOFTWARE.
  */
 
-#define __NEED_MM_STUB
+#define SPAWN_SERVER
 
 #include <nanvix/servers/spawn.h>
-#include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/rmem.h>
-#include <nanvix/sys/noc.h>
-#include <nanvix/ulib.h>
+#include <nanvix/sys/semaphore.h>
+
+/* Import definitions. */
+extern int hello_server(struct nanvix_semaphore *);
+extern int name_server(struct nanvix_semaphore *);
+extern int rmem_server(struct nanvix_semaphore *);
 
 /**
- * The nanvix_shutdown() function shuts down sends a shutdown signal
- * to all system services, asking them to terminate.
+ * @brief Number of servers.
  */
-int nanvix_shutdown(void)
-{
-	/* Broadcast shutdown signal. */
-	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_LEADER)
-	{
-		uprintf("[nanvix][%d] shutting down NOW",
-			PROCESSOR_CLUSTERNUM_LEADER
-		);
-		__runtime_setup(SPAWN_RING_LAST);
+#define SPAWN_SERVERS_NUM 1
 
-		uassert(nanvix_rmem_shutdown() == 0);
-		uassert(name_shutdown() == 0);
-	}
+/**
+ * @brief Table of servers.
+ */
+const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
+	{ .ring = SPAWN_RING_1, .main = rmem_server },
+};
 
-	return (0);
-}
+SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, "spawn2")

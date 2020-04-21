@@ -30,7 +30,7 @@
 #if defined(__NEED_RMEM_SERVICE)
 
 	#include <nanvix/servers/message.h>
-	#include <nanvix/servers/spawn.h>
+	#include <nanvix/config.h>
 	#include <posix/stdint.h>
 	#include <posix/stddef.h>
 

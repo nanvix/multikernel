@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include <nanvix/servers/spawn.h>
+#include <nanvix/config.h>
 
 /**
  * @brief Table of RMem Servers.
@@ -33,6 +33,6 @@ struct rmem_servers_info
 	int portnum;
 	const char *name;
 } rmem_servers[RMEM_SERVERS_NUM] = {
-	{ RMEM_SERVER_0_NODE, 2, "/rmem0" },
-	{ RMEM_SERVER_1_NODE, 3, "/rmem1" },
+	{ RMEM_SERVER_0_NODE, RMEM_SERVER_0_PORT_NUM, "/rmem0" },
+	{ RMEM_SERVER_1_NODE, RMEM_SERVER_1_PORT_NUM, "/rmem1" },
 };

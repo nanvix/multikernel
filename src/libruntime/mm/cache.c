@@ -26,6 +26,7 @@
 #define __NEED_MM_STUB
 #define __NEED_RMEM_CACHE
 
+#include <nanvix/config.h>
 #include <nanvix/runtime/rmem.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
