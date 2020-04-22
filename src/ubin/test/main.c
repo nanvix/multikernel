@@ -48,6 +48,7 @@ int __main2(int argc, const char *argv[])
 		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][test] server starting...");
 		uassert(stdsync_fence() == 0);
+		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][test] server alive");
 
 		__runtime_setup(1);

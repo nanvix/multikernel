@@ -39,6 +39,7 @@ int __main2(int argc, const char *argv[])
 		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][zombie] server starting...");
 		uassert(stdsync_fence() == 0);
+		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][zombie] server alive");
 		uassert(stdsync_fence() == 0);
 
