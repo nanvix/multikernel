@@ -37,7 +37,7 @@
 /**
  * @brief Input named mailbox.
  */
-static int named_inboxes[NANVIX_PROC_MAX];
+static int named_inboxes[NANVIX_PNAME_MAX];
 
 /**
  * @brief Table of mailboxes.
@@ -64,13 +64,13 @@ static const struct resource_pool pool_mailboxes = {
 /**
  * @brief Input HAL mailbox.
  */
-static int inboxes[NANVIX_PROC_MAX];
+static int inboxes[NANVIX_PNAME_MAX];
 
 /**
  *
  * @brief Is the inbox initialized ?
  */
-static int initialized[NANVIX_PROC_MAX] = { 0, };
+static int initialized[NANVIX_PNAME_MAX] = { 0, };
 
 /*============================================================================*
  * mailboxes_are_initialized()                                                *

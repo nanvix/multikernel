@@ -25,9 +25,16 @@
 #ifndef NANVIX_LIMITS_PM_H_
 #define NANVIX_LIMITS_PM_H_
 
+	#include <nanvix/hal.h>
+
 	/**
 	 * @brief Maximum number of processes.
 	 */
-	#define NANVIX_PROC_MAX 256
+	#define NANVIX_PROC_MAX PROCESSOR_CCLUSTERS_NUM
+
+	/**
+	 * @brief Maximum number of names for processes.
+	 */
+	#define NANVIX_PNAME_MAX 256
 
 #endif /* NANVIX_LIMITS_PM_H_ */

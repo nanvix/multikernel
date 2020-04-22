@@ -80,12 +80,12 @@ static inline int nanvix_portal_is_valid(int id)
 /**
  * @brief input portals.
  */
-static int inportals[NANVIX_PROC_MAX];
+static int inportals[NANVIX_PNAME_MAX];
 
 /**
  * @brief Is the named portals facility initialized?
  */
-static int initialized[NANVIX_PROC_MAX] = { 0 , };
+static int initialized[NANVIX_PNAME_MAX] = { 0 , };
 
 /**
  * @todo TODO: Provide a detailed description for this function.
