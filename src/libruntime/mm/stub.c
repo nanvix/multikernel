@@ -22,16 +22,12 @@
  * SOFTWARE.
  */
 
+/* Must come first. */
 #define __NEED_RMEM_SERVICE
 
+#include <nanvix/runtime/runtime.h>
 #include <nanvix/servers/rmem.h>
-#include <nanvix/runtime/stdikc.h>
-#include <nanvix/runtime/mailbox.h>
-#include <nanvix/runtime/portal.h>
-#include <nanvix/sys/excp.h>
-#include <nanvix/sys/mailbox.h>
-#include <nanvix/sys/mutex.h>
-#include <nanvix/sys/noc.h>
+#include <nanvix/pm.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>

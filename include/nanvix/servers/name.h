@@ -29,9 +29,11 @@
 	#error "do not include this file"
 	#endif
 
+	/* Must come first. */
+	#define __NEED_LIMITS_PM
+
 	#include <nanvix/servers/message.h>
-	#include <nanvix/limits/name.h>
-	#include <nanvix/pm.h>
+	#include <nanvix/limits/pm.h>
 	#include <nanvix/ulib.h>
 	#include <posix/stdint.h>
 	#include <posix/errno.h>
@@ -95,6 +97,11 @@
 			} ret;
 		} op;
 	};
+
+	/**
+	 * @see node_is_valid()
+	 */
+	#define proc_is_valid(x) node_is_valid(x)
 
 	/**
 	 * @brief Asserts if a name is valid.

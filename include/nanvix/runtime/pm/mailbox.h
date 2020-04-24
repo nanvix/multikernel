@@ -25,8 +25,27 @@
 #ifndef NANVIX_RUNTIME_MAILBOX_H_
 #define NANVIX_RUNTIME_MAILBOX_H_
 
-	#include <nanvix/sys/mailbox.h>
+	#ifndef __NEED_MAILBOX_SERVICE
+	#define "do not include this file"
+	#endif
+
 	#include <posix/sys/types.h>
+
+	/**
+	 * @brief Initializes the Named Mailbox facility.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_mailbox_setup(void);
+
+	/**
+	 * @brief Shuts down Named Mailbox facility.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_mailbox_cleanup(void);
 
 	/**
 	 * @brief Get named input mailbox.
