@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
-#define __NEED_RMEM_SERVICE
-#define __NEED_MM_STUB
-#define __NEED_RMEM_CACHE
+/* Must come first. */
+#define __NEED_MM_RMEM_STUB
+#define __NEED_MM_RMEM_CACHE
 
-#include <nanvix/runtime/rmem.h>
+#include <nanvix/runtime/mm.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>

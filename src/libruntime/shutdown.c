@@ -22,12 +22,11 @@
  * SOFTWARE.
  */
 
-#define __NEED_MM_STUB
+#define __NEED_MM_RMEM_STUB
+#define __NEED_SPAWN_SERVER
 
-#include <nanvix/servers/spawn.h>
 #include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/rmem.h>
-#include <nanvix/sys/noc.h>
+#include <nanvix/servers/spawn.h>
 #include <nanvix/ulib.h>
 
 /**

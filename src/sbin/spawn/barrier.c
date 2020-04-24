@@ -22,11 +22,11 @@
  * SOFTWARE.
  */
 
+#define __NEED_SPAWN_SERVER
+
 #include <nanvix/servers/message.h>
 #include <nanvix/servers/spawn.h>
 #include <nanvix/runtime/stdikc.h>
-#include <nanvix/sys/mailbox.h>
-#include <nanvix/sys/noc.h>
 #include <nanvix/ulib.h>
 
 /**

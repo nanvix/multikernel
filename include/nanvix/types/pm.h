@@ -22,27 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_RUNTIME_RMEM_H_
-#define NANVIX_RUNTIME_RMEM_H_
-
-	#include <nanvix/runtime/mm/manager.h>
-	#include <nanvix/runtime/mm/cache.h>
-	#include <nanvix/runtime/mm/stub.h>
+#ifndef NANVIX_TYPES_PM_H_
+#define NANVIX_TYPES_PM_H_
 
 	/**
-	 * @brief Initializes the RMem Service client.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
+	 * @brief Process ID.
 	 */
-	extern int __nanvix_rmem_setup(void);
+	typedef int nanvix_pid_t;
 
-	/**
-	 * @brief Shuts down the RMem Service client.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int __nanvix_rmem_cleanup(void);
+#endif /* NANVIX_TYPES_PM_H_ */
 
-#endif /* NANVIX_RUNTIME_RMEM_H_ */

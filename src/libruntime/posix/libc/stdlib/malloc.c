@@ -21,9 +21,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
-#define __NEED_MM_MANAGER
 
-#include <nanvix/runtime/rmem.h>
+#include <nanvix/runtime/mm.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>

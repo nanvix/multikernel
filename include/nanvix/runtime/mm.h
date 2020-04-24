@@ -22,21 +22,33 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef NANVIX_RUNTIME_MM_H_
+#define NANVIX_RUNTIME_MM_H_
 
-#include <nanvix/servers/servers.h>
-#include <nanvix/config.h>
+	/* Must come first. */
+	#define __NEED_MM_VMEM_MANAGER
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 1
+	#include <nanvix/runtime/mm/manager.h>
+	#include <nanvix/runtime/mm/cache.h>
+	#include <nanvix/runtime/mm/stub.h>
+	#include <nanvix/servers/rmem.h>
+	#include <nanvix/types/mm/rmem.h>
 
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_1, .main = rmem_server },
-};
+	/**
+	 * @brief Initializes the RMem Service client.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_rmem_setup(void);
 
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_1_NAME)
+	/**
+	 * @brief Shuts down the RMem Service client.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_rmem_cleanup(void);
+
+#endif /* NANVIX_RUNTIME_MM_H_ */
+

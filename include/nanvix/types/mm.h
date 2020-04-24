@@ -22,21 +22,9 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef NANVIX_TYPES_MM_H_
+#define NANVIX_TYPES_MM_H_
 
-#include <nanvix/servers/servers.h>
-#include <nanvix/config.h>
+	#include <nanvix/types/mm/rmem.h>
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 1
-
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_1, .main = rmem_server },
-};
-
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_1_NAME)
+#endif /* NANVIX_TYPES_MM_H_ */

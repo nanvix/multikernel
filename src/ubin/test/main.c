@@ -23,7 +23,6 @@
  */
 
 #include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/stdikc.h>
 #include <nanvix/ulib.h>
 #include <posix/stdint.h>
 #include "test.h"

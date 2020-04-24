@@ -25,16 +25,15 @@
 #ifndef NANVIX_SERVERS_RMEM_H_
 #define NANVIX_SERVERS_RMEM_H_
 
-	#include <nanvix/kernel/kernel.h>
+#ifdef __NEED_RMEM_SERVER
 
-#if defined(__NEED_RMEM_SERVICE)
-
+	#include <nanvix/types/mm/rmem.h>
 	#include <nanvix/servers/message.h>
 	#include <nanvix/config.h>
 	#include <posix/stdint.h>
 	#include <posix/stddef.h>
 
-#endif
+#endif /* __NEED_RMEM_SERVER */
 
 	/**
 	 * @brief Null remote address.
@@ -67,8 +66,6 @@
 	#ifdef __RMEM_USES_MAILBOX
 	#define RMEM_PAYLOAD_SIZE 64
 	#endif
-
-#if defined(__NEED_RMEM_SERVICE)
 
 	/**
 	 * @name Shifts for remote addresses.
@@ -117,6 +114,8 @@
 		(((word_t)(num) << RMEM_BLOCK_NUM_SHIFT) & RMEM_BLOCK_NUM_MASK)            \
 	)
 
+#ifdef __NEED_RMEM_SERVER
+
 	/**
 	 * @brief Operations on remote memory.
 	 */
@@ -128,20 +127,6 @@
 	#define RMEM_MEMFREE 4 /**< Free        */
 	#define RMEM_ACK     5 /**< Acknowledge */
 	/**@}*/
-
-#endif
-
-	/**
-	 * @brief Remote page number.
-	 */
-	typedef word_t rpage_t;
-
-	/**
-	 * @brief Remote address.
-	 */
-	typedef word_t raddr_t;
-
-#if defined(__NEED_RMEM_SERVICE)
 
 	/**
 	 * @brief Remote memory message.
@@ -167,6 +152,6 @@
 		const char *name;
 	} rmem_servers[RMEM_SERVERS_NUM];
 
-#endif
+#endif /* __NEED_RMEM_SERVER */
 
 #endif /* NANVIX_SERVERS_RMEM_H_ */

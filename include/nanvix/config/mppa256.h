@@ -60,4 +60,12 @@
 	#define RMEM_SERVER_1_PORT_NUM 3 /**< RMem Server 1 */
 	/**@}*/
 
+	/**
+	 * @name Name of Spawners
+	 */
+	/**@{ */
+	#define SPAWN_SERVER_0_NAME "spawn0" /**< Spawn Servers 0 */
+	#define SPAWN_SERVER_1_NAME "spawn1" /**< Spawn Servers 1 */
+	/**@}*/
+
 #endif /* NANVIX_CONFIG_MPPA256_H_ */

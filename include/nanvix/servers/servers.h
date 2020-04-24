@@ -22,21 +22,22 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef NANVIX_SERVERS_SERVERS_H_
+#define NANVIX_SERVERS_SERVERS_H_
 
-#include <nanvix/servers/servers.h>
-#include <nanvix/config.h>
+	/* Must come first. */
+	#define __NEED_NAME_SERVER
+	#define __NEED_RMEM_SERVER
+	#define __NEED_SPAWN_SERVER
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 1
+	#include <nanvix/servers/name.h>
+	#include <nanvix/servers/rmem.h>
+	#include <nanvix/servers/spawn.h>
+	#include <nanvix/sys/semaphore.h>
 
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_1, .main = rmem_server },
-};
+	/* Import definitions. */
+	extern int hello_server(struct nanvix_semaphore *);
+	extern int name_server(struct nanvix_semaphore *);
+	extern int rmem_server(struct nanvix_semaphore *);
 
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_1_NAME)
+#endif /* NANVIX_SERVERS_SERVERS_H_*/

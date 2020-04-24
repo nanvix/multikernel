@@ -22,21 +22,20 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef NANVIX_TYPES_MM_RMEM_H_
+#define NANVIX_TYPES_MM_RMEM_H_
 
-#include <nanvix/servers/servers.h>
-#include <nanvix/config.h>
+	#include <nanvix/kernel/kernel.h>
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 1
+	/**
+	 * @brief Remote page number.
+	 */
+	typedef word_t rpage_t;
 
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_1, .main = rmem_server },
-};
+	/**
+	 * @brief Remote address.
+	 */
+	typedef word_t raddr_t;
 
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_1_NAME)
+#endif /* NANVIX_TYPES_MM_RMEM_H_ */
+

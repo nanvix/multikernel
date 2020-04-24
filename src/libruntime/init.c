@@ -22,11 +22,10 @@
  * SOFTWARE.
  */
 
-#define __NEED_MM_MANAGER
+#define __NEED_SPAWN_SERVER
 #define SPAWN_SERVER
 
 #include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/stdikc.h>
 #include <nanvix/servers/spawn.h>
 #include <nanvix/sys/thread.h>
 #include <nanvix/sys/excp.h>

@@ -23,12 +23,12 @@
  */
 
 #define SPAWN_SERVER
+#define __NEED_SPAWN_SERVER
 
 #include <nanvix/runtime/runtime.h>
 #include <nanvix/runtime/stdikc.h>
 #include <nanvix/servers/spawn.h>
 #include <nanvix/sys/semaphore.h>
-#include <nanvix/sys/noc.h>
 #include <nanvix/sys/thread.h>
 #include <nanvix/ulib.h>
 

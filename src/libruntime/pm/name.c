@@ -23,7 +23,7 @@
  */
 
 /* Must come first. */
-#define __NAME_SERVICE
+#define __NEED_NAME_SERVER
 #define __NEED_NAME_SERVICE
 
 #include <nanvix/servers/name.h>

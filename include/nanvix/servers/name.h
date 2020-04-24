@@ -25,7 +25,7 @@
 #ifndef NANVIX_SERVERS_NAME_H_
 #define NANVIX_SERVERS_NAME_H_
 
-	#ifndef __NAME_SERVICE
+	#ifndef __NEED_NAME_SERVER
 	#error "do not include this file"
 	#endif
 

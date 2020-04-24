@@ -25,6 +25,10 @@
 #ifndef NANVIX_SERVERS_SPAWN_H_
 #define NANVIX_SERVERS_SPAWN_H_
 
+	#ifndef __NEED_SPAWN_SERVER
+	#error "do not include this file"
+	#endif
+
 	#include <nanvix/sys/semaphore.h>
 	#include <nanvix/config.h>
 
