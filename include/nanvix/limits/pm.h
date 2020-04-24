@@ -25,7 +25,12 @@
 #ifndef NANVIX_LIMITS_PM_H_
 #define NANVIX_LIMITS_PM_H_
 
-	#include <nanvix/hal.h>
+	#ifndef __NEED_LIMITS_PM
+	#error "do not include this file"
+	#endif
+
+	#include <nanvix/sys/portal.h>
+	#include <nanvix/sys/mailbox.h>
 
 	/**
 	 * @brief Maximum number of processes.
@@ -36,5 +41,26 @@
 	 * @brief Maximum number of names for processes.
 	 */
 	#define NANVIX_PNAME_MAX 256
+
+	/**
+	 * @name Limits on Naming Service
+	 */
+	/**@{*/
+	#define NANVIX_PROC_NAME_MAX 64 /**< Maximum length of a process name. */
+	/**@}*/
+
+	/**
+	 * @name Limits on Named Mailboxes
+	 */
+	/**@{*/
+	#define NANVIX_MAILBOX_MESSAGE_SIZE KMAILBOX_MESSAGE_SIZE /**< Maximum size for a mailbox message.             */
+	#define NANVIX_MAILBOX_MAX          KMAILBOX_MAX          /**< Maximum number of mailboxes that can be opened. */
+	/**@}*/
+
+	/**
+	 * @name Limits on Named Portals
+	 */
+	/**@{*/
+	#define NANVIX_PORTAL_MAX KPORTAL_MAX /**< Maximum number of portals that can be opened. */
 
 #endif /* NANVIX_LIMITS_PM_H_ */

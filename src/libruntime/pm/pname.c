@@ -23,74 +23,56 @@
  */
 
 /* Must come first. */
-#define __NEED_NAME_SERVICE
-#define __NEED_NAME_CLIENT
+#define __NEED_LIMITS_PM
 
-#include <nanvix/runtime/pm/name.h>
-#include <nanvix/sys/noc.h>
-#include <nanvix/limits.h>
+#include <nanvix/limits/pm.h>
+#include <nanvix/runtime/pm.h>
 #include <nanvix/ulib.h>
-#include "../test.h"
+#include <posix/errno.h>
 
 /**
- * @brief Number of iterations for stress tests.
+ * @brief Name of the running process.
  */
-#define NITERATIONS 100
+static char _pname[NANVIX_PROC_NAME_MAX] = "";
 
 /*============================================================================*
- * Lookup                                                                     *
+ * get_pname ()                                                               *
  *============================================================================*/
 
 /**
- * @brief Lookup
+ * The nanvix_getpname() function returns the name of the calling
+ * process.
  */
-static void test_name_lookup(void)
+const char *nanvix_getpname(void)
 {
-	int nodenum;
-	char pathname[NANVIX_PROC_NAME_MAX];
-
-	nodenum = knode_get_num();
-	ustrcpy(pathname, "cool-name");
-	TEST_ASSERT(name_link(nodenum, pathname) == 0);
-
-	for (int i = 0; i < NITERATIONS; i++)
-		TEST_ASSERT(name_lookup(pathname) == nodenum);
-
-	TEST_ASSERT(name_unlink(pathname) == 0);
+	return (_pname);
 }
 
 /*============================================================================*
- * Heartbeat                                                                  *
+ * get_pname ()                                                               *
  *============================================================================*/
 
 /**
- * @brief Heartbeat
+ * The nanvix_setpname() function sets the name of the calling process
+ * to @pname.
  */
-static void test_name_heartbeat(void)
+int nanvix_setpname(const char *pname)
 {
+	int ret;
 	int nodenum;
-	char pathname[NANVIX_PROC_NAME_MAX];
+
+	/* Invalid name. */
+	if (ustrlen(pname) >= NANVIX_PROC_NAME_MAX)
+		return (-EINVAL);
+
+	if (ustrcmp(_pname, ""))
+		return (-EBUSY);
 
 	nodenum = knode_get_num();
-	ustrcpy(pathname, "cool-name");
-	TEST_ASSERT(name_link(nodenum, pathname) == 0);
 
-	for (int i = 0; i < NITERATIONS; i++)
-		TEST_ASSERT(name_heartbeat() == 0);
+	/* Link process name. */
+	if ((ret = name_link(nodenum, pname)) < 0)
+		return (ret);
 
-	TEST_ASSERT(name_unlink(pathname) == 0);
+	return (0);
 }
-
-/*============================================================================*
- * Stress Tests Driver Table                                                  *
- *============================================================================*/
-
-/**
- * @brief Unit tests.
- */
-struct test tests_name_stress[] = {
-	{ test_name_lookup,    "lookup"    },
-	{ test_name_heartbeat, "heartbeat" },
-	{ NULL,                 NULL       },
-};
-

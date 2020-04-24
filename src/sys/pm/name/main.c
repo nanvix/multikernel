@@ -22,16 +22,16 @@
  * SOFTWARE.
  */
 
+/* Must come first. */
+#define __NEED_LIMITS_PM
 #define __NAME_SERVICE
 
+#include <nanvix/limits/pm.h>
+#include <nanvix/runtime/stdikc.h>
 #include <nanvix/servers/message.h>
 #include <nanvix/servers/name.h>
 #include <nanvix/servers/spawn.h>
-#include <nanvix/runtime/stdikc.h>
-#include <nanvix/runtime/runtime.h>
-#include <nanvix/sys/mailbox.h>
 #include <nanvix/sys/semaphore.h>
-#include <nanvix/limits.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 #include <posix/stdint.h>

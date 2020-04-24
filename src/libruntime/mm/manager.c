@@ -24,11 +24,10 @@
 
 #include <nanvix/runtime/rmem.h>
 #include <nanvix/sys/page.h>
-#include <nanvix/const.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <posix/stddef.h>
+#include <posix/stdint.h>
 
 /**
  * @brief Length of remote memory table.

@@ -29,4 +29,20 @@
 	#include <nanvix/runtime/mm/cache.h>
 	#include <nanvix/runtime/mm/stub.h>
 
+	/**
+	 * @brief Initializes the RMem Service client.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_rmem_setup(void);
+
+	/**
+	 * @brief Shuts down the RMem Service client.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_rmem_cleanup(void);
+
 #endif /* NANVIX_RUNTIME_RMEM_H_ */

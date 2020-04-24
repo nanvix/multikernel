@@ -25,6 +25,12 @@
 #ifndef NANVIX_RUNTIME_RUNTIME_H_
 #define NANVIX_RUNTIME_RUNTIME_H_
 
+	#include <nanvix/runtime/pm.h>
+	#include <nanvix/runtime/rmem.h>
+	#include <nanvix/runtime/stdikc.h>
+	#include <nanvix/sys/excp.h>
+	#include <nanvix/sys/mutex.h>
+
 	/**
 	 * @brief Initializes the runtime.
 	 *
@@ -46,67 +52,5 @@
 	 * @returns Always zero.
 	 */
 	extern int nanvix_shutdown(void);
-
-/*============================================================================*
- * Ring 1                                                                     *
- *============================================================================*/
-
-	#include <nanvix/runtime/pm.h>
-
-/*============================================================================*
- * Ring 2                                                                     *
- *============================================================================*/
-
-	/**
-	 * @brief Initializes the Named Mailbox facility.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int __nanvix_mailbox_setup(void);
-
-	/**
-	 * @brief Shuts down Named Mailbox facility.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int __nanvix_mailbox_cleanup(void);
-
-	/**
-	 * @brief Initializes the Named Portal facility.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int __nanvix_portal_setup(void);
-
-	/**
-	 * @brief Shuts down named Portal facility.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int __nanvix_portal_cleanup(void);
-
-/*============================================================================*
- * Ring 3                                                                     *
- *============================================================================*/
-
-	/**
-	 * @brief Initializes the RMem Service client.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int __nanvix_rmem_setup(void);
-
-	/**
-	 * @brief Shuts down the RMem Service client.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int __nanvix_rmem_cleanup(void);
 
 #endif /* NANVIX_RUNTIME_RUNTIME_H_ */

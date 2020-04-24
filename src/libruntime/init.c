@@ -25,7 +25,6 @@
 #define __NEED_MM_MANAGER
 #define SPAWN_SERVER
 
-#include <nanvix/runtime/rmem.h>
 #include <nanvix/runtime/runtime.h>
 #include <nanvix/runtime/stdikc.h>
 #include <nanvix/servers/spawn.h>

@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
+/* Must come first. */
 #define __NAME_SERVICE
+#define __NEED_NAME_SERVICE
 
 #include <nanvix/servers/name.h>
-#include <nanvix/runtime/stdikc.h>
-#include <nanvix/sys/mailbox.h>
-#include <nanvix/sys/mutex.h>
+#include <nanvix/runtime/pm.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>

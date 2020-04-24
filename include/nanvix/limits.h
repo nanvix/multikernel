@@ -25,7 +25,9 @@
 #ifndef NANVIX_LIMITS_H_
 #define NANVIX_LIMITS_H_
 
-	#include <nanvix/limits/name.h>
+	/* Must come first. */
+	#define __NEED_LIMITS_PM
+
 	#include <nanvix/limits/pm.h>
 
 #endif /* NANVIX_LIMITS_H_ */
