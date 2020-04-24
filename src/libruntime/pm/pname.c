@@ -74,5 +74,7 @@ int nanvix_setpname(const char *pname)
 	if ((ret = name_link(nodenum, pname)) < 0)
 		return (ret);
 
+	ustrcpy(_pname, pname);
+
 	return (0);
 }
