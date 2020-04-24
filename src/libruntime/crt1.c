@@ -66,6 +66,7 @@ int __main2(int argc, const char *argv[])
 		__runtime_setup(4);
 
 		uassert(name_link(nodenum, pname) == 0);
+		uassert(stdsync_fence() == 0);
 
 		__main3(argc, argv);
 
