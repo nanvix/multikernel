@@ -424,7 +424,7 @@ static inline int do_rmem_read(int remote, rpage_t blknum, int outbox, int outpo
 			outport)
 		) >= 0
 	);
-	msg.header.portal_port = outportal % KPORTAL_PORT_NR;
+	msg.header.portal_port = kcomm_get_port(outportal, COMM_TYPE_PORTAL);
 	uassert(
 		kmailbox_write(outbox,
 			&msg,
