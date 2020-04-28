@@ -39,5 +39,6 @@
 	extern int hello_server(struct nanvix_semaphore *);
 	extern int name_server(struct nanvix_semaphore *);
 	extern int rmem_server(struct nanvix_semaphore *);
+	extern int shm_server(struct nanvix_semaphore *);
 
 #endif /* NANVIX_SERVERS_SERVERS_H_*/

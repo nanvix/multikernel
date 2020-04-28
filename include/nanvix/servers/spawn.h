@@ -41,7 +41,8 @@
 	#define SPAWN_RING_2 2
 	#define SPAWN_RING_3 3
 	#define SPAWN_RING_4 4
-	#define SPAWN_RING_X 5
+	#define SPAWN_RING_5 5
+	#define SPAWN_RING_X 6
 	/**@}*/
 
 	/**
@@ -52,7 +53,7 @@
 	/**
 	 * @brief Last spawn ring.
 	 */
-	#define SPAWN_RING_LAST SPAWN_RING_4
+	#define SPAWN_RING_LAST SPAWN_RING_5
 
 #ifdef SPAWN_SERVER
 
