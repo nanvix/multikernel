@@ -59,6 +59,7 @@ int __main2(int argc, const char *argv[])
 #ifdef __mppa256__
 		test_posix();
 #endif
+		test_shm();
 
 		uprintf("[nanvix][test] shutting down server");
 		uassert(stdsync_fence() == 0);

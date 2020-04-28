@@ -22,58 +22,37 @@
  * SOFTWARE.
  */
 
-#ifndef _TEST_H_
-#define _TEST_H_
+#include <nanvix/ulib.h>
+#include "../test.h"
 
-	#include <nanvix/ulib.h>
+/* Import definitions. */
+extern struct test tests_shm_api[];
+extern struct test tests_shm_fault[];
+extern struct test tests_shm_stress[];
 
-	/**
-	 * @brief Asserts a logic expression.
-	 */
-	#define TEST_ASSERT(x) uassert(x)
-
-	/**
-	 * @brief Unit test.
-	 */
-	struct test
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+void test_shm(void)
+{
+	/* Run API tests. */
+	for (int i = 0; tests_shm_api[i].test_fn != NULL; i++)
 	{
-		void (*test_fn)(void); /**< Test function. */
-		const char *name;      /**< Test name.     */
-	};
+		uprintf("[nanvix][test][shm][api] %s", tests_shm_api[i].name);
+		tests_shm_api[i].test_fn();
+	}
 
-	/**
-	 * @brief Launches regression tests on Name Service.
-	 */
-	extern void test_name(void);
+	/* Run fault injection tests. */
+	for (int i = 0; tests_shm_fault[i].test_fn != NULL; i++)
+	{
+		uprintf("[nanvix][test][shm][fault] %s", tests_shm_fault[i].name);
+		tests_shm_fault[i].test_fn();
+	}
 
-	/**
-	 * @brief Launches regression tests on RMem Manager.
-	 */
-	extern void test_rmem_stub(void);
-
-	/**
-	 * @brief Launches regression tests on RMem Cache.
-	 */
-	extern void test_rmem_cache(void);
-
-	/**
-	 * @brief Launches regression tests on RMem Interface.
-	 */
-	extern void test_rmem_manager(void);
-
-	/**
-	 * @brief Launches regression tests on SHM Service.
-	 */
-	extern void test_shm(void);
-
-	/**
-	 * @brief Launches regression tests on POSIX manager.
-	 */
-	extern void test_posix(void);
-
-	/**
-	 * @brief Horizontal line for tests.
-	 */
-	extern const char *HLINE;
-
-#endif /* _TEST_H_ */
+	/* Run stress injection tests. */
+	for (int i = 0; tests_shm_stress[i].test_fn != NULL; i++)
+	{
+		uprintf("[nanvix][test][shm][stress] %s", tests_shm_stress[i].name);
+		tests_shm_stress[i].test_fn();
+	}
+}
