@@ -32,6 +32,7 @@
 	#include <nanvix/runtime/mm/cache.h>
 	#include <nanvix/runtime/mm/stub.h>
 	#include <nanvix/servers/rmem.h>
+	#include <nanvix/servers/shm.h>
 	#include <nanvix/types/mm/rmem.h>
 
 	/**
