@@ -27,10 +27,12 @@
 
 	/* Must come first. */
 	#define __NEED_MM_VMEM_MANAGER
+	#define __NEED_MM_SHM_MANAGER
 
 	#include <nanvix/runtime/mm/manager.h>
 	#include <nanvix/runtime/mm/cache.h>
 	#include <nanvix/runtime/mm/stub.h>
+	#include <nanvix/runtime/mm/shm.h>
 	#include <nanvix/servers/rmem.h>
 	#include <nanvix/servers/shm.h>
 	#include <nanvix/types/mm/rmem.h>
