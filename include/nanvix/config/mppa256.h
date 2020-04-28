@@ -32,6 +32,7 @@
 	#define SPAWNERS_NUM      2 /**< Spawn Servers */
 	#define NAME_SERVERS_NUM  1 /**< Name Servers  */
 	#define RMEM_SERVERS_NUM  2 /**< RMem Servers  */
+	#define SHM_SERVERS_NUM   1 /**< SHM Servers  */
 	/**@}*/
 
 	/**
@@ -58,6 +59,7 @@
 	#define NAME_SERVER_PORT_NUM   2 /**< Name Server   */
 	#define RMEM_SERVER_0_PORT_NUM 2 /**< RMem Server 0 */
 	#define RMEM_SERVER_1_PORT_NUM 3 /**< RMem Server 1 */
+	#define SHM_SERVER_PORT_NUM    3 /**< Shm Server    */
 	/**@}*/
 
 	/**
