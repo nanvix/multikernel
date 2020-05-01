@@ -62,7 +62,7 @@ rpage_t nanvix_rmem_alloc(void)
 
 	/* Client not initialized.  */
 	if (!server[serverid].initialized)
-		return (-EINVAL);
+		return (RMEM_NULL);
 
 	/* Build operation header. */
 	message_header_build(&msg.header, RMEM_ALLOC);
