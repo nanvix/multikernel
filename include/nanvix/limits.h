@@ -27,7 +27,9 @@
 
 	/* Must come first. */
 	#define __NEED_LIMITS_PM
+	#define __NEED_LIMITS_SHM
 
 	#include <nanvix/limits/pm.h>
+	#include <nanvix/limits/shm.h>
 
 #endif /* NANVIX_LIMITS_H_ */

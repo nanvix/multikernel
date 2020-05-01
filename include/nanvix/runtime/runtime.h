@@ -26,10 +26,8 @@
 #define NANVIX_RUNTIME_RUNTIME_H_
 
 	#include <nanvix/runtime/pm.h>
-	#include <nanvix/runtime/rmem.h>
+	#include <nanvix/runtime/mm.h>
 	#include <nanvix/runtime/stdikc.h>
-	#include <nanvix/sys/excp.h>
-	#include <nanvix/sys/mutex.h>
 
 	/**
 	 * @brief Initializes the runtime.

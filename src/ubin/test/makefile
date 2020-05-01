@@ -55,6 +55,7 @@ EXEC = nanvix-test.$(OBJ_SUFFIX)
 SRC = $(wildcard *.c)                \
       $(wildcard name/*.c)           \
       $(wildcard posix/*.c)          \
+      $(wildcard shm/*.c)            \
       $(wildcard rmem/manager/*.c)   \
       $(wildcard rmem/cache/*.c)     \
       $(wildcard rmem/stub/*.c)

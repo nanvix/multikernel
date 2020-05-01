@@ -31,4 +31,9 @@
 	#include <nanvix/config/unix64.h>
 	#endif
 
+	/**
+	 * @brief Node number for SHM Server.
+	 */
+	#define SHM_SERVER_NAME "/shm"
+
 #endif /* NANVIX_CONFIG_H_ */

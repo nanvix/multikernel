@@ -43,13 +43,13 @@ int __main2(int argc, const char *argv[])
 	nodenum = knode_get_num();
 	usprintf(pname, "cluster%d", nodenum);
 
-	__runtime_setup(0);
+	__runtime_setup(SPAWN_RING_FIRST);
 
 		/* Unblock spawners. */
 		uassert(stdsync_fence() == 0);
 		uassert(stdsync_fence() == 0);
 
-		__runtime_setup(4);
+		__runtime_setup(SPAWN_RING_LAST);
 
 		uassert(nanvix_setpname(pname) == 0);
 		uassert(stdsync_fence() == 0);

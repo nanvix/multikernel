@@ -22,10 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_RUNTIME_MM_RCACHE_H_
-#define NANVIX_RUNTIME_MM_RCACHE_H_
+#ifndef NANVIX_RUNTIME_MM_CACHE_H_
+#define NANVIX_RUNTIME_MM_CACHE_H_
+
+#ifdef __NEED_MM_RMEM_CACHE
 
 	#include <nanvix/servers/rmem.h>
+	#include <nanvix/types/mm/rmem.h>
 
 	/**
 	 * @#brief Size of a block in the page cache.
@@ -64,8 +67,6 @@
 	#define RMEM_CACHE_WRITE_BACK    0 /**< Write Back    */
 	#define RMEM_CACHE_WRITE_THROUGH 1 /**< Write Through */
 	/**@}*/
-
-#if defined(__NEED_RMEM_CACHE)
 
 	/**
 	 * @brief Allocates a remote page.
@@ -130,8 +131,6 @@
 	 */
 	extern int __nanvix_rcache_setup(void);
 
-#endif /* __NEED_RMEM_CACHE */
-
 	/**
 	 * @brief Selects the cache replacement_policy.
 	 *
@@ -146,5 +145,7 @@
 	 */
 	extern int nanvix_rcache_select_write(int num);
 
-#endif /* NANVIX_RUNTIME_MM_RCACHE_H_ */
+#endif /* __NEED_MM_RMEM_CACHE */
+
+#endif /* NANVIX_RUNTIME_MM_CACHE_H_ */
 

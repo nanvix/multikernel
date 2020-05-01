@@ -24,13 +24,8 @@
 
 #define SPAWN_SERVER
 
-#include <nanvix/servers/spawn.h>
-#include <nanvix/sys/semaphore.h>
-
-/* Import definitions. */
-extern int hello_server(struct nanvix_semaphore *);
-extern int name_server(struct nanvix_semaphore *);
-extern int rmem_server(struct nanvix_semaphore *);
+#include <nanvix/servers/servers.h>
+#include <nanvix/config.h>
 
 /**
  * @brief Number of servers.
@@ -41,7 +36,7 @@ extern int rmem_server(struct nanvix_semaphore *);
  * @brief Table of servers.
  */
 const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_1, .main = hello_server },
+	{ .ring = SPAWN_RING_3, .main = shm_server  },
 };
 
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, "spawn3")
+SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_3_NAME)

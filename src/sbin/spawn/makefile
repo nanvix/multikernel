@@ -34,6 +34,7 @@ endif
 # Modules
 export MODULES := $(LIBDIR)/nanvix-hello.$(OBJ_SUFFIX).a \
                   $(LIBDIR)/nanvix-rmem.$(OBJ_SUFFIX).a  \
+                  $(LIBDIR)/nanvix-shm.$(OBJ_SUFFIX).a   \
                   $(LIBDIR)/nanvix-name.$(OBJ_SUFFIX).a
 
 # Libraries

@@ -24,7 +24,7 @@
 
 #define __NEED_MM_MANAGER
 
-#include <nanvix/runtime/rmem.h>
+#include <nanvix/runtime/mm.h>
 #include <nanvix/ulib.h>
 #include "../../test.h"
 

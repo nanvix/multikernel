@@ -31,7 +31,8 @@ SRC = $(wildcard *.c)                        \
       $(wildcard posix/libc/stdlib/malloc.c) \
       $(wildcard pm/*.c)                     \
       $(wildcard mm/*.c)                     \
-      $(wildcard utils/*.c)                  \
+      $(wildcard mm/shm/*.c)                 \
+      $(wildcard utils/*.c)
 
 #===============================================================================
 # Object Files

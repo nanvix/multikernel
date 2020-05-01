@@ -25,9 +25,7 @@
 #ifndef NANVIX_TYPES_H_
 #define NANVIX_TYPES_H_
 
-	/**
-	 * @brief Process ID.
-	 */
-	typedef int nanvix_pid_t;
+	#include <nanvix/types/pm.h>
+	#include <nanvix/types/mm.h>
 
 #endif /* NANVIX_TYPES_H_ */

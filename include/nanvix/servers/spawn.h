@@ -25,6 +25,10 @@
 #ifndef NANVIX_SERVERS_SPAWN_H_
 #define NANVIX_SERVERS_SPAWN_H_
 
+	#ifndef __NEED_SPAWN_SERVER
+	#error "do not include this file"
+	#endif
+
 	#include <nanvix/sys/semaphore.h>
 	#include <nanvix/config.h>
 
@@ -37,7 +41,8 @@
 	#define SPAWN_RING_2 2
 	#define SPAWN_RING_3 3
 	#define SPAWN_RING_4 4
-	#define SPAWN_RING_X 5
+	#define SPAWN_RING_5 5
+	#define SPAWN_RING_X 6
 	/**@}*/
 
 	/**
@@ -48,7 +53,7 @@
 	/**
 	 * @brief Last spawn ring.
 	 */
-	#define SPAWN_RING_LAST SPAWN_RING_4
+	#define SPAWN_RING_LAST SPAWN_RING_5
 
 #ifdef SPAWN_SERVER
 

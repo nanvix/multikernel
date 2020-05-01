@@ -23,13 +23,13 @@
 #
 
 # Builds Everything
-all: all-name all-rmem all-hello
+all: all-name all-rmem all-hello all-shm
 
 # Cleans Build Objects
-clean: clean-name clean-rmem clean-hello
+clean: clean-name clean-rmem clean-hello clean-shm
 
 # Cleans Everything
-distclean: distclean-name distclean-rmem distclean-hello
+distclean: distclean-name distclean-rmem distclean-hello distclean-shm
 
 #===============================================================================
 # Name Server
@@ -62,6 +62,22 @@ clean-rmem:
 # Cleans RMem Server build.
 distclean-rmem:
 	$(MAKE) -C mm/rmem distclean
+
+#===============================================================================
+# SHM Server
+#===============================================================================
+
+# Builds RMem Server.
+all-shm:
+	$(MAKE) -C mm/shm all
+
+# Cleans RMem Server Build objects.
+clean-shm:
+	$(MAKE) -C mm/shm clean
+
+# Cleans RMem Server build.
+distclean-shm:
+	$(MAKE) -C mm/shm distclean
 
 #===============================================================================
 # Hello Server

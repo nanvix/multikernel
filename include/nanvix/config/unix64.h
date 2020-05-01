@@ -32,6 +32,7 @@
 	#define SPAWNERS_NUM      4 /**< Spawn Servers */
 	#define NAME_SERVERS_NUM  1 /**< Name Servers  */
 	#define RMEM_SERVERS_NUM  2 /**< RMem Servers  */
+	#define SHM_SERVERS_NUM   1 /**< SHM Servers   */
 	/**@}*/
 
 	/**
@@ -61,6 +62,17 @@
 	#define NAME_SERVER_PORT_NUM   2 /**< Name Server   */
 	#define RMEM_SERVER_0_PORT_NUM 2 /**< RMem Server 0 */
 	#define RMEM_SERVER_1_PORT_NUM 2 /**< RMem Server 1 */
+	#define SHM_SERVER_PORT_NUM    2 /**< Shm Server    */
+	/**@}*/
+
+	/**
+	 * @name Name of Spawners
+	 */
+	/**@{ */
+	#define SPAWN_SERVER_0_NAME "spawn0" /**< Spawn Servers 0 */
+	#define SPAWN_SERVER_1_NAME "spawn1" /**< Spawn Servers 1 */
+	#define SPAWN_SERVER_2_NAME "spawn2" /**< Spawn Servers 2 */
+	#define SPAWN_SERVER_3_NAME "spawn3" /**< Spawn Servers 3 */
 	/**@}*/
 
 #endif /* NANVIX_CONFIG_UNIX64_H_ */

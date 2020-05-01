@@ -22,11 +22,10 @@
  * SOFTWARE.
  */
 
-#define __NEED_MM_MANAGER
+#define __NEED_SPAWN_SERVER
 #define SPAWN_SERVER
 
 #include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/stdikc.h>
 #include <nanvix/servers/spawn.h>
 #include <nanvix/sys/thread.h>
 #include <nanvix/sys/excp.h>
@@ -83,27 +82,6 @@ static void *nanvix_exception_handler(void *args)
 }
 
 /**
- * @brief Forces a platform-independent delay.
- *
- * @param cycles Delay in cycles.
- *
- * @author João Vicente Souto
- */
-static void delay(uint64_t cycles)
-{
-	uint64_t t0, t1;
-
-	for (int i = 0; i < PROCESSOR_CLUSTERS_NUM; ++i)
-	{
-		kclock(&t0);
-
-		do
-			kclock(&t1);
-		while ((t1 - t0) < cycles);
-	}
-}
-
-/**
  * @todo TODO: provide a detailed description for this function.
  */
 int __runtime_setup(int ring)
@@ -133,7 +111,6 @@ int __runtime_setup(int ring)
 	if ((current_ring[tid] < SPAWN_RING_1) && (ring >= SPAWN_RING_1))
 	{
 		uprintf("[nanvix][thread %d] initalizing ring 1", tid);
-		delay(CLUSTER_FREQ);
 		uassert(__name_setup() == 0);
 	}
 
@@ -141,17 +118,28 @@ int __runtime_setup(int ring)
 	if ((current_ring[tid] < SPAWN_RING_2) && (ring >= SPAWN_RING_2))
 	{
 		uprintf("[nanvix][thread %d] initalizing ring 2", tid);
-		delay(CLUSTER_FREQ);
 		uassert(__nanvix_mailbox_setup() == 0);
 		uassert(__nanvix_portal_setup() == 0);
+	}
+
+	/* Initialize Ring 3. */
+	if ((current_ring[tid] < SPAWN_RING_3) && (ring >= SPAWN_RING_3))
+	{
+		uprintf("[nanvix][thread %d] initalizing ring 3", tid);
+		uassert(__nanvix_rmem_setup() == 0);
 	}
 
 	/* Initialize Ring 4. */
 	if ((current_ring[tid] < SPAWN_RING_4) && (ring >= SPAWN_RING_4))
 	{
 		uprintf("[nanvix][thread %d] initalizing ring 4", tid);
-		delay(CLUSTER_FREQ);
-		uassert(__nanvix_rmem_setup() == 0);
+		uassert(__nanvix_shm_setup() == 0);
+	}
+
+	/* Initialize Ring 5. */
+	if ((current_ring[tid] < SPAWN_RING_5) && (ring >= SPAWN_RING_5))
+	{
+		uprintf("[nanvix][thread %d] initalizing ring 5", tid);
 		uassert(kthread_create(&exception_handler_tid, &nanvix_exception_handler, NULL) == 0);
 	}
 
@@ -170,11 +158,24 @@ int __runtime_cleanup(void)
 	tid = kthread_self();
 
 	/* Initialize Ring 4. */
+	if (current_ring[tid] >= SPAWN_RING_5)
+	{
+		uprintf("[nanvix][thread %d] shutting down ring 5", tid);
+		uassert(kthread_join(exception_handler_tid, NULL) == 0);
+	}
+
+	/* Initialize Ring 4. */
 	if (current_ring[tid] >= SPAWN_RING_4)
 	{
 		uprintf("[nanvix][thread %d] shutting down ring 4", tid);
+		uassert(__nanvix_shm_cleanup() == 0);
+	}
+
+	/* Initialize Ring 3. */
+	if (current_ring[tid] >= SPAWN_RING_3)
+	{
+		uprintf("[nanvix][thread %d] shutting down ring 3", tid);
 		uassert(__nanvix_rmem_cleanup() == 0);
-		uassert(kthread_join(exception_handler_tid, NULL) == 0);
 	}
 
 	/* Initialize Ring 2. */

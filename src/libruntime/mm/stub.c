@@ -23,11 +23,11 @@
  */
 
 /* Must come first. */
-#define __NEED_RMEM_SERVICE
+#define __NEED_MM_RMEM_STUB
+#define __NEED_RMEM_SERVER
 
-#include <nanvix/runtime/runtime.h>
-#include <nanvix/servers/rmem.h>
-#include <nanvix/pm.h>
+#include <nanvix/runtime/pm.h>
+#include <nanvix/runtime/mm.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
@@ -62,7 +62,7 @@ rpage_t nanvix_rmem_alloc(void)
 
 	/* Client not initialized.  */
 	if (!server[serverid].initialized)
-		return (-EINVAL);
+		return (RMEM_NULL);
 
 	/* Build operation header. */
 	message_header_build(&msg.header, RMEM_ALLOC);
