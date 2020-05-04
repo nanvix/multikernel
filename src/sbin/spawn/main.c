@@ -98,8 +98,8 @@ int __main2(int argc, const char *argv[])
 		uprintf("[nanvix][%s] listening to inbox %d", spawner_name, stdinbox_get());
 		uprintf("[nanvix][%s] syncing in sync %d", spawner_name, stdsync_get());
 
-		uassert(stdsync_fence() == 0);
 		spawn_barrier_setup();
+		uassert(stdsync_fence() == 0);
 
 		/* Spawn servers. */
 		for (int ring = SPAWN_RING_FIRST; ring <= SPAWN_RING_LAST; ring++)
