@@ -25,7 +25,7 @@
 /* Must come first. */
 #define __NEED_RESOURCE
 #define __NEED_MM_SHM_SERVER
-#define __NEED_MM_RMEM_STUB
+#define __NEED_MM_RMEM_CACHE
 
 #include <nanvix/runtime/pm.h>
 #include <nanvix/runtime/mm.h>
@@ -645,6 +645,7 @@ int __nanvix_shm_close(int shmid)
  */
 static ssize_t __do_nanvix_shm_read(int shmid, void *buf, size_t n, off_t off)
 {
+	char *ptr;  /* Local page.                       */
 	int oshmid; /* ID of Opened Shared Memory Region */
 
 	/* Invalid shared memory region. */
@@ -661,7 +662,9 @@ static ssize_t __do_nanvix_shm_read(int shmid, void *buf, size_t n, off_t off)
 
 	((void) off);
 
-	uassert(nanvix_rmem_read(oregions[oshmid].base, buf) == RMEM_BLOCK_SIZE);
+	uassert((ptr = nanvix_rcache_get(oregions[oshmid].base)) != NULL);
+	umemcpy(buf, ptr + off, n);
+	uassert(nanvix_rcache_put(oregions[oshmid].base, 1) == 0);
 
 	return (n);
 }
@@ -712,6 +715,7 @@ ssize_t __nanvix_shm_read(int shmid, void *buf, size_t n, off_t off)
  */
 static ssize_t __do_nanvix_shm_write(int shmid, const void *buf, size_t n, off_t off)
 {
+	char *ptr;  /* Local page.                       */
 	int oshmid; /* ID of Opened Shared Memory Region */
 
 	/* Invalid shared memory region. */
@@ -728,7 +732,9 @@ static ssize_t __do_nanvix_shm_write(int shmid, const void *buf, size_t n, off_t
 
 	((void) off);
 
-	uassert(nanvix_rmem_write(oregions[oshmid].base, buf) == RMEM_BLOCK_SIZE);
+	uassert((ptr = nanvix_rcache_get(oregions[oshmid].base)) != NULL);
+	umemcpy(ptr + off, buf, n);
+	uassert(nanvix_rcache_put(oregions[oshmid].base, 1) == 0);
 
 	return (n);
 }
