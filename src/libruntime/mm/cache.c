@@ -80,9 +80,7 @@ struct cache_slot
 /*
  * @brief Page cache.
  */
-static struct cache_slot cache_lines[RMEM_CACHE_SIZE] = {
-	[0 ... ((RMEM_CACHE_SIZE) - 1)] = {.pgnum = RMEM_NULL, .age = 0, .ref_count = 0}
-};
+static struct cache_slot cache_lines[RMEM_CACHE_SIZE];
 
 /**
  * @brief Discrete cache time.
