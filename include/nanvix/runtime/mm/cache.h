@@ -124,14 +124,6 @@
 	extern int nanvix_rcache_flush(rpage_t pgnum);
 
 	/**
-	 * @brief Initializes the page cache.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure a negative error code is returned instead.
-	 */
-	extern int __nanvix_rcache_setup(void);
-
-	/**
 	 * @brief Selects the cache replacement_policy.
 	 *
 	 * @param num Number of the replacement policy.

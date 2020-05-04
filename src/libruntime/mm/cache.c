@@ -828,7 +828,7 @@ int nanvix_rcache_put(rpage_t pgnum, int strike)
 int __nanvix_rcache_setup(void)
 {
 	/* Page cache already initialized. */
-	if (!initialized)
+	if (initialized)
 		return (0);
 
 	/* Initialize page cache statistics. */
@@ -847,6 +847,7 @@ int __nanvix_rcache_setup(void)
 		spinlock_init(&cache_lines[i].lock);
 	}
 
+	uprintf("[nanvix][rcache] page cache initialized");
 	initialized = 1;
 
 	return (0);

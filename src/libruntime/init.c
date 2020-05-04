@@ -127,6 +127,7 @@ int __runtime_setup(int ring)
 	{
 		uprintf("[nanvix][thread %d] initalizing ring 3", tid);
 		uassert(__nanvix_rmem_setup() == 0);
+		uassert(__nanvix_rcache_setup() == 0);
 	}
 
 	/* Initialize Ring 4. */
