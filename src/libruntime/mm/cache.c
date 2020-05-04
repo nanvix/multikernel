@@ -151,6 +151,28 @@ static void nanvix_rcache_line_unlock(int lineno)
 }
 
 /*============================================================================*
+ * nanvix_rcache_inval()                                                      *
+ *============================================================================*/
+
+/**
+ * The nanvix_rcache_line_inval() invalidates the line @p lineno of the
+ * page cache.
+ */
+int nanvix_rcache_line_inval(int lineno)
+{
+	if (!WITHIN(lineno, 0, RMEM_CACHE_SIZE))
+		return (-EINVAL);	
+
+	nanvix_rcache_line_lock(lineno);
+
+		cache_lines[lineno].valid = 0;
+
+	nanvix_rcache_line_unlock(lineno);
+
+	return (0);
+}
+
+/*============================================================================*
  * nanvix_rcache_clean()                                                      *
  *============================================================================*/
 
