@@ -856,7 +856,7 @@ static void *nanvix_shm_snooper(void *args)
 	uassert(__stdmailbox_setup() == 0);
 	uassert(__stdportal_setup() == 0);
 
-	uprintf("[nanvix][shm] snooper lstening port %d",
+	uprintf("[nanvix][shm] snooper listening port %d",
 		stdinbox_get_port()
 	);
 
