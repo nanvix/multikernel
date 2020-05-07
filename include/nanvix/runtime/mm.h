@@ -53,5 +53,13 @@
 	 */
 	extern int __nanvix_rmem_cleanup(void);
 
+	/**
+	 * @brief Initializes the page cache.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure a negative error code is returned instead.
+	 */
+	extern int __nanvix_rcache_setup(void);
+
 #endif /* NANVIX_RUNTIME_MM_H_ */
 

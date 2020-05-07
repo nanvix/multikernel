@@ -72,6 +72,9 @@ struct tuple
 struct cache_slot
 {
 	rpage_t pgnum;
+	spinlock_t lock;
+	int busy;
+	int valid;
 	char pages[RMEM_BLOCK_SIZE] ALIGN(PAGE_SIZE);
 	AGE_TYPE age;
 	int ref_count;
@@ -80,9 +83,7 @@ struct cache_slot
 /*
  * @brief Page cache.
  */
-static struct cache_slot cache_lines[RMEM_CACHE_SIZE] = {
-	[0 ... ((RMEM_CACHE_SIZE) - 1)] = {.pgnum = RMEM_NULL, .age = 0, .ref_count = 0}
-};
+static struct cache_slot cache_lines[RMEM_CACHE_SIZE];
 
 /**
  * @brief Discrete cache time.
@@ -114,11 +115,49 @@ static int cache_policy = __RMEM_CACHE_DEFAULT_REPLACEMENT;
 static int write_policy = __RMEM_CACHE_DEFAULT_WRITE;
 
 /*============================================================================*
+ * nanvix_rcache_line_lock()                                                  *
+ *============================================================================*/
+
+/**
+ * @brief Locks a line of the page cache.
+ *
+ * @param lineno Number of target line.
+ */
+static void nanvix_rcache_line_lock(int lineno)
+{
+	do
+		spinlock_lock(&cache_lines[lineno].lock);
+	while (cache_lines[lineno].busy);
+
+	cache_lines[lineno].busy = 1;
+
+	spinlock_unlock(&cache_lines[lineno].lock);
+}
+
+/*============================================================================*
+ * nanvix_rcache_line_unlock()                                                *
+ *============================================================================*/
+
+/**
+ * @brief Unlocks a line of the page cache.
+ *
+ * @param lineno Number of target line.
+ */
+static void nanvix_rcache_line_unlock(int lineno)
+{
+	spinlock_lock(&cache_lines[lineno].lock);
+		cache_lines[lineno].busy = 0;
+	spinlock_unlock(&cache_lines[lineno].lock);
+}
+
+/*============================================================================*
  * nanvix_rcache_clean()                                                      *
  *============================================================================*/
 
 /**
  * @brief Cleans the cache.
+ *
+ * @bug FIXME: this funciton should not exist.
  */
 void nanvix_rcache_clean(void)
 {
@@ -678,17 +717,28 @@ void *nanvix_rcache_get(rpage_t pgnum)
 	{
 		stats.nmisses++;
 
-		if (cache_lines[0].pgnum != RMEM_NULL)
-		{
-			if (nanvix_rcache_flush(cache_lines[0].pgnum))
+		nanvix_rcache_line_lock(0);
+
+			if ((cache_lines[0].valid) && (cache_lines[0].pgnum != RMEM_NULL))
+			{
+				if (nanvix_rcache_flush(cache_lines[0].pgnum))
+				{
+					nanvix_rcache_line_unlock(0);
+					return (NULL);
+				}
+			}
+
+			if ((err = nanvix_rmem_read(pgnum, cache_lines[0].pages)) < 0)
+			{
+				nanvix_rcache_line_unlock(0);
 				return (NULL);
-		}
+			}
 
-		if ((err = nanvix_rmem_read(pgnum, cache_lines[0].pages)) < 0)
-			return (NULL);
+			cache_lines[0].valid = 1;
+			cache_lines[0].pgnum = pgnum;
+			ptr = cache_lines[0].pages;
 
-		cache_lines[0].pgnum = pgnum;
-		ptr = cache_lines[0].pages;
+		nanvix_rcache_line_unlock(0);
 	}
 
 #ifdef CACHE_DEBUG
@@ -742,11 +792,24 @@ int nanvix_rcache_put(rpage_t pgnum, int strike)
 	{
 		int err;
 
-		if (cache_lines[0].pgnum != pgnum)
-			return (-EFAULT);
+		nanvix_rcache_line_lock(0);
 
-		if ((err = nanvix_rmem_write(pgnum, cache_lines[0].pages)) < 0)
-			return (err);
+			if (cache_lines[0].pgnum != pgnum)
+			{
+				nanvix_rcache_line_unlock(0);
+				return (-EFAULT);
+			}
+
+			if ((cache_lines[0].valid) && (cache_lines[0].pgnum != RMEM_NULL))
+			{
+				if ((err = nanvix_rmem_write(pgnum, cache_lines[0].pages)) < 0)
+				{
+					nanvix_rcache_line_unlock(0);
+					return (err);
+				}
+			}
+
+		nanvix_rcache_line_unlock(0);
 	}
 
 #ifdef CACHE_DEBUG
@@ -765,7 +828,7 @@ int nanvix_rcache_put(rpage_t pgnum, int strike)
 int __nanvix_rcache_setup(void)
 {
 	/* Page cache already initialized. */
-	if (!initialized)
+	if (initialized)
 		return (0);
 
 	/* Initialize page cache statistics. */
@@ -778,9 +841,13 @@ int __nanvix_rcache_setup(void)
 	{
 		cache_lines[i].pgnum = RMEM_NULL;
 		cache_lines[i].age = 0;
+		cache_lines[i].busy = 0;
+		cache_lines[i].valid = 0;
 		cache_lines[i].ref_count = 0;
+		spinlock_init(&cache_lines[i].lock);
 	}
 
+	uprintf("[nanvix][rcache] page cache initialized");
 	initialized = 1;
 
 	return (0);
