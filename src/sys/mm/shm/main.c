@@ -33,6 +33,7 @@
 #include <nanvix/config.h>
 #include <nanvix/pm.h>
 #include <nanvix/ulib.h>
+#include "shm.h"
 
 /**
  * @brief SHM Server information.
@@ -69,6 +70,7 @@ static int do_open(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.shmid = ret;
+	uassert(connect(request->header.source) == 0);
 
 	return (0);
 }
@@ -90,6 +92,7 @@ static int do_close(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.status = ret;
+	uassert(disconnect(request->header.source) == 0);
 
 	return (0);
 }
@@ -117,6 +120,7 @@ static int do_create(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.shmid = ret;
+	uassert(connect(request->header.source) == 0);
 
 	return (0);
 }
@@ -296,6 +300,7 @@ static int do_shm_startup(struct nanvix_semaphore *lock)
 		return (ret);
 
 	shm_init();
+	connections_setup();
 
 	uprintf("[nanvix][shm] server alive");
 	uprintf("[nanvix][shm] attached to node %d", server.nodenum);
