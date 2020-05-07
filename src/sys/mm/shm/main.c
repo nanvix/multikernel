@@ -59,7 +59,7 @@ static int do_open(struct shm_message *request, struct shm_message *response)
 	int ret;
 
 	ret = __do_shm_open(
-		&response->op.ret.base,
+		&response->op.ret.page,
 		request->header.source,
 		request->op.open.name,
 		request->op.open.oflags
@@ -106,7 +106,7 @@ static int do_create(struct shm_message *request, struct shm_message *response)
 	int ret;
 
 	ret = __do_shm_create(
-		&response->op.ret.base,
+		&response->op.ret.page,
 		request->header.source,
 		request->op.create.name,
 		request->op.create.oflags,
@@ -154,7 +154,7 @@ static int do_ftruncate(struct shm_message *request, struct shm_message *respons
 	int ret;
 
 	ret = __do_shm_ftruncate(
-		&response->op.ret.base,
+		&response->op.ret.page,
 		request->header.source,
 		request->op.ftruncate.shmid,
 		request->op.ftruncate.size

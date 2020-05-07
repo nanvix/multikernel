@@ -63,7 +63,7 @@ static struct oregion
 	mode_t mode;                    /**< Acess Permissions             */
 	int refcount;                   /**< References Count              */
 	char name[NANVIX_SHM_NAME_MAX]; /**< Name of underlying shm region */
-	rpage_t base;                   /**< Underlying Page               */
+	rpage_t page;                   /**< Underlying Page               */
 } oregions[NANVIX_SHM_OPEN_MAX];
 
 /**
@@ -230,7 +230,7 @@ static int __do_nanvix_shm_ftruncate(int shmid, off_t size)
 		return (msg.op.ret.status);
 	}
 
-	oregions[oshmid].base = msg.op.ret.base;
+	oregions[oshmid].page = msg.op.ret.page;
 
 	return (0);
 }
@@ -330,7 +330,7 @@ static int __do_nanvix_shm_create(const char *name, int oflags, mode_t mode)
 	 * Initialize entry in local table of
 	 * opened shared memory regions.
 	 */
-	oregions[oshmid].base = msg.op.ret.base;
+	oregions[oshmid].page = msg.op.ret.page;
 	__nanvix_shm_initializer(oshmid, shmid, name, oflags, mode);
 
 	return (shmid);
@@ -438,7 +438,7 @@ static int __do_nanvix_shm_open(const char *name, int oflags, mode_t mode)
 	 * Initialize entry in local table of
 	 * opened shared memory regions.
 	 */
-	oregions[oshmid].base = msg.op.ret.base;
+	oregions[oshmid].page = msg.op.ret.page;
 	__nanvix_shm_initializer(oshmid, shmid, name, oflags, mode);
 
 	return (shmid);
@@ -657,14 +657,14 @@ static ssize_t __do_nanvix_shm_read(int shmid, void *buf, size_t n, off_t off)
 		return (-ENOENT);
 
 	/* Bad memory region. */
-	if (oregions[oshmid].base == RMEM_NULL)
+	if (oregions[oshmid].page == RMEM_NULL)
 		return (-ENOMEM);
 
 	((void) off);
 
-	uassert((ptr = nanvix_rcache_get(oregions[oshmid].base)) != NULL);
+	uassert((ptr = nanvix_rcache_get(oregions[oshmid].page)) != NULL);
 	umemcpy(buf, ptr + off, n);
-	uassert(nanvix_rcache_put(oregions[oshmid].base, 1) == 0);
+	uassert(nanvix_rcache_put(oregions[oshmid].page, 1) == 0);
 
 	return (n);
 }
@@ -727,14 +727,14 @@ static ssize_t __do_nanvix_shm_write(int shmid, const void *buf, size_t n, off_t
 		return (-ENOENT);
 
 	/* Bad memory region. */
-	if (oregions[oshmid].base == RMEM_NULL)
+	if (oregions[oshmid].page == RMEM_NULL)
 		return (-ENOMEM);
 
 	((void) off);
 
-	uassert((ptr = nanvix_rcache_get(oregions[oshmid].base)) != NULL);
+	uassert((ptr = nanvix_rcache_get(oregions[oshmid].page)) != NULL);
 	umemcpy(ptr + off, buf, n);
-	uassert(nanvix_rcache_put(oregions[oshmid].base, 1) == 0);
+	uassert(nanvix_rcache_put(oregions[oshmid].page, 1) == 0);
 
 	return (n);
 }
