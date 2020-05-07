@@ -30,6 +30,8 @@
 	#include <nanvix/servers/rmem.h>
 	#include <nanvix/types/mm/rmem.h>
 
+#endif /* __NEED_MM_RMEM_CACHE */
+
 	/**
 	 * @#brief Size of a block in the page cache.
 	 */
@@ -67,6 +69,8 @@
 	#define RMEM_CACHE_WRITE_BACK    0 /**< Write Back    */
 	#define RMEM_CACHE_WRITE_THROUGH 1 /**< Write Through */
 	/**@}*/
+
+#ifdef __NEED_MM_RMEM_CACHE
 
 	/**
 	 * @brief Allocates a remote page.
