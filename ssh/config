@@ -7,3 +7,8 @@ Host mppa
 	User penna
 	ProxyCommand ssh -q bastionguest nc -q0 mppa %p
 	StrictHostKeyChecking no
+
+Host quadro
+	User ppenna
+	HostName quadro.icei.pucminas.br
+	StrictHostKeyChecking no
