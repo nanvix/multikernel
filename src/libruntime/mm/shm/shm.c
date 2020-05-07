@@ -29,12 +29,19 @@
 
 #include <nanvix/runtime/pm.h>
 #include <nanvix/runtime/mm.h>
+#include <nanvix/runtime/stdikc.h>
+#include <nanvix/sys/thread.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/sys/stat.h>
 #include <posix/errno.h>
 #include <posix/fcntl.h>
+
+/**
+ * @brief ID of snooper thread.
+ */
+static kthread_t nanvix_shm_snooper_tid;
 
 /**
  * @brief Connection to SHMem Server.
@@ -764,6 +771,112 @@ ssize_t __nanvix_shm_write(int shmid, const void *buf, size_t n, off_t off)
 }
 
 /*============================================================================*
+ * __nanvix_shm_inval()                                                       *
+ *============================================================================*/
+
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+static int __do_nanvix_shm_inval(int shmid)
+{
+	int oshmid;
+	struct shm_message msg;
+
+	/* Invalid shared memory region. */
+	if ((oshmid = shm_lookup_shmid(shmid)) < 0)
+		return (-ENOENT);
+
+	/* Bad memory region. */
+	if (oregions[oshmid].refcount == 0)
+		return (-ENOENT);
+
+	/* Build message. */
+	message_header_build(&msg.header, SHM_INVAL);
+	msg.op.inval.page = oregions[oshmid].page;
+
+	/* Send operation. */
+	uassert(
+		nanvix_mailbox_write(
+			server.outbox,
+			&msg,
+			sizeof(struct shm_message)
+		) == 0
+	);
+
+	/* Receive reply. */
+	uassert(
+		kmailbox_read(
+			stdinbox_get(),
+			&msg,
+			sizeof(struct shm_message)
+		) == sizeof(struct shm_message)
+	);
+
+	/* Failed to close shared memory region. */
+	if (msg.header.opcode == SHM_FAIL)
+		return (msg.op.ret.status);
+
+	return (0);
+}
+
+/**
+ * @see __do_nanvix_shm_inval()
+ */
+int __nanvix_shm_inval(int shmid)
+{
+	/* Uninitialized server. */
+	if (!server.initialized)
+		return (-EAGAIN);
+
+	/* Invalid ID. */
+	if (!WITHIN(shmid, 0, NANVIX_SHM_MAX))
+		return (-EINVAL);
+
+	return (__do_nanvix_shm_inval(shmid));
+}
+
+/*============================================================================*
+ * nanvix_shm_snooper()                                                       *
+ *============================================================================*/
+
+/**
+ * @brief Shared memory region snooper.
+ *
+ * @param args Arguments for the thread (unused).
+ *
+ * @returns Always return NULL.
+ */
+static void *nanvix_shm_snooper(void *args)
+{
+	struct shm_message msg;
+
+	UNUSED(args);
+
+	uassert(__stdsync_setup() == 0);
+	uassert(__stdmailbox_setup() == 0);
+	uassert(__stdportal_setup() == 0);
+
+	uprintf("[nanvix][shm] snooper lstening port %d",
+		stdinbox_get_port()
+	);
+
+	while (1)
+	{
+		uassert(
+			kmailbox_read(
+				stdinbox_get(),
+				&msg,
+				sizeof(struct shm_message)
+			) == sizeof(struct shm_message)
+		);
+
+		uprintf("[nanvix][shm] invalidation signal received");
+	}
+
+	return (NULL);
+}
+
+/*============================================================================*
  * nanvix_shm_shutdown()                                                      *
  *============================================================================*/
 
@@ -824,6 +937,8 @@ int __nanvix_shm_setup(void)
 
 	server.initialized = true;
 	uprintf("[nanvix][shm] connection with server established");
+
+	uassert(kthread_create(&nanvix_shm_snooper_tid, &nanvix_shm_snooper, NULL) == 0);
 
 	return (0);
 }

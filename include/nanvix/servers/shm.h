@@ -48,8 +48,9 @@
 	#define SHM_UNLINK       3  /**< Unlink.           */
 	#define SHM_CLOSE        4  /**< Close             */
 	#define SHM_FTRUNCATE    5  /**< Truncate.         */
-	#define SHM_SUCCESS      6  /**< Success.          */
-	#define SHM_FAIL         7  /**< Failure.          */
+	#define SHM_INVAL        6  /**< Truncate.         */
+	#define SHM_SUCCESS      7  /**< Success.          */
+	#define SHM_FAIL         8  /**< Failure.          */
 	/**@}*/
 
 	/**
@@ -92,6 +93,14 @@
 				int shmid;  /**< Target shared memory region. */
 				off_t size; /**< Size (in bytes).             */
 			} ftruncate;
+
+			/**
+			 * Invalidate message.
+			 */
+			struct {
+				int shmid;    /**< Target Shared Memory Region */
+				rpage_t page; /**< Target Page                 */
+			} inval;
 
 			/* Return message. */
 			struct

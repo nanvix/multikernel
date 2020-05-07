@@ -36,4 +36,9 @@
 	 */
 	#define SHM_SERVER_NAME "/shm"
 
+	/**
+	 * @brief Port number of Page Cache Snooper
+	 */
+	#define NANVIX_SHM_SNOOPER_PORT_NUM 2
+
 #endif /* NANVIX_CONFIG_H_ */

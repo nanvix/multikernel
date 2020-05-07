@@ -173,6 +173,65 @@ static int do_ftruncate(struct shm_message *request, struct shm_message *respons
 }
 
 /*============================================================================*
+ * do_inval()                                                                 *
+ *============================================================================*/
+
+/**
+ * @brief Handles an truncate request.
+ */
+static int do_inval(struct shm_message *request, struct shm_message *response)
+{
+	int nremotes;
+	int shmid;
+	rpage_t page;
+	pid_t remotes[NANVIX_PROC_MAX];
+
+	shmid = request->op.inval.shmid;
+	page = request->op.inval.page;
+
+	shm_debug("inval proc=%d shmid=%d page=%x",
+		request->header.source,
+		shmid,
+		page
+	);
+
+	nremotes = get_connections(remotes);
+
+	/* Broadcast invalidation signal. */
+	for (int i = 0; i < nremotes; i++)
+	{
+		int outbox;
+		struct shm_message msg;
+
+		message_header_build(
+			&msg.header, SHM_INVAL
+		);
+
+		msg.op.inval.shmid = shmid;
+		msg.op.inval.page = page;
+
+		uassert((
+			outbox = kmailbox_open(
+				remotes[i],
+				NANVIX_SHM_SNOOPER_PORT_NUM	
+			)) >= 0
+		);
+		uassert(
+			kmailbox_write(
+				outbox,
+				&msg,
+				sizeof(struct shm_message
+			)) == sizeof(struct shm_message)
+		);
+		uassert(kmailbox_close(outbox) == 0);
+	}
+
+	response->op.ret.status = 0;
+
+	return (0);
+}
+
+/*============================================================================*
  * shm_loop()                                                                 *
  *============================================================================*/
 
@@ -235,6 +294,11 @@ static int do_shm_loop(void)
 
 			case SHM_FTRUNCATE:
 				ret = do_ftruncate(&request, &response);
+				reply = 1;
+				break;
+
+			case SHM_INVAL:
+				ret = do_inval(&request, &response);
 				reply = 1;
 				break;
 
