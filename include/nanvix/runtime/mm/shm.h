@@ -142,6 +142,16 @@
 	 */
 	extern ssize_t __nanvix_shm_write(int shmid, const void *buf, size_t n, off_t off);
 
+	/**
+	 * @brief Broadcasts an invalidation signal on a shared memory region.
+	 *
+	 * @param shmid ID of the target shared memory region.
+	 *
+	 * @returns Upon sucessful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_shm_inval(int shmid);
+
 #endif /* __NEED_SHM_MANAGER */
 
 #endif /* NANVIX_RUNTIME_MM_SHM_H_ */

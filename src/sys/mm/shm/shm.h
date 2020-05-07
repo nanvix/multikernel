@@ -22,23 +22,45 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_CONFIG_H_
-#define NANVIX_CONFIG_H_
+#ifndef _SHM_H_
+#define _SHM_H_
 
-	#if defined(__mppa256__)
-	#include <nanvix/config/mppa256.h>
-	#elif defined(__unix64__)
-	#include <nanvix/config/unix64.h>
-	#endif
+	#include <posix/sys/types.h>
 
 	/**
-	 * @brief Node number for SHM Server.
+	 * @brief Initializes the table of connections.
 	 */
-	#define SHM_SERVER_NAME "/shm"
+	extern void connections_setup(void);
 
 	/**
-	 * @brief Port number of Page Cache Snooper
+	 * @brief Establishes a connection
+	 *
+	 * @param pid PID of the remote.
+	 *
+	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
+	 * negative error code is returned instead.
 	 */
-	#define NANVIX_SHM_SNOOPER_PORT_NUM 2
+	extern int connect(pid_t remote);
 
-#endif /* NANVIX_CONFIG_H_ */
+	/**
+	 * @brief Unlinks a connection
+	 *
+	 * @param pid PID of the remote.
+	 *
+	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
+	 * negative error code is returned instead.
+	 */
+	extern int disconnect(pid_t remote);
+
+	/**
+	 * @brief Gets active connections.
+	 *
+	 * @param buf Buffer to store info on connections.
+	 *
+	 * @returns Upon successful completion, the number of connections
+	 * placed in @p buf is returned. Upon failure, a negative error code
+	 * is returned instead.
+	 */
+	extern int get_connections(pid_t *buf);
+
+#endif /* _SHM_H_ */

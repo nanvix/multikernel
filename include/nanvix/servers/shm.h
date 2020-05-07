@@ -48,8 +48,9 @@
 	#define SHM_UNLINK       3  /**< Unlink.           */
 	#define SHM_CLOSE        4  /**< Close             */
 	#define SHM_FTRUNCATE    5  /**< Truncate.         */
-	#define SHM_SUCCESS      6  /**< Success.          */
-	#define SHM_FAIL         7  /**< Failure.          */
+	#define SHM_INVAL        6  /**< Truncate.         */
+	#define SHM_SUCCESS      7  /**< Success.          */
+	#define SHM_FAIL         8  /**< Failure.          */
 	/**@}*/
 
 	/**
@@ -93,12 +94,20 @@
 				off_t size; /**< Size (in bytes).             */
 			} ftruncate;
 
+			/**
+			 * Invalidate message.
+			 */
+			struct {
+				int shmid;    /**< Target Shared Memory Region */
+				rpage_t page; /**< Target Page                 */
+			} inval;
+
 			/* Return message. */
 			struct
 			{
 				int shmid;    /**< ID of shared memory region.  */
 				int status;   /**< Status code.                 */
-				rpage_t base; /**< Base Address                 */
+				rpage_t page; /**< Base Address                 */
 			} ret;
 		} op;
 	};
@@ -141,7 +150,7 @@
 	/**
 	 * @brief Creates a shared memory region
 	 *
-	 * @param base   Base addes of shared memory region.
+	 * @param page   Underlying page of shared memory region.
 	 * @param proc   ID of owner process.
 	 * @param name   Name of the targeted shm.
 	 * @param oflags Opening flags.
@@ -152,7 +161,7 @@
 	 * error code is returned instead.
 	 */
 	extern int __do_shm_create(
-			rpage_t *base,
+			rpage_t *page,
 			pid_t proc,
 			const char *name,
 			int oflags,
@@ -162,7 +171,7 @@
 	/**
 	 * @brief Opens a shared memory region
 	 *
-	 * @param base   Base addes of shared memory region.
+	 * @param page   Underlying page of shared memory region.
 	 * @param proc   ID of opening process.
 	 * @param name   Name of the targeted shared memory region.
 	 * @param oflags Opening flags.
@@ -171,7 +180,7 @@
 	 * returned. Upon failure, a negative error code is returned instead.
 	 */
 	extern int __do_shm_open(
-		rpage_t *base,
+		rpage_t *page,
 		pid_t proc,
 		const char *name,
 		int oflags
@@ -202,7 +211,7 @@
 	/**
 	 * @brief Truncates a shared memory region to a size.
 	 *
-	 * @param base   Base addes of shared memory region.
+	 * @param page  Underlying page of shared memory region.
 	 * @param proc  ID of opening process.
 	 * @param shmid ID of the target shared memory region.
 	 * @param size  New size for the target shared memory region.
@@ -211,7 +220,7 @@
 	 * failure, a negative error code is returned instead.
 	 */
 	extern int __do_shm_ftruncate(
-		rpage_t *base,
+		rpage_t *page,
 		pid_t proc,
 		int shmid,
 		off_t size

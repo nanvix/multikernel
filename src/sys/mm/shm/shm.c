@@ -50,7 +50,7 @@ static struct region
 	int refcount;                    /**< Number of references.          */
 	mode_t mode;                     /**< Access permissions.            */
 	size_t size;                     /**< Size (in bytes).               */
-	rpage_t base;                    /**< Remote page                    */
+	rpage_t page;                    /**< Remote page                    */
 } regions[NANVIX_SHM_MAX];
 
 /**
@@ -236,14 +236,14 @@ static inline void shm_set_name(int shmid, const char *name)
 static inline void shm_set_size(int shmid, size_t size)
 {
 	/* Allocate page. */
-	if ((size > 0) && (regions[shmid].base == RMEM_NULL))
-		uassert((regions[shmid].base = nanvix_rmem_alloc()) != RMEM_NULL);
+	if ((size > 0) && (regions[shmid].page == RMEM_NULL))
+		uassert((regions[shmid].page = nanvix_rmem_alloc()) != RMEM_NULL);
 
 	/* Release page. */
-	else if ((size == 0) && (regions[shmid].base != RMEM_NULL))
+	else if ((size == 0) && (regions[shmid].page != RMEM_NULL))
 	{
-		uassert(nanvix_rmem_free(regions[shmid].base) == 0);
-		regions[shmid].base = RMEM_NULL;
+		uassert(nanvix_rmem_free(regions[shmid].page) == 0);
+		regions[shmid].page = RMEM_NULL;
 	}
 
 	regions[shmid].size = size;
@@ -336,10 +336,10 @@ static int shm_put(int shmid)
 	if ((regions[shmid].refcount == 0) && (shm_is_remove(shmid)))
 	{
 		/* Release underlying page. */
-		if (regions[shmid].base != RMEM_NULL)
+		if (regions[shmid].page != RMEM_NULL)
 		{
-			uassert(nanvix_rmem_free(regions[shmid].base) == 0);
-			regions[shmid].base = RMEM_NULL;
+			uassert(nanvix_rmem_free(regions[shmid].page) == 0);
+			regions[shmid].page = RMEM_NULL;
 		}
 
 		shm_free(shmid);
@@ -356,7 +356,7 @@ static int shm_put(int shmid)
  * @todo TODO: provide a detailed description for this function.
  */
 int __do_shm_ftruncate(
-	rpage_t *base,
+	rpage_t *page,
 	pid_t proc,
 	int shmid,
 	off_t size
@@ -395,7 +395,7 @@ int __do_shm_ftruncate(
 
 	shm_set_size(shmid, size);
 
-	*base = regions[shmid].base;
+	*page = regions[shmid].page;
 
 	return (0);
 }
@@ -408,7 +408,7 @@ int __do_shm_ftruncate(
  * @todo TODO: provide a detailed description for this function.
  */
 int __do_shm_open(
-	rpage_t *base,
+	rpage_t *page,
 	pid_t proc,
 	const char *name,
 	int oflags
@@ -459,14 +459,14 @@ int __do_shm_open(
 		}
 
 		/* Truncate. */
-		if ((ret = __do_shm_ftruncate(base, proc, shmid, 0)) < 0)
+		if ((ret = __do_shm_ftruncate(page, proc, shmid, 0)) < 0)
 		{
 			shm_put(shmid);
 			return (-EAGAIN);
 		}
 	}
 
-	*base = regions[shmid].base;
+	*page = regions[shmid].page;
 
 	return (shmid);
 }
@@ -479,7 +479,7 @@ int __do_shm_open(
  * @todo TODO: provide a detailed description for this function.
  */
 int __do_shm_create(
-	rpage_t *base,
+	rpage_t *page,
 	pid_t proc,
 	const char *name,
 	int oflags,
@@ -533,7 +533,7 @@ int __do_shm_create(
 			}
 
 			/* Truncate. */
-			if ((ret = __do_shm_ftruncate(base, proc, shmid, 0)) < 0)
+			if ((ret = __do_shm_ftruncate(page, proc, shmid, 0)) < 0)
 			{
 				shm_put(shmid);
 				return (-EAGAIN);
@@ -554,7 +554,7 @@ int __do_shm_create(
 
 
 out:
-	*base = regions[shmid].base;
+	*page = regions[shmid].page;
 	return (shmid);
 }
 
@@ -627,6 +627,6 @@ void shm_init(void)
 	{
 		regions[i].refcount = 0;
 		regions[i].resource = RESOURCE_INITIALIZER;
-		regions[i].base = RMEM_NULL;
+		regions[i].page = RMEM_NULL;
 	}
 }

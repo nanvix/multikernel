@@ -137,6 +137,16 @@
 	 */
 	extern int nanvix_rcache_select_write(int num);
 
+	/**
+	 * @brief Invalidates a lone of the page cache.
+	 *
+	 * @param lineno Number of target line.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure a negative error code is returned instead.
+	 */
+	extern int nanvix_rcache_line_inval(int lineno);
+
 #endif /* __NEED_MM_RMEM_CACHE */
 
 #endif /* NANVIX_RUNTIME_MM_CACHE_H_ */

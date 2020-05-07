@@ -33,6 +33,7 @@
 #include <nanvix/config.h>
 #include <nanvix/pm.h>
 #include <nanvix/ulib.h>
+#include "shm.h"
 
 /**
  * @brief SHM Server information.
@@ -59,7 +60,7 @@ static int do_open(struct shm_message *request, struct shm_message *response)
 	int ret;
 
 	ret = __do_shm_open(
-		&response->op.ret.base,
+		&response->op.ret.page,
 		request->header.source,
 		request->op.open.name,
 		request->op.open.oflags
@@ -69,6 +70,7 @@ static int do_open(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.shmid = ret;
+	uassert(connect(request->header.source) == 0);
 
 	return (0);
 }
@@ -90,6 +92,7 @@ static int do_close(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.status = ret;
+	uassert(disconnect(request->header.source) == 0);
 
 	return (0);
 }
@@ -106,7 +109,7 @@ static int do_create(struct shm_message *request, struct shm_message *response)
 	int ret;
 
 	ret = __do_shm_create(
-		&response->op.ret.base,
+		&response->op.ret.page,
 		request->header.source,
 		request->op.create.name,
 		request->op.create.oflags,
@@ -117,6 +120,7 @@ static int do_create(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.shmid = ret;
+	uassert(connect(request->header.source) == 0);
 
 	return (0);
 }
@@ -154,7 +158,7 @@ static int do_ftruncate(struct shm_message *request, struct shm_message *respons
 	int ret;
 
 	ret = __do_shm_ftruncate(
-		&response->op.ret.base,
+		&response->op.ret.page,
 		request->header.source,
 		request->op.ftruncate.shmid,
 		request->op.ftruncate.size
@@ -164,6 +168,65 @@ static int do_ftruncate(struct shm_message *request, struct shm_message *respons
 		return (ret);
 
 	response->op.ret.status = ret;
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_inval()                                                                 *
+ *============================================================================*/
+
+/**
+ * @brief Handles an truncate request.
+ */
+static int do_inval(struct shm_message *request, struct shm_message *response)
+{
+	int nremotes;
+	int shmid;
+	rpage_t page;
+	pid_t remotes[NANVIX_PROC_MAX];
+
+	shmid = request->op.inval.shmid;
+	page = request->op.inval.page;
+
+	shm_debug("inval proc=%d shmid=%d page=%x",
+		request->header.source,
+		shmid,
+		page
+	);
+
+	nremotes = get_connections(remotes);
+
+	/* Broadcast invalidation signal. */
+	for (int i = 0; i < nremotes; i++)
+	{
+		int outbox;
+		struct shm_message msg;
+
+		message_header_build(
+			&msg.header, SHM_INVAL
+		);
+
+		msg.op.inval.shmid = shmid;
+		msg.op.inval.page = page;
+
+		uassert((
+			outbox = kmailbox_open(
+				remotes[i],
+				NANVIX_SHM_SNOOPER_PORT_NUM	
+			)) >= 0
+		);
+		uassert(
+			kmailbox_write(
+				outbox,
+				&msg,
+				sizeof(struct shm_message
+			)) == sizeof(struct shm_message)
+		);
+		uassert(kmailbox_close(outbox) == 0);
+	}
+
+	response->op.ret.status = 0;
 
 	return (0);
 }
@@ -234,6 +297,11 @@ static int do_shm_loop(void)
 				reply = 1;
 				break;
 
+			case SHM_INVAL:
+				ret = do_inval(&request, &response);
+				reply = 1;
+				break;
+
 			case SHM_EXIT:
 				shutdown = 1;
 				break;
@@ -296,6 +364,7 @@ static int do_shm_startup(struct nanvix_semaphore *lock)
 		return (ret);
 
 	shm_init();
+	connections_setup();
 
 	uprintf("[nanvix][shm] server alive");
 	uprintf("[nanvix][shm] attached to node %d", server.nodenum);
