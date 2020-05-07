@@ -312,6 +312,37 @@ static void test_shm_read_write(void)
 }
 
 /*============================================================================*
+ * API Test: Inval                                                             *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Inval
+ */
+static void test_shm_inval(void)
+{
+	int shmid;
+	const char *shm_name = "cool-region";
+
+	uassert((shmid = __nanvix_shm_open(shm_name, O_RDWR | O_CREAT, S_IWUSR | S_IRUSR)) >= 0);
+
+		uassert(__nanvix_shm_ftruncate(shmid, NANVIX_SHM_SIZE_MAX) == 0);
+
+		umemset(buffer, 1, NANVIX_SHM_SIZE_MAX);
+		uassert(__nanvix_shm_write(shmid, buffer, NANVIX_SHM_SIZE_MAX, 0) == NANVIX_SHM_SIZE_MAX);
+		umemset(buffer, 0, NANVIX_SHM_SIZE_MAX);
+		uassert(__nanvix_shm_read(shmid, buffer, NANVIX_SHM_SIZE_MAX, 0) == NANVIX_SHM_SIZE_MAX);
+
+		/* Checksum. */
+		for (size_t i = 0; i < NANVIX_SHM_SIZE_MAX; i++)
+			uassert(buffer[i] == 1);
+
+		uassert(__nanvix_shm_inval(shmid) == 0);
+
+	uassert(__nanvix_shm_close(shmid) == 0);
+	uassert(__nanvix_shm_unlink(shm_name) == 0);
+}
+
+/*============================================================================*
  * API Test Driver Table                                                      *
  *============================================================================*/
 
@@ -324,5 +355,6 @@ struct test tests_shm_api[] = {
 	{ test_shm_open_close,         "open/close        " },
 	{ test_shm_ftruncate,          "ftruncate         " },
 	{ test_shm_read_write,         "read/write        " },
+	{ test_shm_inval,              "inval             " },
 	{ NULL,                         NULL                }
 };
