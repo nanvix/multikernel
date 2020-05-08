@@ -103,7 +103,6 @@ int connect(pid_t remote)
 out:
 
 	connections[i].count++;
-	uprintf("[nanvix][shm] client %d connected", remote);
 	
 	return (0);
 }
@@ -130,10 +129,7 @@ int disconnect(pid_t remote)
 
 	/* Unlink remote. */
 	if (connections[i].count-- == 1)
-	{
-		uprintf("[nanvix][shm] client %d disconnected", remote);
 		connections[i].remote = -1;
-	}
 	
 	return (0);
 }
