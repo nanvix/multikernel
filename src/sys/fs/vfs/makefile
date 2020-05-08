@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2018 Pedro Henrique Penna <pedrohenriquepenna@gmail.com>
+# Copyright(c) 2011-2020 The Maintainers of Nanvix
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -22,53 +22,54 @@
 # SOFTWARE.
 #
 
-#===============================================================================
-# Toolchain Configuration
-#===============================================================================
-
-# Compiler Options
-ifneq ($(LIBLWIP),)
-export CFLAGS += -I $(INCDIR)/posix
-endif
-
-# Modules
-export MODULES := $(LIBDIR)/nanvix-hello.$(OBJ_SUFFIX).a \
-                  $(LIBDIR)/nanvix-rmem.$(OBJ_SUFFIX).a  \
-                  $(LIBDIR)/nanvix-shm.$(OBJ_SUFFIX).a   \
-                  $(LIBDIR)/nanvix-name.$(OBJ_SUFFIX).a  \
-                  $(LIBDIR)/nanvix-vfs.$(OBJ_SUFFIX).a
-
-# Libraries
-export LIBS := -Wl,--whole-archive
-export LIBS += $(LIBDIR)/$(LIBHAL)
-export LIBS += $(LIBDIR)/$(LIBKERNEL)
-export LIBS += -Wl,--no-whole-archive
-export LIBS += $(MODULES)
-export LIBS += $(LIBDIR)/$(LIBRUNTIME)
-export LIBS += $(LIBDIR)/$(LIBC)
-export LIBS += $(LIBDIR)/$(LIBNANVIX)
-ifneq ($(LIBLWIP),)
-export LIBS += $(LIBDIR)/$(LIBLWIP)
-endif
-export LIBS += $(LIBDIR)/$(BARELIB) $(THEIR_LIBS)
+# Module Name
+MODULE = nanvix-vfs.$(OBJ_SUFFIX).a
 
 #===============================================================================
-# Sources
+# Sources and Objects
 #===============================================================================
 
 # C Source Files
-export SRC = $(wildcard $(CURDIR)/*.c)
+SRC = $(wildcard *.c)
+
+# Object Files
+OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)
 
 #===============================================================================
 
 # Builds All Object Files
-all:
-	cd $(TARGET) && $(MAKE) all
+all: $(OBJ)
+ifeq ($(VERBOSE), no)
+	@echo [AR] $(MODULE)
+	@$(AR) $(ARFLAGS) $(LIBDIR)/$(MODULE) $(OBJ)
+else
+	$(AR) $(ARFLAGS) $(LIBDIR)/$(MODULE) $(OBJ)
+endif
 
 # Cleans All Object Files
 clean:
-	cd $(TARGET) && $(MAKE) clean
+ifeq ($(VERBOSE), no)
+	@echo [CLEAN] $(OBJ)
+	@rm -rf $(OBJ)
+else
+	rm -rf $(OBJ)
+endif
 
 # Cleans Everything
 distclean: clean
-	cd $(TARGET) && $(MAKE) distclean
+ifeq ($(VERBOSE), no)
+	@echo [CLEAN] $(MODULE)
+	@rm -rf $(LIBDIR)/$(MODULE)
+else
+	rm -rf $(LIBDIR)/$(MODULE)
+endif
+
+# Builds a C source file.
+%.$(OBJ_SUFFIX).o: %.c
+ifeq ($(VERBOSE), no)
+	@echo [CC] $@
+	@$(CC) $(CFLAGS) $< -c -o $@
+else
+	$(CC) $(CFLAGS) $< -c -o $@
+endif
+

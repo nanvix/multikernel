@@ -22,32 +22,58 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_SERVERS_SERVERS_H_
-#define NANVIX_SERVERS_SERVERS_H_
+#ifndef NANVIX_SERVERS_VFS_H_
+#define NANVIX_SERVERS_VFS_H_
 
-	/* Must come first. */
-	#define __NEED_NAME_SERVER
-	#define __NEED_RMEM_SERVER
-	#define __NEED_VFS_SERVER
-	#define __NEED_SPAWN_SERVER
+#if defined(__NEED_FS_VFS_SERVER) || defined(__VFS_SERVER)
 
-	#include <nanvix/servers/name.h>
-	#include <nanvix/servers/rmem.h>
-	#include <nanvix/servers/spawn.h>
-	#include <nanvix/servers/vfs.h>
-	#include <nanvix/sys/semaphore.h>
-
-	/* Import definitions. */
-	extern int hello_server(struct nanvix_semaphore *);
-	extern int name_server(struct nanvix_semaphore *);
-	extern int rmem_server(struct nanvix_semaphore *);
-	extern int shm_server(struct nanvix_semaphore *);
+	#include <nanvix/servers/message.h>
 
 	/**
-	 * @brief Handles file system requests.
-	 *
-	 * @returns Always returns zero.
+	 * @bried Virtual File System Operations
 	 */
-	extern int vfs_server(struct nanvix_semaphore *lock);
+	/**@{*/
+	#define VFS_EXIT    0  /**< Exit    */
+	#define VFS_SUCCESS 1  /**< Success */
+	#define VFS_FAIL    2  /**< Failure */
+	/**@}*/
 
-#endif /* NANVIX_SERVERS_SERVERS_H_*/
+	/**
+	 * @brief Shared Memory Region message.
+	 */
+	struct vfs_message
+	{
+		message_header header; /**< Message header.  */
+
+		/* Operation-specific Fields */
+		union
+		{
+
+			/* Return Message */
+			struct
+			{
+				int status;  /**< Status Code */
+			} ret;
+		} op;
+	};
+
+
+#ifdef __VFS_SERVER
+
+	/**
+	 * @brief Debug VFS Server?
+	 */
+	#define __DEBUG_VFS 0
+
+	#if (__DEBUG_VFS)
+	#define vfs_debug(fmt, ...) uprintf(fmt, __VA_ARGS__)
+	#else
+	#define vfs_debug(fmt, ...) { }
+	#endif
+
+#endif /*__VFS_SERVER */
+
+#endif /* defined(__NEED_VFS_SERVER) || defined(__VFS_SERVER) */
+
+#endif /* NANVIX_SERVERS_VFS_H_ */
+

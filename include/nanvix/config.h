@@ -54,6 +54,7 @@
 	 */
 	/**@{*/
 	#define SHM_SERVER_NAME "/shm" /**< Shared Memory Region */
+	#define VFS_SERVER_NAME "/vfs" /**< Virtual File System  */
 	/**@}*/
 
 	/**
