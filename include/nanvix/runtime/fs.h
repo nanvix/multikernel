@@ -22,34 +22,10 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_RUNTIME_RUNTIME_H_
-#define NANVIX_RUNTIME_RUNTIME_H_
+#ifndef NANVIX_RUNTIME_FS_H_
+#define NANVIX_RUNTIME_FS_H_
 
-	#include <nanvix/runtime/pm.h>
-	#include <nanvix/runtime/mm.h>
-	#include <nanvix/runtime/fs.h>
-	#include <nanvix/runtime/stdikc.h>
+	#include <nanvix/runtime/fs/vfs.h>
 
-	/**
-	 * @brief Initializes the runtime.
-	 *
-	 * @param ring Target ring.
-	 *
-	 * @return Upon successful completion zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int __runtime_setup(int ring);
+#endif /* NANVIX_RUNTIME_FS_H_ */
 
-	/**
-	 * @brief Shuts down runtime.
-	 */
-	extern int __runtime_cleanup(void);
-
-	/**
-	 * @brief Shuts down nanvix.
-	 *
-	 * @returns Always zero.
-	 */
-	extern int nanvix_shutdown(void);
-
-#endif /* NANVIX_RUNTIME_RUNTIME_H_ */

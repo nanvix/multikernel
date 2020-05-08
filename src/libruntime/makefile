@@ -29,6 +29,7 @@
 # C Source Files
 SRC = $(wildcard *.c)                        \
       $(wildcard posix/libc/stdlib/malloc.c) \
+      $(wildcard fs/*.c)                     \
       $(wildcard pm/*.c)                     \
       $(wildcard mm/*.c)                     \
       $(wildcard mm/shm/*.c)                 \
