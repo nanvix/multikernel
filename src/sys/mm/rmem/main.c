@@ -700,7 +700,6 @@ static int do_rmem_startup(struct nanvix_semaphore *lock)
 	uprintf("[nanvix][rmem] attached to node %d", knode_get_num());
 	uprintf("[nanvix][rmem] listening to mailbox %d", inbox);
 	uprintf("[nanvix][rmem] listening to portal %d", inportal);
-	uprintf("[nanvix][rmem] syncing in sync %d", stdsync_get());
 	uprintf("[nanvix][rmem] memory size %d KB", RMEM_SIZE/KB);
 
 	nanvix_semaphore_up(lock);

@@ -32,9 +32,11 @@
 	#endif
 
 	/**
-	 * @brief Node number for SHM Server.
+	 * @name Name of Servers
 	 */
-	#define SHM_SERVER_NAME "/shm"
+	/**@{*/
+	#define SHM_SERVER_NAME "/shm" /**< Shared Memory Region */
+	/**@}*/
 
 	/**
 	 * @brief Port number of Page Cache Snooper

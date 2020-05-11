@@ -49,10 +49,10 @@
 	 * @name Map of Servers
 	 */
 	/**@{*/
-	#define NAME_SERVER_NODE    0 /**< Name Server  */
-	#define RMEM_SERVER_0_NODE  1 /**< RMem Server  */
-	#define RMEM_SERVER_1_NODE  2 /**< RMem Server  */
-	#define HELLO_SERVER_NODE   3 /**< Hello Server */
+	#define NAME_SERVER_NODE    0 /**< Name Server */
+	#define RMEM_SERVER_0_NODE  1 /**< RMem Server */
+	#define RMEM_SERVER_1_NODE  2 /**< RMem Server */
+	#define SHM_SERVER_NODE     3 /**< SHM Server  */
 	/**@}*/
 
 	/**
@@ -62,7 +62,7 @@
 	#define NAME_SERVER_PORT_NUM   2 /**< Name Server   */
 	#define RMEM_SERVER_0_PORT_NUM 2 /**< RMem Server 0 */
 	#define RMEM_SERVER_1_PORT_NUM 2 /**< RMem Server 1 */
-	#define SHM_SERVER_PORT_NUM    2 /**< Shm Server    */
+	#define SHM_SERVER_PORT_NUM    2 /**< SHM Server    */
 	/**@}*/
 
 	/**

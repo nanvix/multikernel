@@ -97,7 +97,6 @@ static void do_name_init(struct nanvix_semaphore *lock)
 	/* Unblock spawner. */
 	uprintf("[nanvix][name] server alive");
 	uprintf("[nanvix][name] listening to mailbox %d", inbox);
-	uprintf("[nanvix][name] syncing in sync %d", stdsync_get());
 	uprintf("[nanvix][name] attached to node %d", knode_get_num());
 
 	nanvix_semaphore_up(lock);
