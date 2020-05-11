@@ -22,43 +22,42 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_CONFIG_H_
-#define NANVIX_CONFIG_H_
+#ifndef RAMDISK_H_
+#define RAMDISK_H_
 
-	#if defined(__mppa256__)
-	#include <nanvix/config/mppa256.h>
-	#elif defined(__unix64__)
-	#include <nanvix/config/unix64.h>
-	#endif
-
-/*============================================================================*
- * Virtual File System                                                        *
- *============================================================================*/
+	#include <posix/sys/types.h>
 
 	/**
-	 * @brief Number of RAM Disks
+	 * @brief Writes data to a RAM Disk.
+	 *
+	 * @param minor Target RAM Disk.
+	 * @param buf   Target buffer from where data should be read.
+	 * @param n     Number of bytes to read.
+	 * @param off   Read offset.
+	 *
+	 * @returns Upon successful completion, the number of bytes
+	 * effectively read is returned. Upon failure, a negative error code
+	 * is returned instead.
 	 */
-	#define NANVIX_FS_NR_RAMDISKS 1
+	extern ssize_t ramdisk_write(unsigned minor, const char *buf, size_t n, off_t off);
 
 	/**
-	 * @brief Size of the RAM Disk
+	 * @brief Reads data from a RAM disk.
+	 *
+	 * @param minor Target RAM Disk.
+	 * @param buf   Target buffer to where data should be written.
+	 * @param n     Number of bytes to write.
+	 * @param off   Write offset.
+	 *
+	 * @returns Upon successful completion, the number of bytes
+	 * effectively wrriten is returned. Upon failure, a negative error
+	 * code is returned instead.
 	 */
-	#define NANVIX_FS_RAMDISK_SIZE (64*1024)
-
-/*============================================================================*
- * Memory Management System                                                   *
- *============================================================================*/
+	extern ssize_t ramdisk_read(unsigned minor, char *buf, size_t n, off_t off);
 
 	/**
-	 * @name Name of Servers
+	 * @brief Initializes the RAM Disk devices.
 	 */
-	/**@{*/
-	#define SHM_SERVER_NAME "/shm" /**< Shared Memory Region */
-	/**@}*/
+	extern void ramdisk_init(void);
 
-	/**
-	 * @brief Port number of Page Cache Snooper
-	 */
-	#define NANVIX_SHM_SNOOPER_PORT_NUM 2
-
-#endif /* NANVIX_CONFIG_H_ */
+#endif /* RAMDISK_H_ */
