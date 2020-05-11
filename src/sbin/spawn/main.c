@@ -96,7 +96,6 @@ int __main2(int argc, const char *argv[])
 
 		uprintf("[nanvix][%s] attached to node %d", spawner_name, knode_get_num());
 		uprintf("[nanvix][%s] listening to inbox %d", spawner_name, stdinbox_get());
-		uprintf("[nanvix][%s] syncing in sync %d", spawner_name, stdsync_get());
 
 		spawn_barrier_setup();
 		uassert(stdsync_fence() == 0);
