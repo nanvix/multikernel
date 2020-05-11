@@ -31,11 +31,30 @@
 	#include <nanvix/config/unix64.h>
 	#endif
 
+/*============================================================================*
+ * Virtual File System                                                        *
+ *============================================================================*/
+
+	/**
+	 * @brief Number of RAM Disks
+	 */
+	#define NANVIX_FS_NR_RAMDISKS 1
+
+	/**
+	 * @brief Size of the RAM Disk
+	 */
+	#define NANVIX_FS_RAMDISK_SIZE (64*1024)
+
+/*============================================================================*
+ * Memory Management System                                                   *
+ *============================================================================*/
+
 	/**
 	 * @name Name of Servers
 	 */
 	/**@{*/
 	#define SHM_SERVER_NAME "/shm" /**< Shared Memory Region */
+	#define VFS_SERVER_NAME "/vfs" /**< Virtual File System  */
 	/**@}*/
 
 	/**

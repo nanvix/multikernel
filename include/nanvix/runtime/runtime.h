@@ -27,6 +27,7 @@
 
 	#include <nanvix/runtime/pm.h>
 	#include <nanvix/runtime/mm.h>
+	#include <nanvix/runtime/fs.h>
 	#include <nanvix/runtime/stdikc.h>
 
 	/**

@@ -128,6 +128,7 @@ int __runtime_setup(int ring)
 		uprintf("[nanvix][thread %d] initalizing ring 3", tid);
 		uassert(__nanvix_rmem_setup() == 0);
 		uassert(__nanvix_rcache_setup() == 0);
+		uassert(__nanvix_vfs_setup() == 0);
 	}
 
 	/* Initialize Ring 4. */
@@ -176,6 +177,7 @@ int __runtime_cleanup(void)
 	if (current_ring[tid] >= SPAWN_RING_3)
 	{
 		uprintf("[nanvix][thread %d] shutting down ring 3", tid);
+		uassert(__nanvix_vfs_cleanup() == 0);
 		uassert(__nanvix_rmem_cleanup() == 0);
 	}
 

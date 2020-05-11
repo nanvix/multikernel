@@ -22,22 +22,10 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef NANVIX_RUNTIME_FS_H_
+#define NANVIX_RUNTIME_FS_H_
 
-#include <nanvix/servers/servers.h>
-#include <nanvix/config.h>
+	#include <nanvix/runtime/fs/vfs.h>
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 2
+#endif /* NANVIX_RUNTIME_FS_H_ */
 
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_0, .main = name_server },
-	{ .ring = SPAWN_RING_1, .main = vfs_server  },
-};
-
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_0_NAME)

@@ -22,22 +22,27 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef NANVIX_RUNTIME_FS_VFS_H_
+#define NANVIX_RUNTIME_FS_VFS_H_
 
-#include <nanvix/servers/servers.h>
-#include <nanvix/config.h>
+	/**
+	 * @brief Initializes the VFS Service.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_vfs_setup(void);
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 2
+	/**
+	 * @brief Shutdowns the VFS Service.
+	 */
+	extern int __nanvix_vfs_cleanup(void);
 
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_0, .main = name_server },
-	{ .ring = SPAWN_RING_1, .main = vfs_server  },
-};
+	/**
+	 * @brief Shutdowns the VFS Service.
+	 */
+	extern int nanvix_vfs_shutdown(void);
 
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_0_NAME)
+#endif /* NANVIX_RUNTIME_FS_VFS_H_ */
+
+

@@ -33,6 +33,7 @@
 	#define NAME_SERVERS_NUM  1 /**< Name Servers  */
 	#define RMEM_SERVERS_NUM  2 /**< RMem Servers  */
 	#define SHM_SERVERS_NUM   1 /**< SHM Servers   */
+	#define VFS_SERVERS_NUM   1 /**< VFS Servers */
 	/**@}*/
 
 	/**
@@ -53,6 +54,7 @@
 	#define RMEM_SERVER_0_NODE  1 /**< RMem Server */
 	#define RMEM_SERVER_1_NODE  2 /**< RMem Server */
 	#define SHM_SERVER_NODE     3 /**< SHM Server  */
+	#define VFS_SERVER_NODE     0 /**< VFS Server  */
 	/**@}*/
 
 	/**
@@ -63,6 +65,7 @@
 	#define RMEM_SERVER_0_PORT_NUM 2 /**< RMem Server 0 */
 	#define RMEM_SERVER_1_PORT_NUM 2 /**< RMem Server 1 */
 	#define SHM_SERVER_PORT_NUM    2 /**< SHM Server    */
+	#define VFS_SERVER_PORT_NUM    3 /**< VFS Server    */
 	/**@}*/
 
 	/**

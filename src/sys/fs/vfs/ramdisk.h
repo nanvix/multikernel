@@ -22,22 +22,42 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef RAMDISK_H_
+#define RAMDISK_H_
 
-#include <nanvix/servers/servers.h>
-#include <nanvix/config.h>
+	#include <posix/sys/types.h>
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 2
+	/**
+	 * @brief Writes data to a RAM Disk.
+	 *
+	 * @param minor Target RAM Disk.
+	 * @param buf   Target buffer from where data should be read.
+	 * @param n     Number of bytes to read.
+	 * @param off   Read offset.
+	 *
+	 * @returns Upon successful completion, the number of bytes
+	 * effectively read is returned. Upon failure, a negative error code
+	 * is returned instead.
+	 */
+	extern ssize_t ramdisk_write(unsigned minor, const char *buf, size_t n, off_t off);
 
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_0, .main = name_server },
-	{ .ring = SPAWN_RING_1, .main = vfs_server  },
-};
+	/**
+	 * @brief Reads data from a RAM disk.
+	 *
+	 * @param minor Target RAM Disk.
+	 * @param buf   Target buffer to where data should be written.
+	 * @param n     Number of bytes to write.
+	 * @param off   Write offset.
+	 *
+	 * @returns Upon successful completion, the number of bytes
+	 * effectively wrriten is returned. Upon failure, a negative error
+	 * code is returned instead.
+	 */
+	extern ssize_t ramdisk_read(unsigned minor, char *buf, size_t n, off_t off);
 
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_0_NAME)
+	/**
+	 * @brief Initializes the RAM Disk devices.
+	 */
+	extern void ramdisk_init(void);
+
+#endif /* RAMDISK_H_ */

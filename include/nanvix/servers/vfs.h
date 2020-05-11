@@ -22,22 +22,58 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef NANVIX_SERVERS_VFS_H_
+#define NANVIX_SERVERS_VFS_H_
 
-#include <nanvix/servers/servers.h>
-#include <nanvix/config.h>
+#if defined(__NEED_FS_VFS_SERVER) || defined(__VFS_SERVER)
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 2
+	#include <nanvix/servers/message.h>
 
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_0, .main = name_server },
-	{ .ring = SPAWN_RING_1, .main = vfs_server  },
-};
+	/**
+	 * @bried Virtual File System Operations
+	 */
+	/**@{*/
+	#define VFS_EXIT    0  /**< Exit    */
+	#define VFS_SUCCESS 1  /**< Success */
+	#define VFS_FAIL    2  /**< Failure */
+	/**@}*/
 
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_0_NAME)
+	/**
+	 * @brief Shared Memory Region message.
+	 */
+	struct vfs_message
+	{
+		message_header header; /**< Message header.  */
+
+		/* Operation-specific Fields */
+		union
+		{
+
+			/* Return Message */
+			struct
+			{
+				int status;  /**< Status Code */
+			} ret;
+		} op;
+	};
+
+
+#ifdef __VFS_SERVER
+
+	/**
+	 * @brief Debug VFS Server?
+	 */
+	#define __DEBUG_VFS 0
+
+	#if (__DEBUG_VFS)
+	#define vfs_debug(fmt, ...) uprintf(fmt, __VA_ARGS__)
+	#else
+	#define vfs_debug(fmt, ...) { }
+	#endif
+
+#endif /*__VFS_SERVER */
+
+#endif /* defined(__NEED_VFS_SERVER) || defined(__VFS_SERVER) */
+
+#endif /* NANVIX_SERVERS_VFS_H_ */
+

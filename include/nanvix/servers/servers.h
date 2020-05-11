@@ -28,11 +28,13 @@
 	/* Must come first. */
 	#define __NEED_NAME_SERVER
 	#define __NEED_RMEM_SERVER
+	#define __NEED_VFS_SERVER
 	#define __NEED_SPAWN_SERVER
 
 	#include <nanvix/servers/name.h>
 	#include <nanvix/servers/rmem.h>
 	#include <nanvix/servers/spawn.h>
+	#include <nanvix/servers/vfs.h>
 	#include <nanvix/sys/semaphore.h>
 
 	/* Import definitions. */
@@ -40,5 +42,12 @@
 	extern int name_server(struct nanvix_semaphore *);
 	extern int rmem_server(struct nanvix_semaphore *);
 	extern int shm_server(struct nanvix_semaphore *);
+
+	/**
+	 * @brief Handles file system requests.
+	 *
+	 * @returns Always returns zero.
+	 */
+	extern int vfs_server(struct nanvix_semaphore *lock);
 
 #endif /* NANVIX_SERVERS_SERVERS_H_*/
