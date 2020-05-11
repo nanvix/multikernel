@@ -54,6 +54,7 @@ include/dev/
 include/nanvix/kernel/
 
 # Nanvix Library
+include/nanvix/runtime/barrier.h
 include/nanvix/runtime/stdikc.h
 include/nanvix/sys/
 
