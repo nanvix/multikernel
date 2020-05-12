@@ -32,6 +32,7 @@
 #include <nanvix/sys/noc.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
+#include "ramdisk.h"
 
 /* Import definitions. */
 extern void vfs_test(void);
@@ -152,6 +153,8 @@ static int do_vfs_startup(struct nanvix_semaphore *lock)
 	/* Link name. */
 	if ((ret = name_link(server.nodenum, server.name)) < 0)
 		return (ret);
+
+	ramdisk_init();
 
 	uprintf("[nanvix][vfs] server alive");
 	uprintf("[nanvix][vfs] attached to node %d", server.nodenum);
