@@ -23,6 +23,7 @@
  */
 
 /* Must come first. */
+#define __NEED_RESOURCE
 #define __VFS_SERVER
 
 #include <nanvix/servers/vfs.h>
@@ -33,6 +34,7 @@
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include "ramdisk.h"
+#include "bcache.h"
 
 /* Import definitions. */
 extern void vfs_test(void);
@@ -155,6 +157,7 @@ static int do_vfs_startup(struct nanvix_semaphore *lock)
 		return (ret);
 
 	ramdisk_init();
+	binit();
 
 	uprintf("[nanvix][vfs] server alive");
 	uprintf("[nanvix][vfs] attached to node %d", server.nodenum);
