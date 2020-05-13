@@ -81,6 +81,16 @@
 	extern int buffer_set_dirty(struct buffer *buf);
 
 	/**
+	 * @brief Asserts if a block buffer is dirty
+	 *
+	 * @param buf Target block buffer.
+	 *
+	 * @returns Zero if the target block buffer is not dirty and
+	 * non-zero otherwise.
+	 */
+	extern int buffer_is_dirty(struct buffer *buf);
+
+	/**
 	 * @brief Reads a block from a device.
 	 *
 	 * @param dev Device number.

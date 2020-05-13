@@ -121,6 +121,23 @@ int buffer_set_dirty(struct buffer *buf)
 }
 
 /**
+ * The buffer_is_dirty() asserts whether or not the buffer pointed to by
+ * @p buf is dirty.
+ */
+int buffer_is_dirty(struct buffer *buf)
+{
+	/* Invalid buffer. */
+	if (buf == NULL)
+		return (0);
+
+	/* Bad buffer. */
+	if ((buf < &buffers[0]) || (buf >= &buffers[NANVIX_FS_NR_BUFFERS]))
+		return (0);
+
+	return (resource_is_dirty(&buf->flags));
+}
+
+/**
  * @brief Evits a block from the block cache.
  *
  * @returns Upon successful completion, a pointer to a free block buffer
