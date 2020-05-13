@@ -33,6 +33,30 @@
 #include "ramdisk.h"
 
 /**
+ * @brief Block Buffer
+ */
+struct buffer
+{
+	/**
+	 * @name Status information
+	 */
+	/**@{*/
+	/* Must come first. */
+	struct resource flags; /**< Flags */
+	/**@}*/
+
+	/**
+	 * @name General information
+	 */
+	/**@{*/
+	dev_t dev;                        /**< Device.          */
+	block_t num;                      /**< Block number.    */
+	char data[NANVIX_FS_BLOCK_SIZE];  /**< Underlying data. */
+	int count;                        /**< Reference count. */
+	/**@}*/
+};
+
+/**
  * @brief Wrapper to ramdisk_read().
  */
 #define bdev_readblk(x)               \

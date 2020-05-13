@@ -47,31 +47,12 @@
 	 */
 	typedef uint32_t block_t;
 
-	/**
-	 * @brief Block Buffer
-	 */
-	struct buffer
-	{
-		/**
-		 * @name Status information
-		 */
-		/**@{*/
-		/* Must come first. */
-		struct resource flags; /**< Flags */
-		/**@}*/
-
-		/**
-		 * @name General information
-		 */
-		/**@{*/
-		dev_t dev;                        /**< Device.          */
-		block_t num;                      /**< Block number.    */
-		char data[NANVIX_FS_BLOCK_SIZE];  /**< Underlying data. */
-		int count;                        /**< Reference count. */
-		/**@}*/
-	};
-
 	/**@}*/
+
+	/**
+	 * @brief Opaque Buffer
+	 */
+	struct buffer;
 
 	/**
 	 * @brief Initializes the bock cache.
