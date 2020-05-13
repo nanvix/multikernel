@@ -66,7 +66,7 @@ ssize_t ramdisk_write(unsigned minor, const char *buf, size_t n, off_t off)
 		return (-EINVAL);
 
 	/* Invalid write size. */
-	if ((ptr + n) >= (ramdisks[minor].data + NANVIX_FS_RAMDISK_SIZE))
+	if ((ptr + n) > (ramdisks[minor].data + NANVIX_FS_RAMDISK_SIZE))
 		return (-EINVAL);
 
 	umemcpy(ptr, buf, n);
@@ -105,7 +105,7 @@ ssize_t ramdisk_read(unsigned minor, char *buf, size_t n, off_t off)
 		return (-EINVAL);
 
 	/* Invalid read size. */
-	if ((ptr + n) >= (ramdisks[minor].data + NANVIX_FS_RAMDISK_SIZE))
+	if ((ptr + n) > (ramdisks[minor].data + NANVIX_FS_RAMDISK_SIZE))
 		return (-EINVAL);
 
 	umemcpy(buf, ptr, n);
