@@ -71,6 +71,16 @@
 	extern void *buffer_get_data(struct buffer *buf);
 
 	/**
+	 * @brief Sets a block buffer as dirty
+	 *
+	 * @param buf Target block buffer.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int buffer_set_dirty(struct buffer *buf);
+
+	/**
 	 * @brief Reads a block from a device.
 	 *
 	 * @param dev Device number.

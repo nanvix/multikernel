@@ -102,6 +102,25 @@ void *buffer_get_data(struct buffer *buf)
 }
 
 /**
+ * The buffer_set_dirty() sets the block buffer pointed to by @p buf as
+ * dirty.
+ */
+int buffer_set_dirty(struct buffer *buf)
+{
+	/* Invalid buffer. */
+	if (buf == NULL)
+		return (-EINVAL);
+
+	/* Bad buffer. */
+	if ((buf < &buffers[0]) || (buf >= &buffers[NANVIX_FS_NR_BUFFERS]))
+		return (-EINVAL);
+
+	resource_set_dirty(&buf->flags);
+
+	return (0);
+}
+
+/**
  * @brief Evits a block from the block cache.
  *
  * @returns Upon successful completion, a pointer to a free block buffer
