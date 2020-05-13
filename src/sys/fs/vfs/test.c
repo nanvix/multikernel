@@ -25,12 +25,13 @@
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
+#include "bcache.h"
 #include "ramdisk.h"
 
 /**
- * @brief Bufer for Read/Write Tests
+ * @brief Buffer for Read/Write Tests
  */
-static char data[512];
+static char data[NANVIX_FS_BLOCK_SIZE];
 
 /*============================================================================*
  * RAM Disk Tests                                                             *
@@ -132,7 +133,167 @@ static void ramdisk_test(void)
 }
 
 /*============================================================================*
- * RAM Disk Tests                                                             *
+ * Block Cache Tests                                                          *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Block Read/Release
+ */
+static void bcache_api_bread_brelse(void)
+{
+	struct buffer *buf;
+
+	uassert((buf = bread(0, 0)) != NULL);
+	uassert(brelse(buf) == 0);
+}
+
+/**
+ * @brief API Test: Block Read/Write
+ */
+static void bcache_api_bread_bwrite(void)
+{
+	struct buffer *buf;
+
+	/* Write data. */
+	uassert((buf = bread(0, 0)) != NULL);
+	umemset(buf->data, 1, NANVIX_FS_BLOCK_SIZE);
+	uassert(bwrite(buf) == 0);
+
+	/* Checksum. */
+	uassert((buf = bread(0, 0)) != NULL);
+	for (size_t i = 0; i < NANVIX_FS_BLOCK_SIZE; i++)
+		uassert(buf->data[i] == 1);
+	uassert(brelse(buf) == 0);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Read
+ */
+static void bcache_fault_bread_inval(void)
+{
+	uassert(bread(-1, 0) == NULL);
+	uassert(bread(NANVIX_FS_NR_RAMDISKS, 0) == NULL);
+	uassert(bread(0, -1) == NULL);
+	uassert(bread(0, NANVIX_FS_RAMDISK_SIZE/NANVIX_FS_BLOCK_SIZE) == NULL);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Release
+ */
+static void bcache_fault_brelse_inval(void)
+{
+	uassert(brelse(NULL) == -EINVAL);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Write
+ */
+static void bcache_fault_bwrite_inval(void)
+{
+	uassert(bwrite(NULL) == -EINVAL);
+}
+
+/**
+ * @brief Fault Injection Test: Bad Release
+ */
+static void bcache_fault_brelse_bad(void)
+{
+	struct buffer buf;
+	struct buffer *bufp;
+
+	uassert(brelse(&buf) == -EINVAL);
+
+	uassert((bufp = bread(0, 0)) != NULL);
+	uassert(brelse(bufp) == 0);
+	uassert(brelse(bufp) == -EINVAL);
+}
+
+/**
+ * @brief Fault Injection Test: Bad Write
+ */
+static void bcache_fault_bwrite_bad(void)
+{
+	struct buffer buf;
+	struct buffer *bufp;
+
+	uassert(bwrite(&buf) == -EINVAL);
+
+	uassert((bufp = bread(0, 0)) != NULL);
+	uassert(bwrite(bufp) == 0);
+	uassert(bwrite(bufp) == -EINVAL);
+}
+
+/**
+ * @brief Stress Test: Block Read/Release
+ */
+static void bcache_stress_bread_brelse(void)
+{
+	struct buffer *buf;
+
+	for (block_t blk = 0; blk < NANVIX_FS_RAMDISK_SIZE/NANVIX_FS_BLOCK_SIZE; blk++)
+	{
+		uassert((buf = bread(0, blk)) != NULL);
+		uassert(brelse(buf) == 0);
+	}
+}
+
+/**
+ * @brief Stress Test: Block Read/Write
+ */
+static void bcache_stress_bread_bwrite(void)
+{
+	struct buffer *buf;
+
+	for (block_t blk = 0; blk < NANVIX_FS_RAMDISK_SIZE/NANVIX_FS_BLOCK_SIZE; blk++)
+	{
+		/* Write data. */
+		uassert((buf = bread(0, blk)) != NULL);
+		umemset(buf->data, 1, NANVIX_FS_BLOCK_SIZE);
+		uassert(bwrite(buf) == 0);
+
+		/* Checksum. */
+		uassert((buf = bread(0, blk)) != NULL);
+		for (size_t i = 0; i < NANVIX_FS_BLOCK_SIZE; i++)
+			uassert(buf->data[i] == 1);
+		uassert(brelse(buf) == 0);
+	}
+}
+
+/**
+ * @brief Block Cache Tests
+ */
+static struct
+{
+	void (*func)(void); /**< Test Function */
+	const char *name;   /**< Test Name     */
+} bcache_tests[] = {
+	{ bcache_api_bread_brelse,    "[bcache][api] bread/brelse     " },
+	{ bcache_api_bread_bwrite,    "[bcache][api] bread/bwrite     " },
+	{ bcache_fault_bread_inval,   "[bcache][fault] invalid bread  " },
+	{ bcache_fault_brelse_inval,  "[bcache][fault] invalid brelse " },
+	{ bcache_fault_bwrite_inval,  "[bcache][fault] invalid bwrite " },
+	{ bcache_fault_brelse_bad,    "[bcache][fault] bad brelse     " },
+	{ bcache_fault_bwrite_bad,    "[bcache][fault] bad bwrite     " },
+	{ bcache_stress_bread_brelse, "[bcache][stress] bread/brelse  " },
+	{ bcache_stress_bread_bwrite, "[bcache][stress] bread/bwrite  " },
+	{ NULL,                        NULL                             },
+};
+
+/**
+ * @brief Runs regression tests on RAM Disk.
+ */
+static void bcache_test(void)
+{
+	for (int i = 0; bcache_tests[i].func != NULL; i++)
+	{
+		bcache_tests[i].func();
+
+		uprintf("[nanvix][vfs]%s passed", bcache_tests[i].name);
+	}
+}
+
+/*============================================================================*
+ * VFS Tests                                                                  *
  *============================================================================*/
 
 /**
@@ -141,4 +302,5 @@ static void ramdisk_test(void)
 void vfs_test(void)
 {
 	ramdisk_test();
+	bcache_test();
 }

@@ -45,6 +45,11 @@
 	 */
 	#define NANVIX_FS_RAMDISK_SIZE (64*1024)
 
+	/**
+	 * @brief Number of File System Buffers
+	 */
+	#define NANVIX_FS_NR_BUFFERS 32
+
 /*============================================================================*
  * Memory Management System                                                   *
  *============================================================================*/
