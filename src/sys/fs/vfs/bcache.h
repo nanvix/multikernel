@@ -79,6 +79,17 @@
 	extern void binit(void);
 
 	/**
+	 * @brief Gets a refecente to the underlying data of a block buffer.
+	 *
+	 * @param buf Target block buffer.
+	 *
+	 * @returns Upon successful completion, a pointer to the underlying
+	 * data of the target block buffer is returned. Upon failure, a NULL
+	 * pointer is returned instead.
+	 */
+	extern void *buffer_get_data(struct buffer *buf);
+
+	/**
 	 * @brief Reads a block from a device.
 	 *
 	 * @param dev Device number.

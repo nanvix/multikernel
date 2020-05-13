@@ -60,6 +60,24 @@
 static struct buffer buffers[NANVIX_FS_NR_BUFFERS];
 
 /**
+ * The buffer_get_data() function gets a reference to the underlying
+ * data of the block buffer pointed to by @p buf.
+ */
+void *buffer_get_data(struct buffer *buf)
+{
+	/* Invalid buffer. */
+	if (buf == NULL)
+		return (NULL);
+
+	/* Bad buffer. */
+	if ((buf < &buffers[0]) || (buf >= &buffers[NANVIX_FS_NR_BUFFERS]))
+		return (NULL);
+
+
+	return (buf->data);
+}
+
+/**
  * @brief Evits a block from the block cache.
  *
  * @returns Upon successful completion, a pointer to a free block buffer

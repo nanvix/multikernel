@@ -156,13 +156,13 @@ static void bcache_api_bread_bwrite(void)
 
 	/* Write data. */
 	uassert((buf = bread(0, 0)) != NULL);
-	umemset(buf->data, 1, NANVIX_FS_BLOCK_SIZE);
+	umemset(buffer_get_data(buf), 1, NANVIX_FS_BLOCK_SIZE);
 	uassert(bwrite(buf) == 0);
 
 	/* Checksum. */
 	uassert((buf = bread(0, 0)) != NULL);
 	for (size_t i = 0; i < NANVIX_FS_BLOCK_SIZE; i++)
-		uassert(buf->data[i] == 1);
+		uassert(((char *)buffer_get_data(buf))[i] == 1);
 	uassert(brelse(buf) == 0);
 }
 
@@ -198,10 +198,10 @@ static void bcache_fault_bwrite_inval(void)
  */
 static void bcache_fault_brelse_bad(void)
 {
-	struct buffer buf;
+	int buf;
 	struct buffer *bufp;
 
-	uassert(brelse(&buf) == -EINVAL);
+	uassert(brelse((struct buffer *)&buf) == -EINVAL);
 
 	uassert((bufp = bread(0, 0)) != NULL);
 	uassert(brelse(bufp) == 0);
@@ -213,10 +213,10 @@ static void bcache_fault_brelse_bad(void)
  */
 static void bcache_fault_bwrite_bad(void)
 {
-	struct buffer buf;
+	int buf;
 	struct buffer *bufp;
 
-	uassert(bwrite(&buf) == -EINVAL);
+	uassert(brelse((struct buffer *)&buf) == -EINVAL);
 
 	uassert((bufp = bread(0, 0)) != NULL);
 	uassert(bwrite(bufp) == 0);
@@ -248,13 +248,13 @@ static void bcache_stress_bread_bwrite(void)
 	{
 		/* Write data. */
 		uassert((buf = bread(0, blk)) != NULL);
-		umemset(buf->data, 1, NANVIX_FS_BLOCK_SIZE);
+		umemset(buffer_get_data(buf), 1, NANVIX_FS_BLOCK_SIZE);
 		uassert(bwrite(buf) == 0);
 
 		/* Checksum. */
 		uassert((buf = bread(0, blk)) != NULL);
 		for (size_t i = 0; i < NANVIX_FS_BLOCK_SIZE; i++)
-			uassert(buf->data[i] == 1);
+			uassert(((char *)buffer_get_data(buf))[i] == 1);
 		uassert(brelse(buf) == 0);
 	}
 }
