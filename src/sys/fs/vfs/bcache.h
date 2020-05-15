@@ -111,6 +111,16 @@
 	 * @returns Upon successful completion zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
+	extern int bwrite2(struct buffer *buf);
+
+	/**
+	 * @brief Writes a block buffer to the underlying device.
+	 *
+	 * @param buf Target block buffer.
+	 *
+	 * @returns Upon successful completion zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
 	extern int bwrite(struct buffer *buf);
 
 	/**

@@ -287,11 +287,10 @@ struct buffer *bread(dev_t dev, block_t num)
 }
 
 /**
- * The bwrite() function writes the block buffer pointed to by buf to
- * the underlying device. Once the operation is completed, the buffer is
- * released.
+ * The bwrite2() function writes the block buffer pointed to by buf to
+ * the underlying device.
  */
-int bwrite(struct buffer *buf)
+int bwrite2(struct buffer *buf)
 {
 	/* Invalid buffer. */
 	if (buf == NULL)
@@ -315,9 +314,23 @@ int bwrite(struct buffer *buf)
 		}
 	}
 
-	brelse(buf);
-
 	return (0);
+}
+
+/**
+ * The bwrite() function writes the block buffer pointed to by buf to
+ * the underlying device. Once the operation is completed, the buffer is
+ * released.
+ */
+int bwrite(struct buffer *buf)
+{
+	int err;
+
+	/* Write buffer. */
+	if ((err = bwrite2(buf)) < 0)
+		return (err);
+
+	return (brelse(buf));
 }
 
 /**
