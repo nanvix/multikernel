@@ -47,36 +47,48 @@
 	 */
 	typedef uint32_t block_t;
 
-	/**
-	 * @brief Block Buffer
-	 */
-	struct buffer
-	{
-		/**
-		 * @name Status information
-		 */
-		/**@{*/
-		/* Must come first. */
-		struct resource flags; /**< Flags */
-		/**@}*/
-
-		/**
-		 * @name General information
-		 */
-		/**@{*/
-		dev_t dev;                        /**< Device.          */
-		block_t num;                      /**< Block number.    */
-		char data[NANVIX_FS_BLOCK_SIZE];  /**< Underlying data. */
-		int count;                        /**< Reference count. */
-		/**@}*/
-	};
-
 	/**@}*/
+
+	/**
+	 * @brief Opaque Buffer
+	 */
+	struct buffer;
 
 	/**
 	 * @brief Initializes the bock cache.
 	 */
 	extern void binit(void);
+
+	/**
+	 * @brief Gets a refecente to the underlying data of a block buffer.
+	 *
+	 * @param buf Target block buffer.
+	 *
+	 * @returns Upon successful completion, a pointer to the underlying
+	 * data of the target block buffer is returned. Upon failure, a NULL
+	 * pointer is returned instead.
+	 */
+	extern void *buffer_get_data(struct buffer *buf);
+
+	/**
+	 * @brief Sets a block buffer as dirty
+	 *
+	 * @param buf Target block buffer.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int buffer_set_dirty(struct buffer *buf);
+
+	/**
+	 * @brief Asserts if a block buffer is dirty
+	 *
+	 * @param buf Target block buffer.
+	 *
+	 * @returns Zero if the target block buffer is not dirty and
+	 * non-zero otherwise.
+	 */
+	extern int buffer_is_dirty(struct buffer *buf);
 
 	/**
 	 * @brief Reads a block from a device.
@@ -90,6 +102,16 @@
 	 * returned instead.
 	 */
 	extern struct buffer *bread(dev_t dev, block_t num);
+
+	/**
+	 * @brief Writes a block buffer to the underlying device.
+	 *
+	 * @param buf Target block buffer.
+	 *
+	 * @returns Upon successful completion zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int bwrite2(struct buffer *buf);
 
 	/**
 	 * @brief Writes a block buffer to the underlying device.

@@ -33,6 +33,30 @@
 #include "ramdisk.h"
 
 /**
+ * @brief Block Buffer
+ */
+struct buffer
+{
+	/**
+	 * @name Status information
+	 */
+	/**@{*/
+	/* Must come first. */
+	struct resource flags; /**< Flags */
+	/**@}*/
+
+	/**
+	 * @name General information
+	 */
+	/**@{*/
+	dev_t dev;                        /**< Device.          */
+	block_t num;                      /**< Block number.    */
+	char data[NANVIX_FS_BLOCK_SIZE];  /**< Underlying data. */
+	int count;                        /**< Reference count. */
+	/**@}*/
+};
+
+/**
  * @brief Wrapper to ramdisk_read().
  */
 #define bdev_readblk(x)               \
@@ -58,6 +82,60 @@
  * @brief Block buffers.
  */
 static struct buffer buffers[NANVIX_FS_NR_BUFFERS];
+
+/**
+ * The buffer_get_data() function gets a reference to the underlying
+ * data of the block buffer pointed to by @p buf.
+ */
+void *buffer_get_data(struct buffer *buf)
+{
+	/* Invalid buffer. */
+	if (buf == NULL)
+		return (NULL);
+
+	/* Bad buffer. */
+	if ((buf < &buffers[0]) || (buf >= &buffers[NANVIX_FS_NR_BUFFERS]))
+		return (NULL);
+
+
+	return (buf->data);
+}
+
+/**
+ * The buffer_set_dirty() sets the block buffer pointed to by @p buf as
+ * dirty.
+ */
+int buffer_set_dirty(struct buffer *buf)
+{
+	/* Invalid buffer. */
+	if (buf == NULL)
+		return (-EINVAL);
+
+	/* Bad buffer. */
+	if ((buf < &buffers[0]) || (buf >= &buffers[NANVIX_FS_NR_BUFFERS]))
+		return (-EINVAL);
+
+	resource_set_dirty(&buf->flags);
+
+	return (0);
+}
+
+/**
+ * The buffer_is_dirty() asserts whether or not the buffer pointed to by
+ * @p buf is dirty.
+ */
+int buffer_is_dirty(struct buffer *buf)
+{
+	/* Invalid buffer. */
+	if (buf == NULL)
+		return (0);
+
+	/* Bad buffer. */
+	if ((buf < &buffers[0]) || (buf >= &buffers[NANVIX_FS_NR_BUFFERS]))
+		return (0);
+
+	return (resource_is_dirty(&buf->flags));
+}
 
 /**
  * @brief Evits a block from the block cache.
@@ -209,11 +287,10 @@ struct buffer *bread(dev_t dev, block_t num)
 }
 
 /**
- * The bwrite() function writes the block buffer pointed to by buf to
- * the underlying device. Once the operation is completed, the buffer is
- * released.
+ * The bwrite2() function writes the block buffer pointed to by buf to
+ * the underlying device.
  */
-int bwrite(struct buffer *buf)
+int bwrite2(struct buffer *buf)
 {
 	/* Invalid buffer. */
 	if (buf == NULL)
@@ -237,9 +314,23 @@ int bwrite(struct buffer *buf)
 		}
 	}
 
-	brelse(buf);
-
 	return (0);
+}
+
+/**
+ * The bwrite() function writes the block buffer pointed to by buf to
+ * the underlying device. Once the operation is completed, the buffer is
+ * released.
+ */
+int bwrite(struct buffer *buf)
+{
+	int err;
+
+	/* Write buffer. */
+	if ((err = bwrite2(buf)) < 0)
+		return (err);
+
+	return (brelse(buf));
 }
 
 /**
