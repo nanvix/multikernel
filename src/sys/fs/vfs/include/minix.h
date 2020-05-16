@@ -66,7 +66,7 @@
 	 *============================================================================*/
 
 	/**
-	 * @brief Allocates a disk block.
+	 * @brief Allocates a  file system block.
 	 *
 	 * @param sb   Target subperbloc.
 	 * @param zmap Target zone map.
@@ -81,7 +81,7 @@
 	);
 
 	/**
-	 * @brief Frees a direct disk block.
+	 * @brief Frees a direct  file system block.
 	 *
 	 * @param sb  Target superblock.
 	 * @param num Number of the target direct block.
@@ -96,7 +96,7 @@
 	);
 
 	/**
-	 * @brief Frees an indirect disk block.
+	 * @brief Frees an indirect  file system block.
 	 *
 	 * @param sb  Target superblock.
 	 * @param num Number of the target indirect block.
@@ -111,7 +111,7 @@
 	);
 
 	/**
-	 * @brief Frees an double indirect disk block.
+	 * @brief Frees an double indirect  file system block.
 	 *
 	 * @param sb  Target superblock.
 	 * @param num Number of the target double indirect block.
@@ -126,7 +126,7 @@
 	);
 
 	/**
-	 * @brief Frees a disk block.
+	 * @brief Frees a  file system block.
 	 *
 	 * @param sb  Target superblock.
 	 * @param num Number of the target block.

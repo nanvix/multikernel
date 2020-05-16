@@ -38,7 +38,7 @@
  *============================================================================*/
 
 /**
- * The minix_block_alloc() function allocates a disk block in the MINIX
+ * The minix_block_alloc() function allocates a file system block in the MINIX
  * file system pointed to by @p sb. Disk block is allocated from the
  * zone map pointed to by @p zmap.
  */
@@ -51,6 +51,10 @@ minix_block_t minix_block_alloc(
 
 	/* Invalid superblock. */
 	if (sb == NULL)
+		return (MINIX_BLOCK_NULL);
+
+	/* Bad superblock. */
+	if (sb->s_magic != MINIX_SUPER_MAGIC)
 		return (MINIX_BLOCK_NULL);
 
 	/* Invalid zone map. */
@@ -76,7 +80,7 @@ minix_block_t minix_block_alloc(
 
 /**
  * @brief The minix_block_map_alloc() function maps the byte offset @p
- * off in the file pointed to by @p ip. The disk block is mapped in the
+ * off in the file pointed to by @p ip. The file system block is mapped in the
  * MINIX file system pointed to by @p sb and allocated in the zone map
  * pointed to by @p zmap if required.
  */
@@ -93,6 +97,10 @@ minix_block_t minix_block_map(
 	minix_block_t buf[MINIX_BLOCK_ADDRS_PER_BLOCK]; /* Working buffer. */
 
 	logic = off/MINIX_BLOCK_SIZE;
+
+	/* Bad superblock. */
+	if (sb->s_magic != MINIX_SUPER_MAGIC)
+		return (MINIX_BLOCK_NULL);
 
 	/* File offset too big. */
 	if ((bitmap_t)off >= sb->s_max_size)
@@ -161,9 +169,9 @@ minix_block_t minix_block_map(
  *============================================================================*/
 
 /**
- * The minix_block_free_direct() function frees the direct block disk @p
- * num that resides in the MINIX file system pointed to by @p sb and is
- * allocated in the zone map pointed by @p zmap.
+ * The minix_block_free_direct() function releases the direct file
+ * system block @p num that resides in the MINIX file system pointed to
+ * by @p sb and is allocated in the zone map pointed by @p zmap.
  */
 int minix_block_free_direct(
 	struct d_superblock *sb,
@@ -175,6 +183,10 @@ int minix_block_free_direct(
 
 	/* Inalid superblock. */
 	if (sb == NULL)
+		return (-EINVAL);
+
+	/* Bad superblock. */
+	if (sb->s_magic != MINIX_SUPER_MAGIC)
 		return (-EINVAL);
 
 	/* Invalid zone map. */
@@ -193,14 +205,14 @@ int minix_block_free_direct(
 
 	bit = num;
 
-	/* Free disk block. */
+	/* Free  file system block. */
 	bitmap_clear(zmap, bit);
 
 	return (0);
 }
 
 /**
- * The minix_block_free_indirect() function frees the indirect block
+ * The minix_block_free_indirect() function releases the indirect block
  * disk @p num that resides in the MINIX file system pointed to by @p sb
  * and is allocated in the zone map pointed by @p zmap.
  */
@@ -214,6 +226,10 @@ int minix_block_free_indirect(
 	if (sb == NULL)
 		return (-EINVAL);
 
+	/* Bad superblock. */
+	if (sb->s_magic != MINIX_SUPER_MAGIC)
+		return (-EINVAL);
+
 	/* Invalid zone map. */
 	if (zmap == NULL)
 		return (-EINVAL);
@@ -222,7 +238,7 @@ int minix_block_free_indirect(
 	if (num == MINIX_BLOCK_NULL)
 		return (-EINVAL);
 
-	/* Free indirect disk block. */
+	/* Free indirect  file system block. */
 	for (unsigned i = 0; i < MINIX_NR_SINGLE; i++)
 		minix_block_free_direct(sb, zmap, num);
 
@@ -232,9 +248,10 @@ int minix_block_free_indirect(
 }
 
 /**
- * The minix_block_free_dindirect() function frees the double indirect
- * block disk @p num that resides in the MINIX file system pointed to by
- * @p sb and is allocated in the zone map pointed by @p zmap.
+ * The minix_block_free_dindirect() function releases the double
+ * indirect file system block @p num that resides in the MINIX file
+ * system pointed to by @p sb and is allocated in the zone map pointed
+ * by @p zmap.
  */
 int minix_block_free_dindirect(
 	struct d_superblock *sb,
@@ -244,6 +261,10 @@ int minix_block_free_dindirect(
 {
 	/* Inalid superblock. */
 	if (sb == NULL)
+		return (-EINVAL);
+
+	/* Bad superblock. */
+	if (sb->s_magic != MINIX_SUPER_MAGIC)
 		return (-EINVAL);
 
 	/* Invalid zone map. */
@@ -264,9 +285,9 @@ int minix_block_free_dindirect(
 }
 
 /**
- * The minix_block_free() function frees the double indirect block disk
- * @p num that resides in the MINIX file system pointed to by @p sb and
- * is allocated in the zone map pointed by @p zmap.
+ * The minix_block_free() function releases the double indirect file
+ * system block @p num that resides in the MINIX file system pointed to
+ * by @p sb and is allocated in the zone map pointed by @p zmap.
  */
 int minix_block_free(
 	struct d_superblock *sb,
@@ -279,11 +300,15 @@ int minix_block_free(
 	if (sb == NULL)
 		return (-EINVAL);
 
+	/* Bad superblock. */
+	if (sb->s_magic != MINIX_SUPER_MAGIC)
+		return (-EINVAL);
+
 	/* Invalid zone map. */
 	if (zmap == NULL)
 		return (-EINVAL);
 
-	/* Free disk block. */
+	/* Release file system block. */
 	switch (lvl)
 	{
 		/* Direct block. */

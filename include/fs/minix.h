@@ -41,8 +41,6 @@
 	 */
 	#define MINIX_BLOCK_SIZE (1 << MINIX_BLOCK_SIZE_LOG2)
 
-	#define MINIX_BLOCK_ADDR_SIZE (sizeof(minix_block_t))
-
 	/**
 	 * @brief Null block.
 	 */
@@ -125,10 +123,10 @@
 	#define MINIX_NR_DIRECT 1
 
 	/** Number of zones in a single indirect zone. */
-	#define MINIX_NR_SINGLE (MINIX_BLOCK_SIZE/MINIX_BLOCK_ADDR_SIZE)
+	#define MINIX_NR_SINGLE (MINIX_BLOCK_SIZE/sizeof(minix_block_t))
 
 	/** Number of zones in a double indirect zone. */
-	#define MINIX_NR_DOUBLE ((MINIX_BLOCK_SIZE/MINIX_BLOCK_ADDR_SIZE)*NR_SINGLE)
+	#define MINIX_NR_DOUBLE ((MINIX_BLOCK_SIZE/sizeof(minix_block_t))*MINIX_NR_SINGLE)
 
 	/**@}*/
 
