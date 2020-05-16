@@ -36,9 +36,9 @@
  *============================================================================*/
 
 	/**
-	 * @brief Number of RAM Disks
+	 * @brief Size of the RAM Disk
 	 */
-	#define NANVIX_FS_NR_RAMDISKS 1
+	#define NANVIX_DISK_SIZE (64*1024)
 
 	/**
 	 * @brief Size of the RAM Disk

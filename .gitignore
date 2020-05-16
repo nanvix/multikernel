@@ -50,7 +50,8 @@ include/posix/stdint.h
 
 
 # Kernel Headers
-include/dev/
+include/dev/net/
+include/dev/pci.h
 include/nanvix/kernel/
 
 # Nanvix Library

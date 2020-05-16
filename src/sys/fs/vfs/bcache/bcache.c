@@ -27,10 +27,11 @@
 
 #include <nanvix/hal/resource.h>
 #include <nanvix/config.h>
+#include <nanvix/dev.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
-#include "bcache.h"
-#include "ramdisk.h"
+#include "../include/const.h"
+#include "../include/bcache.h"
 
 /**
  * @brief Block Buffer
@@ -39,9 +40,10 @@ struct buffer
 {
 	/**
 	 * @name Status information
+	 *
+	 * @note Must come first.
 	 */
 	/**@{*/
-	/* Must come first. */
 	struct resource flags; /**< Flags */
 	/**@}*/
 
@@ -55,28 +57,6 @@ struct buffer
 	int count;                        /**< Reference count. */
 	/**@}*/
 };
-
-/**
- * @brief Wrapper to ramdisk_read().
- */
-#define bdev_readblk(x)               \
-	ramdisk_read(                     \
-		(x)->dev,                     \
-		(x)->data,                    \
-		NANVIX_FS_BLOCK_SIZE,         \
-		(x)->num*NANVIX_FS_BLOCK_SIZE \
-	)
-
-/**
- * @brief Wrapper to ramdisk_write().
- */
-#define bdev_writeblk(x)              \
-	ramdisk_write(                    \
-		(x)->dev,                     \
-		(x)->data,                    \
-		NANVIX_FS_BLOCK_SIZE,         \
-		(x)->num*NANVIX_FS_BLOCK_SIZE \
-	)
 
 /**
  * @brief Block buffers.

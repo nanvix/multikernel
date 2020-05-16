@@ -30,7 +30,10 @@ MODULE = nanvix-vfs.$(OBJ_SUFFIX).a
 #===============================================================================
 
 # C Source Files
-SRC = $(wildcard *.c)
+SRC = $(wildcard *.c)        \
+	  $(wildcard disk/*.c)   \
+	  $(wildcard bcache/*.c) \
+	  $(wildcard test//*.c)
 
 # Object Files
 OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)

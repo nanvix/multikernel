@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#include <nanvix/config.h>
+#include <dev/ramdisk.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
@@ -32,8 +32,8 @@
  */
 static struct
 {
-	char data[NANVIX_FS_RAMDISK_SIZE]; /**< Underlying Data */
-} ramdisks[NANVIX_FS_NR_RAMDISKS];
+	char data[NANVIX_RAMDISK_SIZE]; /**< Underlying Data */
+} ramdisks[NANVIX_NR_RAMDISKS];
 
 /**
  * The ramdisk_write() function writes @p n bytes from the buffer
@@ -44,7 +44,7 @@ ssize_t ramdisk_write(unsigned minor, const char *buf, size_t n, off_t off)
 	char *ptr; /* Write pointer.    */
 
 	/* Invalid device. */
-	if (minor >= NANVIX_FS_NR_RAMDISKS)
+	if (minor >= NANVIX_NR_RAMDISKS)
 		return (-EINVAL);
 
 	/* Invalid buffer. */
@@ -56,17 +56,17 @@ ssize_t ramdisk_write(unsigned minor, const char *buf, size_t n, off_t off)
 		return (-EINVAL);
 
 	/* Invalid write size. */
-	if (n > NANVIX_FS_RAMDISK_SIZE)
+	if (n > NANVIX_RAMDISK_SIZE)
 		return (-EINVAL);
 
 	ptr = ramdisks[minor].data + off;
 
 	/* Invalid offset. */
-	if (ptr >= (ramdisks[minor].data + NANVIX_FS_RAMDISK_SIZE))
+	if (ptr >= (ramdisks[minor].data + NANVIX_RAMDISK_SIZE))
 		return (-EINVAL);
 
 	/* Invalid write size. */
-	if ((ptr + n) > (ramdisks[minor].data + NANVIX_FS_RAMDISK_SIZE))
+	if ((ptr + n) > (ramdisks[minor].data + NANVIX_RAMDISK_SIZE))
 		return (-EINVAL);
 
 	umemcpy(ptr, buf, n);
@@ -83,7 +83,7 @@ ssize_t ramdisk_read(unsigned minor, char *buf, size_t n, off_t off)
 	char *ptr; /* Write pointer.   */
 
 	/* Invalid device. */
-	if (minor >= NANVIX_FS_NR_RAMDISKS)
+	if (minor >= NANVIX_NR_RAMDISKS)
 		return (-EINVAL);
 
 	/* Invalid buffer. */
@@ -95,17 +95,17 @@ ssize_t ramdisk_read(unsigned minor, char *buf, size_t n, off_t off)
 		return (-EINVAL);
 
 	/* Invalid read size. */
-	if (n > NANVIX_FS_RAMDISK_SIZE)
+	if (n > NANVIX_RAMDISK_SIZE)
 		return (-EINVAL);
 
 	ptr = ramdisks[minor].data + off;
 
 	/* Invalid offset. */
-	if (ptr >= (ramdisks[minor].data + NANVIX_FS_RAMDISK_SIZE))
+	if (ptr >= (ramdisks[minor].data + NANVIX_RAMDISK_SIZE))
 		return (-EINVAL);
 
 	/* Invalid read size. */
-	if ((ptr + n) > (ramdisks[minor].data + NANVIX_FS_RAMDISK_SIZE))
+	if ((ptr + n) > (ramdisks[minor].data + NANVIX_RAMDISK_SIZE))
 		return (-EINVAL);
 
 	umemcpy(buf, ptr, n);
@@ -120,6 +120,6 @@ void ramdisk_init(void)
 {
 	uprintf("dev: initializing ramdisk device driver");
 
-	for (unsigned i = 0; i < NANVIX_FS_NR_RAMDISKS; i++)
-		umemset(ramdisks[i].data, 0, NANVIX_FS_RAMDISK_SIZE);
+	for (unsigned i = 0; i < NANVIX_NR_RAMDISKS; i++)
+		umemset(ramdisks[i].data, 0, NANVIX_RAMDISK_SIZE);
 }

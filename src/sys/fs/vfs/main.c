@@ -32,9 +32,10 @@
 #include <nanvix/sys/mailbox.h>
 #include <nanvix/sys/noc.h>
 #include <nanvix/config.h>
+#include <nanvix/dev.h>
 #include <nanvix/ulib.h>
-#include "ramdisk.h"
-#include "bcache.h"
+#include "include/const.h"
+#include "include/bcache.h"
 
 /* Import definitions. */
 extern void vfs_test(void);
