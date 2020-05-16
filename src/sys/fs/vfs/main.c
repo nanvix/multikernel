@@ -31,10 +31,10 @@
 #include <nanvix/sys/semaphore.h>
 #include <nanvix/sys/mailbox.h>
 #include <nanvix/sys/noc.h>
-#include <nanvix/config.h>
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
 #include "include/const.h"
+#include "include/minix.h"
 #include "include/bcache.h"
 
 /* Import definitions. */
@@ -159,6 +159,9 @@ static int do_vfs_startup(struct nanvix_semaphore *lock)
 
 	ramdisk_init();
 	binit();
+	minix_mkfs(NR_INODES, NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE, 0, 0);
+
+	uprintf("[nanvix][vfs] minix file system created");
 
 	uprintf("[nanvix][vfs] server alive");
 	uprintf("[nanvix][vfs] attached to node %d", server.nodenum);

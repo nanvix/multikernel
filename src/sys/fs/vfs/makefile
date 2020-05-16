@@ -33,6 +33,7 @@ MODULE = nanvix-vfs.$(OBJ_SUFFIX).a
 SRC = $(wildcard *.c)        \
 	  $(wildcard disk/*.c)   \
 	  $(wildcard bcache/*.c) \
+	  $(wildcard minix/*.c)  \
 	  $(wildcard test//*.c)
 
 # Object Files
