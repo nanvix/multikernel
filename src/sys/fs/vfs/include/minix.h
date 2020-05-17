@@ -27,6 +27,7 @@
 
 	#include <fs/minix.h>
 	#include <nanvix/config.h>
+	#include <posix/sys/types.h>
 
 	/**
 	 * @brief Number of Bits in a Block
@@ -161,11 +162,49 @@
 		int create
 	);
 
+/*============================================================================*
+ * Superblock Interface                                                       *
+ *============================================================================*/
+
+	/**
+	 * @brief Reads the superblock of a MINIX file system.
+	 *
+	 * @param dev  Target disk device.
+	 * @param sb   Target location to store the superblock.
+	 * @param zmap Target location to store zone map.
+	 * @param imap Target location to store the inode map
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_super_read(
+		dev_t dev,
+		struct d_superblock *sb,
+		bitmap_t *zmap,
+		bitmap_t *imap
+	);
+
+	/**
+	 * @brief Writes the superblock of a MINIX file system.
+	 *
+	 * @param dev  Target disk device.
+	 * @param sb   Target superblock.
+	 * @param zmap Target zone map.
+	 * @param imap Target inode map
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_super_write(
+		dev_t dev,
+		const struct d_superblock *sb,
+		const bitmap_t *zmap,
+		const bitmap_t *imap
+	);
+
 	extern void minix_inode_write(struct d_superblock *sb, struct d_inode *ip, minix_ino_t num);
 	extern struct d_inode *minix_inode_read(struct d_superblock *sb, struct d_inode *ip, minix_ino_t num);
 	extern minix_ino_t minix_inode_alloc(struct d_superblock *sb, bitmap_t *imap, uint16_t mode, uint16_t uid, uint16_t gid);
-	extern void minix_super_read(struct d_superblock *sb, bitmap_t *imap, bitmap_t *zmap);
-	extern void minix_super_write(struct d_superblock *sb, bitmap_t *imap, bitmap_t *zmap);
-	extern void minix_mkfs (minix_ino_t ninodes, minix_block_t nblocks, uint16_t uid, uint16_t gid);
+	extern int minix_mkfs (minix_ino_t ninodes, minix_block_t nblocks, uint16_t uid, uint16_t gid);
 
 #endif /* _MINIX_H_ */

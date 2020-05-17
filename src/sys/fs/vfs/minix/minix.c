@@ -215,8 +215,12 @@ static void minix_dirent_add
  * @note @p ninodes must be valid.
  * @note @p nblocks must be valid.
  */
-void minix_mkfs
-(minix_ino_t ninodes, minix_block_t nblocks, uint16_t uid, uint16_t gid)
+int minix_mkfs(
+	minix_ino_t ninodes,
+	minix_block_t nblocks,
+	uint16_t uid,
+	uint16_t gid
+)
 {
 	size_t size;            /* Size of file system.            */
 	char buf[MINIX_BLOCK_SIZE];   /* Writing buffer.                 */
@@ -272,5 +276,5 @@ void minix_mkfs
 	root.i_nlinks--;
 	minix_inode_write(&minix_fs.super, &root, num);
 
-	minix_super_write(&minix_fs.super, minix_fs.imap, minix_fs.zmap);
+	return (minix_super_write(NANVIX_ROOT_DEV, &minix_fs.super, minix_fs.zmap, minix_fs.imap));
 }

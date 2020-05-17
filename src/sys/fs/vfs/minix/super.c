@@ -22,41 +22,134 @@
  * SOFTWARE.
  */
 
-#include <posix/sys/types.h>
-#include <posix/sys/stat.h>
-#include <posix/stdint.h>
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
+#include <posix/sys/types.h>
+#include <posix/errno.h>
 #include "../include/minix.h"
 
+/*============================================================================*
+ * minix_super_read()                                                         *
+ *============================================================================*/
+
 /**
- * @brief Reads the superblock of a Minix file system.
+ * The minix_super_read() function reads the superblock device of the
+ * MINIX file system stored in the device @p dev. The superblock that
+ * was read is stored in the location pointed to by @p sb, as well as
+ * the inode map is placed in the location pointed to by @p imap, and
+ * the zone map is written to the location pointed to by @p zmap.
  */
-void minix_super_read(struct d_superblock *sb, bitmap_t *imap, bitmap_t *zmap)
+int minix_super_read(
+	dev_t dev,
+	struct d_superblock *sb,
+	bitmap_t *zmap,
+	bitmap_t *imap
+)
 {
-	/* Read superblock. */
-	bdev_read(0, (char  *)sb, sizeof(struct d_superblock), 1*MINIX_BLOCK_SIZE);
+	int err;
+
+	/* Superblock */
+	err = bdev_read(
+		dev,
+		(char *)sb,
+		sizeof(struct d_superblock),
+		1*MINIX_BLOCK_SIZE
+	);
+
+	/* Read failure. */
+	if (err < 0)
+		return (err);
+
+	/* Bad superblock. */
 	if (sb->s_magic != MINIX_SUPER_MAGIC)
-		upanic("bad magic number");
+		return (-EINVAL);
 
-	/* Read inode map. */
-	bdev_read(0, (char *)imap, sb->s_imap_nblocks*MINIX_BLOCK_SIZE, 2*MINIX_BLOCK_SIZE);
+	/* I-Node Map */
+	err = bdev_read(
+		dev,
+		(char *)imap,
+		sb->s_imap_nblocks*MINIX_BLOCK_SIZE,
+		2*MINIX_BLOCK_SIZE
+	);
 
-	/* Read block map. */
-	bdev_read(0, (char *)zmap, sb->s_bmap_nblocks*MINIX_BLOCK_SIZE, (2 + sb->s_imap_nblocks)*MINIX_BLOCK_SIZE);
+	/* Read failure. */
+	if (err < 0)
+		return (err);
+
+	/* Zone Map */
+	err = bdev_read(
+		dev,
+		(char *)zmap,
+		sb->s_bmap_nblocks*MINIX_BLOCK_SIZE,
+		(2 + sb->s_imap_nblocks)*MINIX_BLOCK_SIZE
+	);
+
+	/* Read failure. */
+	if (err < 0)
+		return (err);
+
+	return (0);
 }
 
+/*============================================================================*
+ * minix_super_write()                                                        *
+ *============================================================================*/
+
 /**
- * @brief Writes the superblock of a Minix file system.
+ * The minix_super_write() function writes the superblock device of the
+ * MINIX file system stored in the device @p dev. The superblock to be
+ * written is read from the location pointed to by @p sb, as well as the
+ * inode map is retrieved from the location pointed to by @p imap, and
+ * the zone map is get from the location pointed to by @p zmap.
  */
-void minix_super_write(struct d_superblock *sb, bitmap_t *imap, bitmap_t *zmap)
+int minix_super_write(
+	dev_t dev,
+	const struct d_superblock *sb,
+	const bitmap_t *zmap,
+	const bitmap_t *imap
+)
 {
-	/* Write superblock. */
-	bdev_write(0, (char *)sb, sizeof(struct d_superblock), 1*MINIX_BLOCK_SIZE);
+	int err;
 
-	/* Write inode map. */
-	bdev_write(0, (char *)imap, sb->s_imap_nblocks*MINIX_BLOCK_SIZE, 2*MINIX_BLOCK_SIZE);
+	/* Superblock */
+	err = bdev_write(
+		dev,
+		(char *)sb,
+		sizeof(struct d_superblock),
+		1*MINIX_BLOCK_SIZE
+	);
 
-	/* Write zone map. */
-	bdev_write(0, (char *)zmap, sb->s_bmap_nblocks*MINIX_BLOCK_SIZE, (2 + sb->s_imap_nblocks)*MINIX_BLOCK_SIZE);
+	/* Write failure. */
+	if (err < 0)
+		return (err);
+
+	/* Bad superblock. */
+	if (sb->s_magic != MINIX_SUPER_MAGIC)
+		return (-EINVAL);
+
+	/* I-Node Map */
+	err = bdev_write(
+		dev,
+		(char *)imap,
+		sb->s_imap_nblocks*MINIX_BLOCK_SIZE,
+		2*MINIX_BLOCK_SIZE
+	);
+
+	/* Write failure. */
+	if (err < 0)
+		return (err);
+
+	/* Zone Map */
+	err = bdev_write(
+		dev,
+		(char *)zmap,
+		sb->s_bmap_nblocks*MINIX_BLOCK_SIZE,
+		(2 + sb->s_imap_nblocks)*MINIX_BLOCK_SIZE
+	);
+
+	/* Write failure. */
+	if (err < 0)
+		return (err);
+
+	return (0);
 }
