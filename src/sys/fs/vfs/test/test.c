@@ -387,6 +387,98 @@ static void minix_fault_free_inval(void)
 }
 
 /**
+ * @brief Fault Injection Test: Invalid Superblock Read
+ */
+static void minix_fault_super_read_inval(void)
+{
+	struct d_superblock sb;
+	bitmap_t imap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+	bitmap_t zmap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+
+	uassert(
+		minix_super_read(
+			-1,
+			&sb,
+			zmap,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_read(
+			NANVIX_ROOT_DEV,
+			NULL,
+			zmap,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_read(
+			NANVIX_ROOT_DEV,
+			&sb,
+			NULL,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_read(
+			NANVIX_ROOT_DEV,
+			&sb,
+			zmap,
+			NULL
+		) == -EINVAL
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Superblock Write
+ */
+static void minix_fault_super_write_inval(void)
+{
+	struct d_superblock sb;
+	bitmap_t imap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+	bitmap_t zmap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+
+	uassert(
+		minix_super_write(
+			-1,
+			&sb,
+			zmap,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_write(
+			NANVIX_ROOT_DEV,
+			NULL,
+			zmap,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_write(
+			NANVIX_ROOT_DEV,
+			&sb,
+			NULL,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_write(
+			NANVIX_ROOT_DEV,
+			&sb,
+			zmap,
+			NULL
+		) == -EINVAL
+	);
+}
+
+/**
  * @brief Sress Test: Block Alloc/Free
  */
 static void minix_stress_alloc_free1(void)
@@ -449,12 +541,14 @@ static struct
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
 } minix_tests[] = {
-	{ minix_api_alloc_free,     "[minix][api] block alloc/free     " },
-	{ minix_fault_alloc_inval,  "[minix][fault] block alloc inval  " },
-	{ minix_fault_free_inval,   "[minix][fault] block free inval   " },
-	{ minix_stress_alloc_free1, "[minix][stress] block alloc/free 1" },
-	{ minix_stress_alloc_free2, "[minix][stress] block alloc/free 2" },
-	{ NULL,                      NULL                                },
+	{ minix_api_alloc_free,          "[minix][api] block alloc/free         " },
+	{ minix_fault_alloc_inval,       "[minix][fault] block alloc inval      " },
+	{ minix_fault_free_inval,        "[minix][fault] block free inval       " },
+	{ minix_fault_super_read_inval,  "[minix][fault] superblock read inval  " },
+	{ minix_fault_super_write_inval, "[minix][fault] superblock write inval " },
+	{ minix_stress_alloc_free1,      "[minix][stress] block alloc/free 1    " },
+	{ minix_stress_alloc_free2,      "[minix][stress] block alloc/free 2    " },
+	{ NULL,                           NULL                                    },
 };
 
 /**
