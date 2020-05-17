@@ -202,9 +202,86 @@
 		const bitmap_t *imap
 	);
 
-	extern void minix_inode_write(struct d_superblock *sb, struct d_inode *ip, minix_ino_t num);
-	extern struct d_inode *minix_inode_read(struct d_superblock *sb, struct d_inode *ip, minix_ino_t num);
-	extern minix_ino_t minix_inode_alloc(struct d_superblock *sb, bitmap_t *imap, uint16_t mode, uint16_t uid, uint16_t gid);
+/*============================================================================*
+ * Inode Interface                                                            *
+ *============================================================================*/
+
+	/**
+	 * @brief Allocates an inode.
+	 *
+	 * @param dev  Target device.
+	 * @param sb   Target superblock.
+	 * @param imap Target inode map.
+	 * @param mode Access mode.
+	 * @param uid  User ID.
+	 * @param gid  User group ID.
+	 *
+	 * @returns Upon successful completion, the number of the allocated
+	 * inode is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern minix_ino_t minix_inode_alloc(
+		dev_t dev,
+		struct d_superblock *sb,
+		bitmap_t *imap,
+		minix_mode_t mode,
+		minix_uid_t uid,
+		minix_gid_t gid
+	);
+
+	/**
+	 * @brief Frees an inode.
+	 *
+	 * @param sb   Target superblock.
+	 * @param imap Target inode map.
+	 * @param num  Number of the target inode.
+	 *
+	 * @returns Upon successful completion, the number of the allocated
+	 * inode is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern int minix_inode_free(
+		struct d_superblock *sb,
+		bitmap_t *imap,
+		minix_ino_t num
+	);
+
+	/**
+	 * @brief Reads an inode from the disk.
+	 *
+	 * @param dev Target device.
+	 * @param sb  Target superblock.
+	 * @param ip  Target inode.
+	 * @param num Number of the target inode.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_inode_read(
+		dev_t dev,
+		struct d_superblock *sb,
+		struct d_inode *ip,
+		minix_ino_t num
+	);
+
+	/**
+	 * @brief Writes an inode to the disk.
+	 *
+	 * @param dev Target device.
+	 * @param sb  Target superblock.
+	 * @param ip  Target inode.
+	 * @param num Number of the target inode.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_inode_write(
+		dev_t dev,
+		struct d_superblock *sb,
+		struct d_inode *ip,
+		minix_ino_t num
+	);
+
 	extern int minix_mkfs (minix_ino_t ninodes, minix_block_t nblocks, uint16_t uid, uint16_t gid);
 
 #endif /* _MINIX_H_ */

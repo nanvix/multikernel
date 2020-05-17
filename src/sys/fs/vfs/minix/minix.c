@@ -269,12 +269,12 @@ int minix_mkfs(
 	mode  = S_IFDIR| S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
 	/* Create root directory. */
-	num = minix_inode_alloc(&minix_fs.super, minix_fs.imap, mode, uid, gid);
-	minix_inode_read(&minix_fs.super, &root, num);
+	num = minix_inode_alloc(NANVIX_ROOT_DEV, &minix_fs.super, minix_fs.imap, mode, uid, gid);
+	minix_inode_read(NANVIX_ROOT_DEV, &minix_fs.super, &root, num);
 	minix_dirent_add(&root, ".", num);
 	minix_dirent_add(&root, "..", num);
 	root.i_nlinks--;
-	minix_inode_write(&minix_fs.super, &root, num);
+	minix_inode_write(NANVIX_ROOT_DEV, &minix_fs.super, &root, num);
 
 	return (minix_super_write(NANVIX_ROOT_DEV, &minix_fs.super, minix_fs.zmap, minix_fs.imap));
 }
