@@ -149,6 +149,21 @@
 	 */
 	typedef uint16_t minix_ino_t;
 
+	/**
+	 * @brief Access Mode
+	 */
+	typedef uint16_t minix_mode_t;
+
+	/**
+	 * @brief User
+	 */
+	typedef uint16_t minix_uid_t;
+
+	/**
+	 * @brief User Group
+	 */
+	typedef uint16_t minix_gid_t;
+
 /*============================================================================*
  * Directory Entry Information                                                *
  *============================================================================*/
