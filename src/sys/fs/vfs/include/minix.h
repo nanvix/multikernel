@@ -39,19 +39,33 @@
 	 */
 	struct minix_fs_info
 	{
+		/**
+		 * @brief Underlying Device
+		 */
+		dev_t dev;
 
 		/**
-		 * @brief Mounted superblock.
+		 * @brief Inode Number of Root Directory
+		 */
+		minix_ino_t root_ino;
+
+		/**
+		 * @brief Root Directory
+		 */
+		struct d_inode root;
+
+		/**
+		 * @brief Superblock
 		 */
 		struct d_superblock super;
 
 		/**
-		 * @brief Inode map.
+		 * @brief Inode Map
 		 */
 		bitmap_t *imap;
 
 		/**
-		 * @brief Zone map.
+		 * @brief Zone Map
 		 */
 		bitmap_t *zmap;
 
@@ -282,6 +296,86 @@
 		minix_ino_t num
 	);
 
-	extern int minix_mkfs (minix_ino_t ninodes, minix_block_t nblocks, uint16_t uid, uint16_t gid);
+/*============================================================================*
+ * File System Interface                                                      *
+ *============================================================================*/
+
+	/**
+	 * @brief Adds an entry in a directory.
+	 *
+	 * @param dip  Target directory.
+	 * @param name Name of the entry.
+	 * @param num  Number of linked inode.
+	 *
+	 * @returns upon successful completion, zero is returned. Upon failure,
+	 * a negative error code is returned instead.
+	 */
+	extern int minix_dirent_add(
+		struct d_inode *dip,
+		const char *name,
+		minix_ino_t num
+	);
+
+	/**
+	 * @brief Removes a directory entry.
+	 *
+	 * @param dip  Target directory.
+	 * @param name Symbolic name of target entry.
+	 *
+	 * The nanvix_dirent_remove() function removes the directory entry named
+	 * @p name from the directory pointed to by @p dip.
+	 *
+	 * @returns Upon successful return, zero is returned. Upon failure, a
+	 * negative error code is returned instead.
+	 */
+	extern int minix_dirent_remove(
+		struct d_inode *dip,
+		const char *name
+	);
+
+	/**
+	 * @brief Searches for a directory entry.
+	 *
+	 * The minix_dirent_search() function searches in the target directory
+	 * pointed to by @p dip for the entry named @p name. If the entry does
+	 * not exist and @p create is non zero, the entry is created.
+	 *
+	 * @param dip    Directory where the directory entry shall be searched.
+	 * @param name   Name of the directory entry that shall be searched.
+	 * @param create Create directory entry?
+	 *
+	 * @returns iUpon successful completion, the offset where the directory
+	 * entry is located is returned. Upon failure, a negative error code is
+	 * returned instead..
+	 */
+	extern off_t minix_dirent_search(
+		struct d_inode *dip,
+		const char *name,
+		int create
+	);
+
+	/**
+	 * @brief Makes a MINIX file system.
+	 *
+	 * @param dev      Target device.
+	 * @param ninodes  Number of inodes.
+	 * @param nblocks  Number of blocks.
+	 * @param uid      User ID.
+	 * @param gid      User group ID.
+	 *
+	 * @note @p diskfile must refer to a valid file.
+	 * @note @p ninodes must be valid.
+	 * @note @p nblocks must be valid.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_mkfs(
+		dev_t dev,
+		minix_ino_t ninodes,
+		minix_block_t nblocks,
+		minix_uid_t uid,
+		minix_gid_t gid
+	);
 
 #endif /* _MINIX_H_ */

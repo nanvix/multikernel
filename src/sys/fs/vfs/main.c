@@ -159,7 +159,13 @@ static int do_vfs_startup(struct nanvix_semaphore *lock)
 
 	ramdisk_init();
 	binit();
-	minix_mkfs(NR_INODES, NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE, 0, 0);
+	minix_mkfs(
+		NANVIX_ROOT_DEV,
+		NR_INODES,
+		NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE,
+		NANVIX_ROOT_UID,
+		NANVIX_ROOT_GID
+	);
 
 	uprintf("[nanvix][vfs] minix file system created");
 
