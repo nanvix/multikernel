@@ -22,11 +22,14 @@
  * SOFTWARE.
  */
 
+#include <dev/ramdisk.h>
 #include <nanvix/config.h>
+#include <nanvix/dev.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
-#include "bcache.h"
-#include "ramdisk.h"
+#include "../include/const.h"
+#include "../include/bcache.h"
+#include "../include/minix.h"
 
 /**
  * @brief Buffer for Read/Write Tests
@@ -44,7 +47,7 @@ static void ramdisk_api_read_write(void)
 {
 	umemset(data, 1, sizeof(data));
 
-	for (unsigned minor = 0; minor < NANVIX_FS_NR_RAMDISKS; minor++)
+	for (unsigned minor = 0; minor < NANVIX_NR_RAMDISKS; minor++)
 	{
 		ramdisk_write(minor, data, sizeof(data), 0);
 		ramdisk_read(minor, data, sizeof(data), 0);
@@ -61,12 +64,12 @@ static void ramdisk_api_read_write(void)
 static void ramdisk_fault_read_inval(void)
 {
 	uassert(ramdisk_read(-1, data, sizeof(data), 0) == -EINVAL);
-	uassert(ramdisk_read(NANVIX_FS_NR_RAMDISKS, data, sizeof(data), 0) == -EINVAL);
+	uassert(ramdisk_read(NANVIX_NR_RAMDISKS, data, sizeof(data), 0) == -EINVAL);
 	uassert(ramdisk_read(0, NULL, sizeof(data), 0) == -EINVAL);
 	uassert(ramdisk_read(0, data, -1, 0) == -EINVAL);
-	uassert(ramdisk_read(0, data, NANVIX_FS_RAMDISK_SIZE + 1, 0) == -EINVAL);
-	uassert(ramdisk_read(0, data, NANVIX_FS_RAMDISK_SIZE, 1) == -EINVAL);
-	uassert(ramdisk_read(0, data, NANVIX_FS_RAMDISK_SIZE, -1) == -EINVAL);
+	uassert(ramdisk_read(0, data, NANVIX_RAMDISK_SIZE + 1, 0) == -EINVAL);
+	uassert(ramdisk_read(0, data, NANVIX_RAMDISK_SIZE, 1) == -EINVAL);
+	uassert(ramdisk_read(0, data, NANVIX_RAMDISK_SIZE, -1) == -EINVAL);
 }
 
 /**
@@ -75,12 +78,12 @@ static void ramdisk_fault_read_inval(void)
 static void ramdisk_fault_write_inval(void)
 {
 	uassert(ramdisk_write(-1, data, sizeof(data), 0) == -EINVAL);
-	uassert(ramdisk_write(NANVIX_FS_NR_RAMDISKS, data, sizeof(data), 0) == -EINVAL);
+	uassert(ramdisk_write(NANVIX_NR_RAMDISKS, data, sizeof(data), 0) == -EINVAL);
 	uassert(ramdisk_write(0, NULL, sizeof(data), 0) == -EINVAL);
 	uassert(ramdisk_write(0, data, -1, 0) == -EINVAL);
-	uassert(ramdisk_write(0, data, NANVIX_FS_RAMDISK_SIZE + 1, 0) == -EINVAL);
-	uassert(ramdisk_write(0, data, NANVIX_FS_RAMDISK_SIZE, 1) == -EINVAL);
-	uassert(ramdisk_write(0, data, NANVIX_FS_RAMDISK_SIZE, -1) == -EINVAL);
+	uassert(ramdisk_write(0, data, NANVIX_RAMDISK_SIZE + 1, 0) == -EINVAL);
+	uassert(ramdisk_write(0, data, NANVIX_RAMDISK_SIZE, 1) == -EINVAL);
+	uassert(ramdisk_write(0, data, NANVIX_RAMDISK_SIZE, -1) == -EINVAL);
 }
 
 /**
@@ -90,9 +93,9 @@ static void ramdisk_stress_read_write(void)
 {
 	umemset(data, 1, sizeof(data));
 
-	for (unsigned minor = 0; minor < NANVIX_FS_NR_RAMDISKS; minor++)
+	for (unsigned minor = 0; minor < NANVIX_NR_RAMDISKS; minor++)
 	{
-		for (off_t off = 0; off < NANVIX_FS_RAMDISK_SIZE; off += sizeof(data))
+		for (off_t off = 0; off < NANVIX_RAMDISK_SIZE; off += sizeof(data))
 		{
 			ramdisk_write(minor, data, sizeof(data), 0);
 			ramdisk_read(minor, data, sizeof(data), 0);
@@ -128,7 +131,7 @@ static void ramdisk_test(void)
 	{
 		ramdisk_tests[i].func();
 
-		uprintf("[nanvix][vfs]%s passed", ramdisk_tests[i].name);
+		uprintf("[nanvix][vfs] %s passed", ramdisk_tests[i].name);
 	}
 }
 
@@ -172,9 +175,9 @@ static void bcache_api_bread_bwrite(void)
 static void bcache_fault_bread_inval(void)
 {
 	uassert(bread(-1, 0) == NULL);
-	uassert(bread(NANVIX_FS_NR_RAMDISKS, 0) == NULL);
+	uassert(bread(NANVIX_NR_RAMDISKS, 0) == NULL);
 	uassert(bread(0, -1) == NULL);
-	uassert(bread(0, NANVIX_FS_RAMDISK_SIZE/NANVIX_FS_BLOCK_SIZE) == NULL);
+	uassert(bread(0, NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE) == NULL);
 }
 
 /**
@@ -230,7 +233,7 @@ static void bcache_stress_bread_brelse(void)
 {
 	struct buffer *buf;
 
-	for (block_t blk = 0; blk < NANVIX_FS_RAMDISK_SIZE/NANVIX_FS_BLOCK_SIZE; blk++)
+	for (block_t blk = 0; blk < NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE; blk++)
 	{
 		uassert((buf = bread(0, blk)) != NULL);
 		uassert(brelse(buf) == 0);
@@ -244,7 +247,7 @@ static void bcache_stress_bread_bwrite(void)
 {
 	struct buffer *buf;
 
-	for (block_t blk = 0; blk < NANVIX_FS_RAMDISK_SIZE/NANVIX_FS_BLOCK_SIZE; blk++)
+	for (block_t blk = 0; blk < NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE; blk++)
 	{
 		/* Write data. */
 		uassert((buf = bread(0, blk)) != NULL);
@@ -280,7 +283,7 @@ static struct
 };
 
 /**
- * @brief Runs regression tests on RAM Disk.
+ * @brief Runs regression tests on Block Cache
  */
 static void bcache_test(void)
 {
@@ -288,7 +291,182 @@ static void bcache_test(void)
 	{
 		bcache_tests[i].func();
 
-		uprintf("[nanvix][vfs]%s passed", bcache_tests[i].name);
+		uprintf("[nanvix][vfs] %s passed", bcache_tests[i].name);
+	}
+}
+
+/*============================================================================*
+ * MINIX File System Tests                                                    *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Block Alloc/Free
+ */
+static void minix_api_alloc_free(void)
+{
+	minix_block_t num;
+
+	uassert((
+		num = minix_block_alloc(
+			&minix_fs.super,
+			minix_fs.zmap
+		)) != MINIX_BLOCK_NULL
+	);
+
+	uassert(
+		minix_block_free_direct(
+			&minix_fs.super,
+			minix_fs.zmap,
+			num
+		)  == 0
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Alloc
+ */
+static void minix_fault_alloc_inval(void)
+{
+	uassert(
+		minix_block_alloc(
+			NULL,
+			minix_fs.zmap
+		) == MINIX_BLOCK_NULL
+	);
+	uassert(
+		minix_block_alloc(
+			&minix_fs.super,
+			NULL
+		) == MINIX_BLOCK_NULL
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Free
+ */
+static void minix_fault_free_inval(void)
+{
+	minix_block_t num;
+
+	uassert((
+		num = minix_block_alloc(
+			&minix_fs.super,
+			minix_fs.zmap
+		)) != MINIX_BLOCK_NULL
+	);
+
+		uassert(
+			minix_block_free_direct(
+				NULL,
+				minix_fs.zmap,
+				num
+			)  == -EINVAL
+		);
+		uassert(
+			minix_block_free_direct(
+				&minix_fs.super,
+				NULL,
+				num
+			)  == -EINVAL
+		);
+		uassert(
+			minix_block_free_direct(
+				&minix_fs.super,
+				minix_fs.zmap,
+				MINIX_BLOCK_NULL
+			)  == -EINVAL
+		);
+
+	uassert(
+		minix_block_free_direct(
+			&minix_fs.super,
+			minix_fs.zmap,
+			num
+		)  == 0
+	);
+}
+
+/**
+ * @brief Sress Test: Block Alloc/Free
+ */
+static void minix_stress_alloc_free1(void)
+{
+	minix_block_t blocks[NANVIX_DISK_SIZE/MINIX_BLOCK_SIZE];
+
+	for (unsigned i = 1; i < NANVIX_DISK_SIZE/MINIX_BLOCK_SIZE; i++)
+	{
+		uassert((
+			blocks[i] = minix_block_alloc(
+				&minix_fs.super,
+				minix_fs.zmap
+			)) != MINIX_BLOCK_NULL
+		);
+
+		uassert(
+			minix_block_free_direct(
+				&minix_fs.super,
+				minix_fs.zmap,
+				blocks[i]
+			)  == 0
+		);
+	}
+}
+
+/**
+ * @brief Sress Test: Block Alloc/Free
+ */
+static void minix_stress_alloc_free2(void)
+{
+	minix_block_t blocks[NANVIX_DISK_SIZE/MINIX_BLOCK_SIZE];
+
+	for (unsigned i = 1; i < NANVIX_DISK_SIZE/MINIX_BLOCK_SIZE; i++)
+	{
+		uassert((
+			blocks[i] = minix_block_alloc(
+				&minix_fs.super,
+				minix_fs.zmap
+			)) != MINIX_BLOCK_NULL
+		);
+	}
+
+	for (unsigned i = 1; i < NANVIX_DISK_SIZE/MINIX_BLOCK_SIZE; i++)
+	{
+		uassert(
+			minix_block_free_direct(
+				&minix_fs.super,
+				minix_fs.zmap,
+				blocks[i]
+			)  == 0
+		);
+	}
+}
+
+/**
+ * @brief MINIX File System Tests
+ */
+static struct
+{
+	void (*func)(void); /**< Test Function */
+	const char *name;   /**< Test Name     */
+} minix_tests[] = {
+	{ minix_api_alloc_free,     "[minix][api] block alloc/free     " },
+	{ minix_fault_alloc_inval,  "[minix][fault] block alloc inval  " },
+	{ minix_fault_free_inval,   "[minix][fault] block free inval   " },
+	{ minix_stress_alloc_free1, "[minix][stress] block alloc/free 1" },
+	{ minix_stress_alloc_free2, "[minix][stress] block alloc/free 2" },
+	{ NULL,                      NULL                                },
+};
+
+/**
+ * @brief Runs regression tests on RAM Disk.
+ */
+static void minix_test(void)
+{
+	for (int i = 0; minix_tests[i].func != NULL; i++)
+	{
+		minix_tests[i].func();
+
+		uprintf("[nanvix][vfs] %s passed", minix_tests[i].name);
 	}
 }
 
@@ -303,4 +481,5 @@ void vfs_test(void)
 {
 	ramdisk_test();
 	bcache_test();
+	minix_test();
 }

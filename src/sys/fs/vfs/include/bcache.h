@@ -25,29 +25,13 @@
 #ifndef _BCACHE_H_
 #define _BCACHE_H_
 
-	/* Must come first. */
-	#define __NEED_RESOURCE
-
-	#include <nanvix/hal/resource.h>
 	#include <posix/sys/types.h>
-	#include <posix/stdint.h>
+	#include "types.h"
 
  	/**
  	 * @addtogroup Buffer
  	 */
 	/**@{*/
-
-	/**
-	 * @brief Block Size (in bytes)
-	 */
-	#define NANVIX_FS_BLOCK_SIZE 512
-
-	/**
-	 * @brief Block Number
-	 */
-	typedef uint32_t block_t;
-
-	/**@}*/
 
 	/**
 	 * @brief Opaque Buffer
@@ -132,6 +116,8 @@
 	 * failure, a negative error code is returned instead.
 	 */
 	extern int brelse(struct buffer *buf);
+
+	/**@}*/
 
 #endif /* _BCACHE_H_ */
 

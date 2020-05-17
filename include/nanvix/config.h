@@ -36,19 +36,24 @@
  *============================================================================*/
 
 	/**
-	 * @brief Number of RAM Disks
-	 */
-	#define NANVIX_FS_NR_RAMDISKS 1
-
-	/**
 	 * @brief Size of the RAM Disk
 	 */
-	#define NANVIX_FS_RAMDISK_SIZE (64*1024)
+	#define NANVIX_DISK_SIZE (64*1024)
+
+	/**
+	 * @brief Root Device
+	 */
+	#define NANVIX_ROOT_DEV 0
 
 	/**
 	 * @brief Number of File System Buffers
 	 */
 	#define NANVIX_FS_NR_BUFFERS 32
+
+	/**
+	 * @brief Number of inodes.
+	 */
+	#define NR_INODES 64
 
 /*============================================================================*
  * Memory Management System                                                   *

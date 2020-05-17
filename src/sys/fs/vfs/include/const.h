@@ -22,42 +22,12 @@
  * SOFTWARE.
  */
 
-#ifndef RAMDISK_H_
-#define RAMDISK_H_
-
-	#include <posix/sys/types.h>
+#ifndef _CONST_H_
+#define _CONST_H_
 
 	/**
-	 * @brief Writes data to a RAM Disk.
-	 *
-	 * @param minor Target RAM Disk.
-	 * @param buf   Target buffer from where data should be read.
-	 * @param n     Number of bytes to read.
-	 * @param off   Read offset.
-	 *
-	 * @returns Upon successful completion, the number of bytes
-	 * effectively read is returned. Upon failure, a negative error code
-	 * is returned instead.
+	 * @brief Block Size (in bytes)
 	 */
-	extern ssize_t ramdisk_write(unsigned minor, const char *buf, size_t n, off_t off);
+	#define NANVIX_FS_BLOCK_SIZE 512
 
-	/**
-	 * @brief Reads data from a RAM disk.
-	 *
-	 * @param minor Target RAM Disk.
-	 * @param buf   Target buffer to where data should be written.
-	 * @param n     Number of bytes to write.
-	 * @param off   Write offset.
-	 *
-	 * @returns Upon successful completion, the number of bytes
-	 * effectively wrriten is returned. Upon failure, a negative error
-	 * code is returned instead.
-	 */
-	extern ssize_t ramdisk_read(unsigned minor, char *buf, size_t n, off_t off);
-
-	/**
-	 * @brief Initializes the RAM Disk devices.
-	 */
-	extern void ramdisk_init(void);
-
-#endif /* RAMDISK_H_ */
+#endif /* _CONST_H_ */
