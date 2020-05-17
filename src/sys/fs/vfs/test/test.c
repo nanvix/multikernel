@@ -302,7 +302,7 @@ static void bcache_test(void)
 /**
  * @brief API Test: Block Alloc/Free
  */
-static void minix_api_alloc_free(void)
+static void minix_api_block_alloc_free(void)
 {
 	minix_block_t num;
 
@@ -323,9 +323,78 @@ static void minix_api_alloc_free(void)
 }
 
 /**
+ * @brief API Test: Inode Alloc/Free
+ */
+static void minix_api_inode_alloc_free(void)
+{
+	minix_ino_t ino;
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
+ * @brief API Test: Inode Read/Write
+ */
+static void minix_api_inode_read_write(void)
+{
+	minix_ino_t ino;
+	struct d_inode inode;
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_inode_read(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				&inode,
+				ino)
+			) == 0
+		);
+
+		uassert((
+			minix_inode_write(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				&inode,
+				ino)
+			) == 0
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
  * @brief Fault Injection Test: Invalid Alloc
  */
-static void minix_fault_alloc_inval(void)
+static void minix_fault_block_alloc_inval(void)
 {
 	uassert(
 		minix_block_alloc(
@@ -333,6 +402,7 @@ static void minix_fault_alloc_inval(void)
 			minix_fs.zmap
 		) == MINIX_BLOCK_NULL
 	);
+
 	uassert(
 		minix_block_alloc(
 			&minix_fs.super,
@@ -344,7 +414,7 @@ static void minix_fault_alloc_inval(void)
 /**
  * @brief Fault Injection Test: Invalid Free
  */
-static void minix_fault_free_inval(void)
+static void minix_fault_block_free_inval(void)
 {
 	minix_block_t num;
 
@@ -387,9 +457,324 @@ static void minix_fault_free_inval(void)
 }
 
 /**
+ * @brief Fault Injection Test: Invalid Superblock Read
+ */
+static void minix_fault_super_read_inval(void)
+{
+	struct d_superblock sb;
+	bitmap_t imap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+	bitmap_t zmap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+
+	uassert(
+		minix_super_read(
+			-1,
+			&sb,
+			zmap,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_read(
+			NANVIX_ROOT_DEV,
+			NULL,
+			zmap,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_read(
+			NANVIX_ROOT_DEV,
+			&sb,
+			NULL,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_read(
+			NANVIX_ROOT_DEV,
+			&sb,
+			zmap,
+			NULL
+		) == -EINVAL
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Superblock Write
+ */
+static void minix_fault_super_write_inval(void)
+{
+	struct d_superblock sb;
+	bitmap_t imap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+	bitmap_t zmap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+
+	uassert(
+		minix_super_write(
+			-1,
+			&sb,
+			zmap,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_write(
+			NANVIX_ROOT_DEV,
+			NULL,
+			zmap,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_write(
+			NANVIX_ROOT_DEV,
+			&sb,
+			NULL,
+			imap
+		) == -EINVAL
+	);
+
+	uassert(
+		minix_super_write(
+			NANVIX_ROOT_DEV,
+			&sb,
+			zmap,
+			NULL
+		) == -EINVAL
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Inode Alloc
+ */
+static void minix_fault_inode_alloc_inval(void)
+{
+	uassert((
+		minix_inode_alloc(
+			-1,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) == MINIX_INODE_NULL
+	);
+	uassert((
+		minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			NULL,
+			minix_fs.imap,
+			0, 0, 0)
+		) == MINIX_INODE_NULL
+	);
+	uassert((
+		minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			NULL,
+			0, 0, 0)
+		) == MINIX_INODE_NULL
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Inode Free
+ */
+static void minix_fault_inode_free_inval(void)
+{
+	minix_ino_t ino;
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_inode_free(
+				NULL,
+				minix_fs.imap,
+				ino)
+			) == -EINVAL
+		);
+		uassert((
+			minix_inode_free(
+				&minix_fs.super,
+				NULL,
+				ino)
+			) == -EINVAL
+		);
+		uassert((
+			minix_inode_free(
+				&minix_fs.super,
+				minix_fs.imap,
+				MINIX_INODE_NULL)
+			) == -EINVAL
+		);
+		uassert((
+			minix_inode_free(
+				&minix_fs.super,
+				minix_fs.imap,
+				minix_fs.super.s_ninodes + 1)
+			) == -EINVAL
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Inode Read
+ */
+static void minix_fault_inode_read_inval(void)
+{
+	minix_ino_t ino;
+	struct d_inode inode;
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_inode_read(
+				-1,
+				&minix_fs.super,
+				&inode,
+				ino)
+			) == -EAGAIN
+		);
+
+		uassert((
+			minix_inode_read(
+				NANVIX_ROOT_DEV,
+				NULL,
+				&inode,
+				ino)
+			) == -EINVAL
+		);
+
+		uassert((
+			minix_inode_read(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				NULL,
+				ino)
+			) == -EINVAL
+		);
+
+		uassert((
+			minix_inode_read(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				&inode,
+				MINIX_INODE_NULL)
+			) == -EINVAL
+		);
+
+		uassert((
+			minix_inode_read(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				&inode,
+				minix_fs.super.s_ninodes + 1)
+			) == -EINVAL
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Inode Write
+ */
+static void minix_fault_inode_write_inval(void)
+{
+	minix_ino_t ino;
+	struct d_inode inode;
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_inode_write(
+				-1,
+				&minix_fs.super,
+				&inode,
+				ino)
+			) == -EAGAIN
+		);
+		uassert((
+			minix_inode_write(
+				NANVIX_ROOT_DEV,
+				NULL,
+				&inode,
+				ino)
+			) == -EINVAL
+		);
+		uassert((
+			minix_inode_write(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				NULL,
+				ino)
+			) == -EINVAL
+		);
+		uassert((
+			minix_inode_write(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				&inode,
+				MINIX_INODE_NULL)
+			) == -EINVAL
+		);
+		uassert((
+			minix_inode_write(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				&inode,
+				minix_fs.super.s_ninodes + 1)
+			) == -EINVAL
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
  * @brief Sress Test: Block Alloc/Free
  */
-static void minix_stress_alloc_free1(void)
+static void minix_stress_block_alloc_free1(void)
 {
 	minix_block_t blocks[NANVIX_DISK_SIZE/MINIX_BLOCK_SIZE];
 
@@ -415,7 +800,7 @@ static void minix_stress_alloc_free1(void)
 /**
  * @brief Sress Test: Block Alloc/Free
  */
-static void minix_stress_alloc_free2(void)
+static void minix_stress_block_alloc_free2(void)
 {
 	minix_block_t blocks[NANVIX_DISK_SIZE/MINIX_BLOCK_SIZE];
 
@@ -437,6 +822,171 @@ static void minix_stress_alloc_free2(void)
 				minix_fs.zmap,
 				blocks[i]
 			)  == 0
+		);
+	}
+}
+
+/**
+ * @brief Stress Test: Inode Alloc/Free Sequential One Step
+ */
+static void minix_stress_inode_alloc_free1(void)
+{
+	minix_ino_t inos[NR_INODES];
+
+	for (minix_ino_t i = 1; i < minix_fs.super.s_ninodes; i++)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				minix_fs.imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+		uassert((
+			minix_inode_free(
+				&minix_fs.super,
+				minix_fs.imap,
+				inos[i])
+			) == 0
+		);
+	}
+}
+
+/**
+ * @brief Stress Test: Inode Alloc/Free Sequential Two Steps
+ */
+static void minix_stress_inode_alloc_free2(void)
+{
+	minix_ino_t inos[NR_INODES];
+
+	for (minix_ino_t i = 1; i < minix_fs.super.s_ninodes; i++)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				minix_fs.imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+	}
+
+	for (minix_ino_t i = 1; i < minix_fs.super.s_ninodes; i++)
+	{
+
+		uassert((
+			minix_inode_free(
+				&minix_fs.super,
+				minix_fs.imap,
+				inos[i])
+			) == 0
+		);
+	}
+}
+
+/**
+ * @brief Stress Test: Inode Read/Write Sequential One Step
+ */
+static void minix_stress_inode_read_write1(void)
+{
+	minix_ino_t inos[NR_INODES];
+	struct d_inode inode;
+
+	for (minix_ino_t i = 1; i < minix_fs.super.s_ninodes; i++)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				minix_fs.imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+			uassert((
+				minix_inode_read(
+					NANVIX_ROOT_DEV,
+					&minix_fs.super,
+					&inode,
+					inos[i])
+				) == 0
+			);
+
+			uassert((
+				minix_inode_write(
+					NANVIX_ROOT_DEV,
+					&minix_fs.super,
+					&inode,
+					inos[i])
+				) == 0
+			);
+
+		uassert((
+			minix_inode_free(
+				&minix_fs.super,
+				minix_fs.imap,
+				inos[i])
+			) == 0
+		);
+	}
+}
+
+/**
+ * @brief Stress Test: Inode Read/Write Sequential Two Steps
+ */
+static void minix_stress_inode_read_write2(void)
+{
+	minix_ino_t inos[NR_INODES];
+	struct d_inode inode;
+
+	for (minix_ino_t i = 1; i < minix_fs.super.s_ninodes; i++)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&minix_fs.super,
+				minix_fs.imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+	}
+
+		for (minix_ino_t i = 1; i < minix_fs.super.s_ninodes; i++)
+		{
+			uassert((
+				minix_inode_read(
+					NANVIX_ROOT_DEV,
+					&minix_fs.super,
+					&inode,
+					inos[i])
+				) == 0
+			);
+		}
+
+		for (minix_ino_t i = 1; i < minix_fs.super.s_ninodes; i++)
+		{
+			uassert((
+				minix_inode_write(
+					NANVIX_ROOT_DEV,
+					&minix_fs.super,
+					&inode,
+					inos[i])
+				) == 0
+			);
+		}
+
+	for (minix_ino_t i = 1; i < minix_fs.super.s_ninodes; i++)
+	{
+
+		uassert((
+			minix_inode_free(
+				&minix_fs.super,
+				minix_fs.imap,
+				inos[i])
+			) == 0
 		);
 	}
 }
@@ -449,12 +999,24 @@ static struct
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
 } minix_tests[] = {
-	{ minix_api_alloc_free,     "[minix][api] block alloc/free     " },
-	{ minix_fault_alloc_inval,  "[minix][fault] block alloc inval  " },
-	{ minix_fault_free_inval,   "[minix][fault] block free inval   " },
-	{ minix_stress_alloc_free1, "[minix][stress] block alloc/free 1" },
-	{ minix_stress_alloc_free2, "[minix][stress] block alloc/free 2" },
-	{ NULL,                      NULL                                },
+	{ minix_api_block_alloc_free,     "[minix][api] block alloc/free         " },
+	{ minix_api_inode_alloc_free,     "[minix][api] inode alloc/free         " },
+	{ minix_api_inode_read_write,     "[minix][api] inode read/write         " },
+	{ minix_fault_block_alloc_inval,  "[minix][fault] block alloc inval      " },
+	{ minix_fault_block_free_inval,   "[minix][fault] block free inval       " },
+	{ minix_fault_super_read_inval,   "[minix][fault] superblock read inval  " },
+	{ minix_fault_super_write_inval,  "[minix][fault] superblock write inval " },
+	{ minix_fault_inode_alloc_inval,  "[minix][fault] inode alloc inval      " },
+	{ minix_fault_inode_free_inval,   "[minix][fault] inode free inval       " },
+	{ minix_fault_inode_read_inval,   "[minix][fault] inode read inval       " },
+	{ minix_fault_inode_write_inval,  "[minix][fault] inode write inval      " },
+	{ minix_stress_block_alloc_free1, "[minix][stress] block alloc/free 1    " },
+	{ minix_stress_block_alloc_free2, "[minix][stress] block alloc/free 2    " },
+	{ minix_stress_inode_alloc_free1, "[minix][stress] inode alloc/free 1    " },
+	{ minix_stress_inode_alloc_free2, "[minix][stress] inode alloc/free 2    " },
+	{ minix_stress_inode_read_write1, "[minix][stress] inode read/write 1    " },
+	{ minix_stress_inode_read_write2, "[minix][stress] inode read/write 2    " },
+	{ NULL,                            NULL                                    },
 };
 
 /**

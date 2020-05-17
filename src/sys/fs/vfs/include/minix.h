@@ -27,6 +27,7 @@
 
 	#include <fs/minix.h>
 	#include <nanvix/config.h>
+	#include <posix/sys/types.h>
 
 	/**
 	 * @brief Number of Bits in a Block
@@ -61,9 +62,9 @@
 	 */
 	extern struct minix_fs_info minix_fs;
 
-	/*============================================================================*
-	 * Block Interface                                                            *
-	 *============================================================================*/
+/*============================================================================*
+ * Block Interface                                                            *
+ *============================================================================*/
 
 	/**
 	 * @brief Allocates a  file system block.
@@ -81,7 +82,7 @@
 	);
 
 	/**
-	 * @brief Frees a direct  file system block.
+	 * @brief Frees a direct file system block.
 	 *
 	 * @param sb  Target superblock.
 	 * @param num Number of the target direct block.
@@ -126,7 +127,7 @@
 	);
 
 	/**
-	 * @brief Frees a  file system block.
+	 * @brief Frees a file system block.
 	 *
 	 * @param sb  Target superblock.
 	 * @param num Number of the target block.
@@ -153,13 +154,134 @@
 	 * allocated for the file byte offset @p off is returned. Upon
 	 * failure, MINIX_BLOCK_NULL is returned instead.
 	 */
-	extern minix_block_t minix_block_map(struct d_superblock *sb, bitmap_t *zmap, struct d_inode *ip, off_t off, int create);
+	extern minix_block_t minix_block_map(
+		struct d_superblock *sb,
+		bitmap_t *zmap,
+		struct d_inode *ip,
+		off_t off,
+		int create
+	);
 
-	extern void minix_inode_write(struct d_superblock *sb, struct d_inode *ip, minix_ino_t num);
-	extern struct d_inode *minix_inode_read(struct d_superblock *sb, struct d_inode *ip, minix_ino_t num);
-	extern minix_ino_t minix_inode_alloc(struct d_superblock *sb, bitmap_t *imap, uint16_t mode, uint16_t uid, uint16_t gid);
-	extern void minix_super_read(struct d_superblock *sb, bitmap_t *imap, bitmap_t *zmap);
-	extern void minix_super_write(struct d_superblock *sb, bitmap_t *imap, bitmap_t *zmap);
-	extern void minix_mkfs (minix_ino_t ninodes, minix_block_t nblocks, uint16_t uid, uint16_t gid);
+/*============================================================================*
+ * Superblock Interface                                                       *
+ *============================================================================*/
+
+	/**
+	 * @brief Reads the superblock of a MINIX file system.
+	 *
+	 * @param dev  Target disk device.
+	 * @param sb   Target location to store the superblock.
+	 * @param zmap Target location to store zone map.
+	 * @param imap Target location to store the inode map
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_super_read(
+		dev_t dev,
+		struct d_superblock *sb,
+		bitmap_t *zmap,
+		bitmap_t *imap
+	);
+
+	/**
+	 * @brief Writes the superblock of a MINIX file system.
+	 *
+	 * @param dev  Target disk device.
+	 * @param sb   Target superblock.
+	 * @param zmap Target zone map.
+	 * @param imap Target inode map
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_super_write(
+		dev_t dev,
+		const struct d_superblock *sb,
+		const bitmap_t *zmap,
+		const bitmap_t *imap
+	);
+
+/*============================================================================*
+ * Inode Interface                                                            *
+ *============================================================================*/
+
+	/**
+	 * @brief Allocates an inode.
+	 *
+	 * @param dev  Target device.
+	 * @param sb   Target superblock.
+	 * @param imap Target inode map.
+	 * @param mode Access mode.
+	 * @param uid  User ID.
+	 * @param gid  User group ID.
+	 *
+	 * @returns Upon successful completion, the number of the allocated
+	 * inode is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern minix_ino_t minix_inode_alloc(
+		dev_t dev,
+		struct d_superblock *sb,
+		bitmap_t *imap,
+		minix_mode_t mode,
+		minix_uid_t uid,
+		minix_gid_t gid
+	);
+
+	/**
+	 * @brief Frees an inode.
+	 *
+	 * @param sb   Target superblock.
+	 * @param imap Target inode map.
+	 * @param num  Number of the target inode.
+	 *
+	 * @returns Upon successful completion, the number of the allocated
+	 * inode is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern int minix_inode_free(
+		struct d_superblock *sb,
+		bitmap_t *imap,
+		minix_ino_t num
+	);
+
+	/**
+	 * @brief Reads an inode from the disk.
+	 *
+	 * @param dev Target device.
+	 * @param sb  Target superblock.
+	 * @param ip  Target inode.
+	 * @param num Number of the target inode.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_inode_read(
+		dev_t dev,
+		struct d_superblock *sb,
+		struct d_inode *ip,
+		minix_ino_t num
+	);
+
+	/**
+	 * @brief Writes an inode to the disk.
+	 *
+	 * @param dev Target device.
+	 * @param sb  Target superblock.
+	 * @param ip  Target inode.
+	 * @param num Number of the target inode.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_inode_write(
+		dev_t dev,
+		struct d_superblock *sb,
+		struct d_inode *ip,
+		minix_ino_t num
+	);
+
+	extern int minix_mkfs (minix_ino_t ninodes, minix_block_t nblocks, uint16_t uid, uint16_t gid);
 
 #endif /* _MINIX_H_ */

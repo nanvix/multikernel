@@ -215,8 +215,12 @@ static void minix_dirent_add
  * @note @p ninodes must be valid.
  * @note @p nblocks must be valid.
  */
-void minix_mkfs
-(minix_ino_t ninodes, minix_block_t nblocks, uint16_t uid, uint16_t gid)
+int minix_mkfs(
+	minix_ino_t ninodes,
+	minix_block_t nblocks,
+	uint16_t uid,
+	uint16_t gid
+)
 {
 	size_t size;            /* Size of file system.            */
 	char buf[MINIX_BLOCK_SIZE];   /* Writing buffer.                 */
@@ -265,12 +269,12 @@ void minix_mkfs
 	mode  = S_IFDIR| S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
 	/* Create root directory. */
-	num = minix_inode_alloc(&minix_fs.super, minix_fs.imap, mode, uid, gid);
-	minix_inode_read(&minix_fs.super, &root, num);
+	num = minix_inode_alloc(NANVIX_ROOT_DEV, &minix_fs.super, minix_fs.imap, mode, uid, gid);
+	minix_inode_read(NANVIX_ROOT_DEV, &minix_fs.super, &root, num);
 	minix_dirent_add(&root, ".", num);
 	minix_dirent_add(&root, "..", num);
 	root.i_nlinks--;
-	minix_inode_write(&minix_fs.super, &root, num);
+	minix_inode_write(NANVIX_ROOT_DEV, &minix_fs.super, &root, num);
 
-	minix_super_write(&minix_fs.super, minix_fs.imap, minix_fs.zmap);
+	return (minix_super_write(NANVIX_ROOT_DEV, &minix_fs.super, minix_fs.zmap, minix_fs.imap));
 }
