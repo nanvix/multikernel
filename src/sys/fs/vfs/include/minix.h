@@ -61,9 +61,9 @@
 	 */
 	extern struct minix_fs_info minix_fs;
 
-	/*============================================================================*
-	 * Block Interface                                                            *
-	 *============================================================================*/
+/*============================================================================*
+ * Block Interface                                                            *
+ *============================================================================*/
 
 	/**
 	 * @brief Allocates a  file system block.
@@ -81,7 +81,7 @@
 	);
 
 	/**
-	 * @brief Frees a direct  file system block.
+	 * @brief Frees a direct file system block.
 	 *
 	 * @param sb  Target superblock.
 	 * @param num Number of the target direct block.
@@ -126,7 +126,7 @@
 	);
 
 	/**
-	 * @brief Frees a  file system block.
+	 * @brief Frees a file system block.
 	 *
 	 * @param sb  Target superblock.
 	 * @param num Number of the target block.
@@ -153,7 +153,13 @@
 	 * allocated for the file byte offset @p off is returned. Upon
 	 * failure, MINIX_BLOCK_NULL is returned instead.
 	 */
-	extern minix_block_t minix_block_map(struct d_superblock *sb, bitmap_t *zmap, struct d_inode *ip, off_t off, int create);
+	extern minix_block_t minix_block_map(
+		struct d_superblock *sb,
+		bitmap_t *zmap,
+		struct d_inode *ip,
+		off_t off,
+		int create
+	);
 
 	extern void minix_inode_write(struct d_superblock *sb, struct d_inode *ip, minix_ino_t num);
 	extern struct d_inode *minix_inode_read(struct d_superblock *sb, struct d_inode *ip, minix_ino_t num);
