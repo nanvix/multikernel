@@ -392,6 +392,96 @@ static void minix_api_inode_read_write(void)
 }
 
 /**
+ * @brief API Test: Directory Entry Add/Remove
+ */
+static void minix_api_dirent_add_remove(void)
+{
+	minix_ino_t ino;
+	const char *filename = "test-file";
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_dirent_add(
+				&minix_fs.root,
+				filename,
+				ino)
+			) == 0
+		);
+
+		uassert((
+			minix_dirent_remove(
+				&minix_fs.root,
+				filename)
+			) == 0
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
+ * @brief API Test: Directory Entry Search
+ */
+static void minix_api_dirent_search(void)
+{
+	minix_ino_t ino;
+	const char *filename = "test-file";
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_dirent_add(
+				&minix_fs.root,
+				filename,
+				ino)
+			) == 0
+		);
+
+			uassert((
+				minix_dirent_search(
+					&minix_fs.root,
+					filename,
+					0)
+				) >= 0
+			);
+
+		uassert((
+			minix_dirent_remove(
+				&minix_fs.root,
+				filename)
+			) == 0
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
  * @brief Fault Injection Test: Invalid Alloc
  */
 static void minix_fault_block_alloc_inval(void)
@@ -772,6 +862,197 @@ static void minix_fault_inode_write_inval(void)
 }
 
 /**
+ * @brief Fault Injection Test: Invalid Directory Entry Add
+ */
+static void minix_fault_dirent_add_inval(void)
+{
+	minix_ino_t ino;
+	const char *filename = "test-file";
+	const char *longname =
+		"i like hamburguers, with bacon, cheese, more bacon, and more cheese";
+
+	uassert((
+		ino = minix_inode_alloc(
+			minix_fs.dev,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_dirent_add(
+				NULL,
+				filename,
+				ino)
+			) == -EINVAL
+		);
+
+		uassert((
+			minix_dirent_add(
+				&minix_fs.root,
+				NULL,
+				ino)
+			) == -EINVAL
+		);
+
+		uassert((
+			minix_dirent_add(
+				&minix_fs.root,
+				longname,
+				ino)
+			) == -ENAMETOOLONG
+		);
+
+		uassert((
+			minix_dirent_add(
+				&minix_fs.root,
+				filename,
+				MINIX_INODE_NULL)
+			) == -EINVAL
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Directory Entry Remove
+ */
+static void minix_fault_dirent_remove_inval(void)
+{
+	minix_ino_t ino;
+	const char *filename = "test-file";
+	const char *longname =
+		"i like hamburguers, with bacon, cheese, more bacon, and more cheese";
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_dirent_add(
+				&minix_fs.root,
+				filename,
+				ino)
+			) == 0
+		);
+
+			uassert((
+				minix_dirent_remove(
+					NULL,
+					filename)
+				) == -EINVAL
+			);
+
+			uassert((
+				minix_dirent_remove(
+					&minix_fs.root,
+					NULL)
+				) == -EINVAL
+			);
+
+			uassert((
+				minix_dirent_remove(
+					&minix_fs.root,
+					longname)
+				) == -ENAMETOOLONG
+			);
+
+		uassert((
+			minix_dirent_remove(
+				&minix_fs.root,
+				filename)
+			) == 0
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Directory Entry Search
+ */
+static void minix_fault_dirent_search_inval(void)
+{
+	minix_ino_t ino;
+	const char *filename = "test-file";
+	const char *longname =
+		"i like hamburguers, with bacon, cheese, more bacon, and more cheese";
+
+	uassert((
+		ino = minix_inode_alloc(
+			NANVIX_ROOT_DEV,
+			&minix_fs.super,
+			minix_fs.imap,
+			0, 0, 0)
+		) != MINIX_INODE_NULL
+	);
+
+		uassert((
+			minix_dirent_add(
+				&minix_fs.root,
+				filename,
+				ino)
+			) == 0
+		);
+
+			uassert((
+				minix_dirent_search(
+					NULL,
+					filename,
+					0)
+				) == -EINVAL
+			);
+
+			uassert((
+				minix_dirent_search(
+					&minix_fs.root,
+					NULL,
+					0)
+				) == -EINVAL
+			);
+
+			uassert((
+				minix_dirent_search(
+					&minix_fs.root,
+					longname,
+					0)
+				) == -ENAMETOOLONG
+			);
+
+		uassert((
+			minix_dirent_remove(
+				&minix_fs.root,
+				filename)
+			) == 0
+		);
+
+	uassert((
+		minix_inode_free(
+			&minix_fs.super,
+			minix_fs.imap,
+			ino)
+		) == 0
+	);
+}
+
+/**
  * @brief Sress Test: Block Alloc/Free
  */
 static void minix_stress_block_alloc_free1(void)
@@ -1002,6 +1283,8 @@ static struct
 	{ minix_api_block_alloc_free,     "[minix][api] block alloc/free         " },
 	{ minix_api_inode_alloc_free,     "[minix][api] inode alloc/free         " },
 	{ minix_api_inode_read_write,     "[minix][api] inode read/write         " },
+	{ minix_api_dirent_add_remove,    "[minix][api] dirent add/remove        " },
+	{ minix_api_dirent_search,        "[minix][api] dirent search            " },
 	{ minix_fault_block_alloc_inval,  "[minix][fault] block alloc inval      " },
 	{ minix_fault_block_free_inval,   "[minix][fault] block free inval       " },
 	{ minix_fault_super_read_inval,   "[minix][fault] superblock read inval  " },
@@ -1010,6 +1293,9 @@ static struct
 	{ minix_fault_inode_free_inval,   "[minix][fault] inode free inval       " },
 	{ minix_fault_inode_read_inval,   "[minix][fault] inode read inval       " },
 	{ minix_fault_inode_write_inval,  "[minix][fault] inode write inval      " },
+	{ minix_fault_dirent_add_inval,   "[minix][fault] dirent add inval       " },
+	{ minix_fault_dirent_remove_inval,"[minix][fault] dirent remove inval    " },
+	{ minix_fault_dirent_search_inval,"[minix][fault] dirent search inval    " },
 	{ minix_stress_block_alloc_free1, "[minix][stress] block alloc/free 1    " },
 	{ minix_stress_block_alloc_free2, "[minix][stress] block alloc/free 2    " },
 	{ minix_stress_inode_alloc_free1, "[minix][stress] inode alloc/free 1    " },
