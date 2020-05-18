@@ -22,9 +22,13 @@
  * SOFTWARE.
  */
 
+/* Must come first. */
+#define __NEED_LIMITS_FS
+
+#include <nanvix/limits/fs.h>
 #include <posix/sys/types.h>
 #include <posix/sys/stat.h>
-#include <posix/stdint.h>
+#include <posix/errno.h>
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
 #include "../include/minix.h"
@@ -36,43 +40,72 @@
  */
 struct minix_fs_info minix_fs;
 
+/*============================================================================*
+ * minix_dirent_search()                                                      *
+ *============================================================================*/
+
 /**
  * @brief Searches for a directory entry.
  *
- * @param ip       Directory where the directory entry shall be searched.
- * @param filename Name of the directory entry that shall be searched.
- * @param create   Create directory entry?
+ * The minix_dirent_search() function searches in the target directory
+ * pointed to by @p dip for the entry named @p name. If the entry does
+ * not exist and @p create is non zero, the entry is created.
  *
- * @returns The file offset where the directory entry is located, or -1 if the
- *          file does not exist.
+ * @param dip    Directory where the directory entry shall be searched.
+ * @param name   Name of the directory entry that shall be searched.
+ * @param create Create directory entry?
  *
- * @note @p ip must point to a valid inode
- * @note @p filename must point to a valid file name.
- * @note The Minix file system must be mounted.
+ * @returns The file offset where the directory entry is located, or -1
+ * if the file does not exist.
  */
-static off_t dirent_search(struct d_inode *ip, const char *filename,bool create)
+off_t minix_dirent_search(
+	struct d_inode *dip,
+	const char *name,
+	int create
+)
 {
 	int i;             /* Working entry.               */
 	off_t base, off;   /* Working file offsets.        */
 	int entry;         /* Free entry.                  */
-	minix_block_t blk;       /* Working block.               */
+	minix_block_t blk; /* Working block.               */
 	int nentries;      /* Number of directory entries. */
 	struct d_dirent d; /* Working directory entry.     */
 
-	nentries = ip->i_size/sizeof(struct d_dirent);
+	/* Invalid directory pointer. */
+	if (dip == NULL)
+		return (-EINVAL);
+
+	/* Not a directory. */
+	if (!S_ISDIR(dip->i_mode))
+		return (-EINVAL);
+
+	/* Invalid name. */
+	if (name == NULL)
+		return (-EINVAL);
+
+	/* Bad name. */
+	if (ustrlen(name) > MINIX_NAME_MAX)
+		return (-ENAMETOOLONG);
+
+	nentries = dip->i_size/sizeof(struct d_dirent);
 
 	/* Search for directory entry. */
-	i = 0;
 	entry = -1;
-	blk = ip->i_zones[0];
-	base = -1;
-	while (i < nentries)
+	blk = dip->i_zones[0];
+	off = 0; base = -1;
+	for (i = 0; i < nentries; /* noop*/)
 	{
 		/* Skip invalid block. */
 		if (blk == MINIX_BLOCK_NULL)
 		{
 			i += MINIX_BLOCK_SIZE/sizeof(struct d_dirent);
-			blk = minix_block_map(&minix_fs.super, minix_fs.zmap, ip, i*sizeof(struct d_dirent), false);
+			blk = minix_block_map(
+				&minix_fs.super,
+				minix_fs.zmap,
+				dip,
+				i*sizeof(struct d_dirent),
+				0
+			);
 			continue;
 		}
 
@@ -87,21 +120,27 @@ static off_t dirent_search(struct d_inode *ip, const char *filename,bool create)
 		else if (off >= MINIX_BLOCK_SIZE)
 		{
 			base = -1;
-			blk = minix_block_map(&minix_fs.super, minix_fs.zmap, ip, i*sizeof(struct d_dirent), false);
+			blk = minix_block_map(
+				&minix_fs.super,
+				minix_fs.zmap,
+				dip,
+				i*sizeof(struct d_dirent),
+				0
+			);
 			continue;
 		}
 
-		bdev_read(0, (char *)&d, sizeof(struct d_dirent), base);
+		bdev_read(minix_fs.dev, (char *)&d, sizeof(struct d_dirent), base + off);
 
 		/* Valid entry. */
 		if (d.d_ino != MINIX_INODE_NULL)
 		{
 			/* Found. */
-			if (!ustrncmp(d.d_name, filename, MINIX_NAME_MAX))
+			if (!ustrncmp(d.d_name, name, MINIX_NAME_MAX))
 			{
 				/* Duplicate entry. */
 				if (create)
-					upanic("duplicate entry");
+					return (-EEXIST);
 
 				return (base + off);
 			}
@@ -123,12 +162,12 @@ static off_t dirent_search(struct d_inode *ip, const char *filename,bool create)
 	if (entry < 0)
 	{
 		entry = nentries;
-		blk = minix_block_map(&minix_fs.super, minix_fs.zmap, ip, entry*sizeof(struct d_dirent), true);
-		ip->i_size += sizeof(struct d_dirent);
+		blk = minix_block_map(&minix_fs.super, minix_fs.zmap, dip, entry*sizeof(struct d_dirent), 1);
+		dip->i_size += sizeof(struct d_dirent);
 	}
 
 	else
-		blk = minix_block_map(&minix_fs.super, minix_fs.zmap, ip, entry*sizeof(struct d_dirent), false);
+		blk = minix_block_map(&minix_fs.super, minix_fs.zmap, dip, entry*sizeof(struct d_dirent), 0);
 
 	/* Compute file offset. */
 	off = (entry%(MINIX_BLOCK_SIZE/sizeof(struct d_dirent)))*sizeof(struct d_dirent);
@@ -137,99 +176,180 @@ static off_t dirent_search(struct d_inode *ip, const char *filename,bool create)
 	return (base + off);
 }
 
-/**
- * @brief Searches for a file in a directory.
- *
- * @param dip       Directory where the file shall be searched.
- * @param filename File that shal be searched.
- *
- * @returns The inode number of the requested file, or #MINIX_INODE_NULL, if such
- *          files does not exist.
- *
- * @note @p dip must point to a valid inode.
- * @note @p filename must point to a valid file name.
- * @note The Minix file system must be mounted.
- */
-minix_ino_t dir_search(struct d_inode *dip, const char *filename)
-{
-	off_t off;         /* File offset where the entry is. */
-	struct d_dirent d; /* Working directory entry.        */
-
-	/* Not a directory. */
-	if (!S_ISDIR(dip->i_mode))
-		upanic("not a directory");
-
-	/* Search directory entry. */
-	off = dirent_search(dip, filename, false);
-	if (off == -1)
-		return (MINIX_INODE_NULL);
-
-	bdev_read(0, (char *)&d, sizeof(struct d_dirent), off);
-
-	return (d.d_ino);
-}
+/*============================================================================*
+ * minix_dirent_add()                                                         *
+ *============================================================================*/
 
 /**
  * @brief Adds an entry in a directory.
  *
- * @param dip       Directory where the entry should be added.
- * @param filename Name of the entry.
- * @param num      Inode number of the entry.
+ * The minix_dirent_add() function adds a new entry to the directory
+ * pointed to by @p dip.  The new entry is set to point to the inode @p
+ * num and is linked to the symbolic name pointed to by @p name.
  *
- * @note @p dip must point to a valid inode.
- * @note @p filename must point to a valid file name.
- * @note The Minix file system must be mounted.
+ * @param dip  Target directory.
+ * @param name Name of the entry.
+ * @param num  Number of linked inode.
+ *
+ * @returns upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
  */
-static void minix_dirent_add
-(struct d_inode *dip, const char *filename, minix_ino_t num)
+int minix_dirent_add(
+	struct d_inode *dip,
+	const char *name,
+	minix_ino_t num
+)
 {
-	off_t off;         /* File offset of the entry. */
-	struct d_dirent d; /* Directory entry.          */
+	off_t off;         /* File of the entry. */
+	struct d_dirent d; /* Directory entry.   */
+
+	/* Invalid directory pointer. */
+	if (dip == NULL)
+		return (-EINVAL);
+
+	/* Not a directory. */
+	if (!S_ISDIR(dip->i_mode))
+		return (-EINVAL);
+
+	/* Invalid name. */
+	if (name == NULL)
+		return (-EINVAL);
+
+	/* Bad name. */
+	if (ustrlen(name) > MINIX_NAME_MAX)
+		return (-ENAMETOOLONG);
+
+	/* Invalid inode. */
+	if (num == MINIX_INODE_NULL)
+		return (-EINVAL);
 
 	/* Get free entry. */
-	off = dirent_search(dip, filename, true);
+	if ((off = minix_dirent_search(dip, name, 1)) < 0)
+		return (-EAGAIN);
 
 	/* Read directory entry. */
-	bdev_read(0, (char *)&d, sizeof(struct d_dirent), off);
+	bdev_read(minix_fs.dev, (char *)&d, sizeof(struct d_dirent), off);
 
 	/* Set attributes. */
 	d.d_ino = num;
-	ustrncpy(d.d_name, filename, MINIX_NAME_MAX);
+	ustrncpy(d.d_name, name, MINIX_NAME_MAX);
 
 	/* Write directory entry. */
-	bdev_write(0, (char *)&d, sizeof(struct d_dirent), off);
+	bdev_write(minix_fs.dev, (char *)&d, sizeof(struct d_dirent), off);
 
 	dip->i_nlinks++;
 	dip->i_time = 0;
+
+	return (0);
 }
 
+/*============================================================================*
+ * minix_dirent_remove()                                                      *
+ *============================================================================*/
+
 /**
- * @brief Creates a Minix file system.
+ * @brief Removes a directory entry.
  *
- * @param ninodes  Number of inodes.
- * @param nblocks  Number of blocks.
- * @param uid  User ID.
- * @param gid  User group ID.
+ * @param dip  Target directory.
+ * @param name Symbolic name of target entry.
  *
- * @note @p diskfile must refer to a valid file.
- * @note @p ninodes must be valid.
- * @note @p nblocks must be valid.
+ * The nanvix_dirent_remove() function removes the directory entry named
+ * @p name from the directory pointed to by @p dip.
+ *
+ * @returns Upon successful return, zero is returned. Upon failure, a
+ * negative error code is returned instead.
  */
-int minix_mkfs(
-	minix_ino_t ninodes,
-	minix_block_t nblocks,
-	uint16_t uid,
-	uint16_t gid
+int minix_dirent_remove(
+	struct d_inode *dip,
+	const char *name
 )
 {
-	size_t size;            /* Size of file system.            */
-	char buf[MINIX_BLOCK_SIZE];   /* Writing buffer.                 */
+	struct d_inode ip; /* Target Inode        */
+	off_t off;         /* Offset of the Entry */
+	struct d_dirent d; /* Directory Entry     */
+	/* Invalid directory. */
+	if (dip == NULL)
+		return (-EINVAL);
+
+	/* Not a directory. */
+	if (!S_ISDIR(dip->i_mode))
+		return (-EINVAL);
+
+	/* Invalid name. */
+	if (name == NULL)
+		return (-EINVAL);
+
+	/* Bad name. */
+	if (ustrlen(name) > MINIX_NAME_MAX)
+		return (-ENAMETOOLONG);
+
+	/* Cannot remove '.' */
+	if (!ustrcmp(name, "."))
+		return (-EBUSY);
+
+	/* Search entry. */
+	if ((off = minix_dirent_search(dip, name, 0)) < 0)
+		return (-ENOENT);
+
+	/* Read directory entry. */
+	bdev_read(minix_fs.dev, (char *)&d, sizeof(struct d_dirent), off);
+
+	/* Read inode. */
+	if (minix_inode_read(minix_fs.dev, &minix_fs.super, &ip, d.d_ino) < 0)
+		return (-ENOENT);
+
+	/* Unlinking directory. */
+	if (S_ISDIR(ip.i_mode))
+	{
+		/* Directory not empty. */
+		if (ip.i_size > 0)
+			return (-EBUSY);
+	}
+
+	/* Write inode. */
+	ip.i_nlinks--;
+	if (minix_inode_write(minix_fs.dev, &minix_fs.super, &ip, d.d_ino) < 0)
+		return (-EAGAIN);
+
+	/* Remove directory entry. */
+	d.d_ino = MINIX_INODE_NULL;
+	ustrncpy(d.d_name, "", MINIX_NAME_MAX);
+
+	/* Write directory entry. */
+	bdev_write(minix_fs.dev, (char *)&d, sizeof(struct d_dirent), off);
+
+	return (0);
+}
+
+/*============================================================================*
+ * minix_mkfs()                                                               *
+ *============================================================================*/
+
+/**
+ * The minix_mkfs() function creates a MINIX file system in the device
+ * @p dev. The file system is formatted to feature @p ninode inodes, @p
+ * nblocks @p nblocks. Furthermore, the user ID and the user group ID of
+ * the file system are set to @p uid, and @p gid, respectively.
+ */
+int minix_mkfs(
+	dev_t dev,
+	minix_ino_t ninodes,
+	minix_block_t nblocks,
+	minix_uid_t uid,
+	minix_gid_t gid
+)
+{
+	size_t size;                 /* Size of file system.            */
+	char buf[MINIX_BLOCK_SIZE];  /* Writing buffer.                 */
 	minix_block_t imap_nblocks;  /* Number of inodes map blocks.    */
 	minix_block_t bmap_nblocks;  /* Number of block map blocks.     */
 	minix_block_t inode_nblocks; /* Number of inode blocks.         */
-	struct d_inode root;   /* Root directory.                 */
-	mode_t mode;            /* Access permissions to root dir. */
-	minix_ino_t num;           /* Inode number of root directory. */
+	mode_t mode;                 /* Access permissions to root dir. */
+	minix_ino_t num;             /* Inode number of root directory. */
+
+	/*
+	 * TODO: sanity check arguments.
+	 */
 
 	/* Compute dimensions of file sytem. */
 	imap_nblocks = ROUND(ninodes/(MINIX_BLOCK_BIT_LENGTH));
@@ -248,7 +368,9 @@ int minix_mkfs(
 	/* Fill file system with zeros. */
 	umemset(buf, 0, MINIX_BLOCK_SIZE);
 	for (size_t i = 0; i < size; i += MINIX_BLOCK_SIZE)
-		bdev_write(0, buf, MINIX_BLOCK_SIZE, i*MINIX_BLOCK_SIZE);
+		bdev_write(minix_fs.dev, buf, MINIX_BLOCK_SIZE, i*MINIX_BLOCK_SIZE);
+
+	minix_fs.dev = dev;
 
 	/* Write superblock. */
 	minix_fs.super.s_ninodes = ninodes;
@@ -256,25 +378,23 @@ int minix_mkfs(
 	minix_fs.super.s_imap_nblocks = imap_nblocks;
 	minix_fs.super.s_bmap_nblocks = bmap_nblocks;
 	minix_fs.super.s_first_data_block = 2 + imap_nblocks + bmap_nblocks + inode_nblocks;
-	minix_fs.super.s_max_size = 532480;
+	minix_fs.super.s_max_size = NANVIX_MAX_FILE_SIZE;
 	minix_fs.super.s_magic = MINIX_SUPER_MAGIC;
 
-	/* Create inode map. */
+	/* Create inode and zone maps. */
 	uassert((minix_fs.imap = ucalloc(imap_nblocks, MINIX_BLOCK_SIZE)) != NULL);
-
-	/* Create block map. */
 	uassert((minix_fs.zmap = ucalloc(bmap_nblocks, MINIX_BLOCK_SIZE)) != NULL);
 
 	/* Access permission to root directory. */
 	mode  = S_IFDIR| S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
 	/* Create root directory. */
-	num = minix_inode_alloc(NANVIX_ROOT_DEV, &minix_fs.super, minix_fs.imap, mode, uid, gid);
-	minix_inode_read(NANVIX_ROOT_DEV, &minix_fs.super, &root, num);
-	minix_dirent_add(&root, ".", num);
-	minix_dirent_add(&root, "..", num);
-	root.i_nlinks--;
-	minix_inode_write(NANVIX_ROOT_DEV, &minix_fs.super, &root, num);
+	uassert((num = minix_inode_alloc(dev, &minix_fs.super, minix_fs.imap, mode, uid, gid)) != MINIX_INODE_NULL);
+	minix_fs.root_ino = num;
+	minix_inode_read(dev, &minix_fs.super, &minix_fs.root, num);
+	minix_dirent_add(&minix_fs.root, ".", num);
+	minix_dirent_add(&minix_fs.root, "..", num);
+	uassert(minix_inode_write(dev, &minix_fs.super, &minix_fs.root, num) == 0);
 
-	return (minix_super_write(NANVIX_ROOT_DEV, &minix_fs.super, minix_fs.zmap, minix_fs.imap));
+	return (minix_super_write(dev, &minix_fs.super, minix_fs.zmap, minix_fs.imap));
 }

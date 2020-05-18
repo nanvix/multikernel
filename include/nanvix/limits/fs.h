@@ -25,13 +25,13 @@
 #ifndef NANVIX_LIMITS_H_
 #define NANVIX_LIMITS_H_
 
-	/* Must come first. */
-	#define __NEED_LIMITS_PM
-	#define __NEED_LIMITS_SHM
-	#define __NEED_LIMITS_FS
+	#ifndef __NEED_LIMITS_FS
+	#error "do not include this file"
+	#endif
 
-	#include <nanvix/limits/pm.h>
-	#include <nanvix/limits/shm.h>
-	#include <nanvix/limits/fs.h>
+	/**
+	 * @brief Maximum Size for a File
+	 */
+	#define NANVIX_MAX_FILE_SIZE (64*1024*1024)
 
 #endif /* NANVIX_LIMITS_H_ */
