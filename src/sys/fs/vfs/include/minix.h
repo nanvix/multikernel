@@ -27,6 +27,7 @@
 
 	#include <fs/minix.h>
 	#include <nanvix/config.h>
+	#include <nanvix/ulib.h>
 	#include <posix/sys/types.h>
 
 	/**
