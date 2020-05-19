@@ -22,6 +22,8 @@ tags
 *.swp
 *.swo
 *.vscode/
+.clangd/
+*.json
 
 # KLib Headers
 include/nanvix/barelib.h
