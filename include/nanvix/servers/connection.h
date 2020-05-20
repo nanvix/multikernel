@@ -22,15 +22,27 @@
  * SOFTWARE.
  */
 
-#ifndef _SHM_H_
-#define _SHM_H_
+#ifndef SERVERS_CONNECTION_H_
+#define SERVERS_CONNECTION_H_
 
+	#include <nanvix/limits.h>
 	#include <posix/sys/types.h>
 
 	/**
 	 * @brief Initializes the table of connections.
 	 */
 	extern void connections_setup(void);
+
+	/**
+	 * @brief Searches for a registered connection.
+	 *
+	 * @param pid PID of the remote.
+	 *
+	 * @returns If the target remote is found, its index in the table of
+	 * connections is returned. Otherwise a negative number is returned
+	 * instead.
+	 */
+	extern int lookup(pid_t remote);
 
 	/**
 	 * @brief Establishes a connection
@@ -63,4 +75,4 @@
 	 */
 	extern int get_connections(pid_t *buf);
 
-#endif /* _SHM_H_ */
+#endif /* SERVERS_CONNECTION_H_ */

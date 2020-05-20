@@ -26,6 +26,7 @@
 #define __SHM_SERVER
 
 #include <nanvix/servers/shm.h>
+#include <nanvix/servers/connection.h>
 #include <nanvix/runtime/stdikc.h>
 #include <nanvix/sys/semaphore.h>
 #include <nanvix/sys/mailbox.h>
@@ -33,7 +34,6 @@
 #include <nanvix/config.h>
 #include <nanvix/pm.h>
 #include <nanvix/ulib.h>
-#include "shm.h"
 
 /**
  * @brief SHM Server information.
