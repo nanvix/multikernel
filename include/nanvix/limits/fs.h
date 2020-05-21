@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_LIMITS_H_
-#define NANVIX_LIMITS_H_
+#ifndef NANVIX_LIMITS_FS_H_
+#define NANVIX_LIMITS_FS_H_
 
 	#ifndef __NEED_LIMITS_FS
 	#error "do not include this file"
@@ -34,4 +34,4 @@
 	 */
 	#define NANVIX_MAX_FILE_SIZE (64*1024*1024)
 
-#endif /* NANVIX_LIMITS_H_ */
+#endif /* NANVIX_LIMITS_FS_H_ */
