@@ -23,19 +23,17 @@
  */
 
 /* Must come first. */
-#define __NEED_RESOURCE
 #define __VFS_SERVER
 
+#include <nanvix/servers/connection.h>
 #include <nanvix/servers/vfs.h>
 #include <nanvix/runtime/runtime.h>
 #include <nanvix/sys/semaphore.h>
 #include <nanvix/sys/mailbox.h>
 #include <nanvix/sys/noc.h>
+#include <nanvix/config.h>
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
-#include "include/const.h"
-#include "include/minix.h"
-#include "include/bcache.h"
 
 /* Import definitions. */
 extern void vfs_test(void);
@@ -98,6 +96,46 @@ static int do_vfs_loop(void)
 				shutdown = 1;
 				break;
 
+			case VFS_CREAT:
+				reply = 1;
+				break;
+
+			case VFS_OPEN:
+				reply = 1;
+				break;
+
+			case VFS_UNLINK:
+				reply = 1;
+				break;
+
+			case VFS_CLOSE:
+				reply = 1;
+				break;
+
+			case VFS_LINK:
+				reply = 1;
+				break;
+
+			case VFS_TRUNCATE:
+				reply = 1;
+				break;
+
+			case VFS_STAT:
+				reply = 1;
+				break;
+
+			case VFS_READ:
+				reply = 1;
+				break;
+
+			case VFS_WRITE:
+				reply = 1;
+				break;
+
+			case VFS_SEEK:
+				reply = 1;
+				break;
+
 			default:
 				break;
 		}
@@ -157,15 +195,8 @@ static int do_vfs_startup(struct nanvix_semaphore *lock)
 	if ((ret = name_link(server.nodenum, server.name)) < 0)
 		return (ret);
 
-	ramdisk_init();
-	binit();
-	minix_mkfs(
-		NANVIX_ROOT_DEV,
-		NR_INODES,
-		NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE,
-		NANVIX_ROOT_UID,
-		NANVIX_ROOT_GID
-	);
+	connections_setup();
+	vfs_init();
 
 	uprintf("[nanvix][vfs] minix file system created");
 

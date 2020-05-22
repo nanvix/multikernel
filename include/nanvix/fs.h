@@ -22,14 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef NANVIX_FS_H_
+#define NANVIX_FS_H_
 
-	#include <posix/stdint.h>
 
-	/**
-	 * @brief Block Number
-	 */
-	typedef uint32_t block_t;
-
-#endif /* _TYPES_H_ */
+#endif /* NANVIX_FS_H_ */

@@ -22,45 +22,15 @@
  * SOFTWARE.
  */
 
-#ifndef _SHM_H_
-#define _SHM_H_
+#ifndef NANVIX_SERVERS_VFS_TYPES_H_
+#define NANVIX_SERVERS_VFS_TYPES_H_
 
-	#include <posix/sys/types.h>
-
-	/**
-	 * @brief Initializes the table of connections.
-	 */
-	extern void connections_setup(void);
+	#include <posix/stdint.h>
 
 	/**
-	 * @brief Establishes a connection
-	 *
-	 * @param pid PID of the remote.
-	 *
-	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
-	 * negative error code is returned instead.
+	 * @brief Block Number
 	 */
-	extern int connect(pid_t remote);
+	typedef uint32_t block_t;
 
-	/**
-	 * @brief Unlinks a connection
-	 *
-	 * @param pid PID of the remote.
-	 *
-	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
-	 * negative error code is returned instead.
-	 */
-	extern int disconnect(pid_t remote);
+#endif /* NANVIX_SERVERS_VFS_TYPES_H_ */
 
-	/**
-	 * @brief Gets active connections.
-	 *
-	 * @param buf Buffer to store info on connections.
-	 *
-	 * @returns Upon successful completion, the number of connections
-	 * placed in @p buf is returned. Upon failure, a negative error code
-	 * is returned instead.
-	 */
-	extern int get_connections(pid_t *buf);
-
-#endif /* _SHM_H_ */

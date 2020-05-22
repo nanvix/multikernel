@@ -63,4 +63,9 @@
 	/**@{*/
 	#define NANVIX_PORTAL_MAX KPORTAL_MAX /**< Maximum number of portals that can be opened. */
 
+	/**
+	 * @brief Maximum number of active connections in a server.
+	 */
+	#define NANVIX_CONNECTIONS_MAX NANVIX_PROC_MAX
+
 #endif /* NANVIX_LIMITS_PM_H_ */

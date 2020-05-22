@@ -22,11 +22,12 @@
  * SOFTWARE.
  */
 
-#ifndef _MINIX_H_
-#define _MINIX_H_
+#ifndef NANVIX_SERVERS_VFS_MINIX_H_
+#define NANVIX_SERVERS_VFS_MINIX_H_
 
 	#include <fs/minix.h>
 	#include <nanvix/config.h>
+	#include <nanvix/ulib.h>
 	#include <posix/sys/types.h>
 
 	/**
@@ -45,14 +46,9 @@
 		dev_t dev;
 
 		/**
-		 * @brief Inode Number of Root Directory
-		 */
-		minix_ino_t root_ino;
-
-		/**
 		 * @brief Root Directory
 		 */
-		struct d_inode root;
+		struct inode *root;
 
 		/**
 		 * @brief Superblock
@@ -378,4 +374,4 @@
 		minix_gid_t gid
 	);
 
-#endif /* _MINIX_H_ */
+#endif /* NANVIX_SERVERS_VFS_MINIX_H_ */

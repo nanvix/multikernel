@@ -23,15 +23,16 @@
  */
 
 /* Must come first. */
+#define __VFS_SERVER
 #define __NEED_LIMITS_FS
 
+#include <nanvix/servers/vfs.h>
 #include <nanvix/limits/fs.h>
+#include <nanvix/dev.h>
+#include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/sys/stat.h>
 #include <posix/errno.h>
-#include <nanvix/dev.h>
-#include <nanvix/ulib.h>
-#include "../include/minix.h"
 
 #define ROUND(x) (((x) == 0) ? 1 : (x))
 
@@ -346,6 +347,7 @@ int minix_mkfs(
 	minix_block_t inode_nblocks; /* Number of inode blocks.         */
 	mode_t mode;                 /* Access permissions to root dir. */
 	minix_ino_t num;             /* Inode number of root directory. */
+	struct d_inode winode;       /* Working Inode                   */
 
 	/*
 	 * TODO: sanity check arguments.
@@ -388,13 +390,24 @@ int minix_mkfs(
 	/* Access permission to root directory. */
 	mode  = S_IFDIR| S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
+	uassert((minix_fs.root = inode_alloc(mode, uid, gid)) != NULL);
+
 	/* Create root directory. */
-	uassert((num = minix_inode_alloc(dev, &minix_fs.super, minix_fs.imap, mode, uid, gid)) != MINIX_INODE_NULL);
-	minix_fs.root_ino = num;
-	minix_inode_read(dev, &minix_fs.super, &minix_fs.root, num);
-	minix_dirent_add(&minix_fs.root, ".", num);
-	minix_dirent_add(&minix_fs.root, "..", num);
-	uassert(minix_inode_write(dev, &minix_fs.super, &minix_fs.root, num) == 0);
+	minix_dirent_add(&minix_fs.root->data, ".", minix_fs.root->num);
+	minix_dirent_add(&minix_fs.root->data, "..", minix_fs.root->num);
+	uassert(inode_write(minix_fs.root) == 0);
+	uprintf("[nanvix][vfs][minix] root inode = %d", minix_fs.root->num);
+
+	/* Create disk device. */
+	uassert((num = minix_inode_alloc(dev, &minix_fs.super, minix_fs.imap, mode | S_IFBLK, uid, gid)) != MINIX_INODE_NULL);
+	minix_inode_read(dev, &minix_fs.super, &winode, num);
+	winode.i_size = NANVIX_DISK_SIZE;
+	minix_dirent_add(&minix_fs.root->data, "disk", num);
+	uassert(minix_inode_write(dev, &minix_fs.super, &winode, minix_fs.root->num) == 0);
+	uassert(minix_inode_write(dev, &minix_fs.super, &minix_fs.root->data, minix_fs.root->num) == 0);
+	uprintf("[nanvix][vfs][minix] disk inode = %d", num);
+
+	uprintf("[nanvix][vfs][minix] first data block =  %d", minix_fs.super.s_first_data_block);
 
 	return (minix_super_write(dev, &minix_fs.super, minix_fs.zmap, minix_fs.imap));
 }

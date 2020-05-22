@@ -30,7 +30,7 @@ MODULE = nanvix-hello.$(OBJ_SUFFIX).a
 #===============================================================================
 
 # C Source Files
-SRC = $(wildcard *.c)
+SRC += $(wildcard *.c)
 
 # Object Files
 OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)

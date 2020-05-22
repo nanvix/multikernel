@@ -22,21 +22,19 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_LIMITS_FS_H_
-#define NANVIX_LIMITS_FS_H_
+#ifndef POSIX_UNISTD_H_
+#define POSIX_UNISTD_H_
 
-	#ifndef __NEED_LIMITS_FS
-	#error "do not include this file"
-	#endif
-
-	/**
-	 * @brief Maximum Size for a File
-	 */
-	#define NANVIX_MAX_FILE_SIZE (64*1024*1024)
+	
+	/* Starting positions for lseek() and fcntl(). */
 
 	/**
-	 * @brief Maximum of Opened Files for a Process
+	 * @name Positions for lseek() and fnctl()
 	 */
-	#define NANVIX_OPEN_MAX 16
+	/**@{*/
+	#define SEEK_CUR 0 /**< Set file offset to current plus offset. */
+	#define SEEK_END 1 /**< Set file offset to EOF plus offset.     */
+	#define SEEK_SET 2 /**< Set file offset to offset.              */
+	/**@}*/
 
-#endif /* NANVIX_LIMITS_FS_H_ */
+#endif /* POSIX_UNISTD_H_ */

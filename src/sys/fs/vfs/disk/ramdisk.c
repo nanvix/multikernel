@@ -118,7 +118,7 @@ ssize_t ramdisk_read(unsigned minor, char *buf, size_t n, off_t off)
  */
 void ramdisk_init(void)
 {
-	uprintf("dev: initializing ramdisk device driver");
+	uprintf("[nanvix][dev]: initializing ramdisk device driver");
 
 	for (unsigned i = 0; i < NANVIX_NR_RAMDISKS; i++)
 		umemset(ramdisks[i].data, 0, NANVIX_RAMDISK_SIZE);

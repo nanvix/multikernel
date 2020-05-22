@@ -34,29 +34,24 @@ static struct
 {
 	pid_t remote;  /**< PID.                  */
 	int count;     /**< Number of Connections */
-} connections[NANVIX_PROC_MAX];
+} connections[NANVIX_CONNECTIONS_MAX];
 
 /*============================================================================*
  * connect()                                                                  *
  *============================================================================*/
 
 /**
- * @brief Searches for a registered connection.
- *
- * @param pid PID of the remote.
- *
- * @returns If the target remote is found, its index in the table of
- * connections is returned. Otherwise a negative number is returned
- * instead.
+ * The lookup() function searches in the table of active connnections
+ * for the connection in which the process @p remote is hooked up.
  */
-static int lookup(pid_t remote)
+int lookup(pid_t remote)
 {
 	/* Invalid PID. */
 	if (remote < 0)
 		return (-EINVAL);
 
 	/* Lookup connection. */
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_CONNECTIONS_MAX; i++)
 	{
 		/* Found. */
 		if (connections[i].remote == remote)
@@ -86,7 +81,7 @@ int connect(pid_t remote)
 	if ((i = lookup(remote)) < 0)
 	{
 		/* Looks for an empty slot in the table of connections. */
-		for (i = 0; i < NANVIX_PROC_MAX; i++)
+		for (i = 0; i < NANVIX_CONNECTIONS_MAX; i++)
 		{
 			/* Found. */
 			if (connections[i].remote < 0)
@@ -153,7 +148,7 @@ int get_connections(pid_t *buf)
 
 	/* Traverse table of connections. */
 	count = 0;
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_CONNECTIONS_MAX; i++)
 	{
 		/* Skip invalid connections. */
 		if (connections[i].remote < 0)
@@ -174,7 +169,7 @@ int get_connections(pid_t *buf)
  */
 void connections_setup(void)
 {
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_CONNECTIONS_MAX; i++)
 	{
 		connections[i].remote = -1;
 		connections[i].count = 0;

@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-#ifndef _CONST_H_
-#define _CONST_H_
+#ifndef NANVIX_SERVERS_VFS_CONST_H_
+#define NANVIX_SERVERS_VFS_CONST_H_
 
 	/**
 	 * @brief Block Size (in bytes)
 	 */
 	#define NANVIX_FS_BLOCK_SIZE 512
 
-#endif /* _CONST_H_ */
+#endif /* NANVIX_SERVERS_VFS_CONST_H_ */

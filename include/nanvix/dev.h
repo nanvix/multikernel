@@ -28,6 +28,16 @@
 	#include <posix/sys/types.h>
 
 	/**
+	 * @brief Dummy function.
+	 */
+	#define bdev_open(x) (0)
+
+	/**
+	 * @brief Dummy function.
+	 */
+	#define bdev_close(x) (0)
+
+	/**
 	 * @brief Wrapper to ramdisk_read().
 	 */
 	#define bdev_readblk(x)               \

@@ -23,15 +23,15 @@
  */
 
 /* Must come first. */
+#define __VFS_SERVER
 #define __NEED_RESOURCE
 
 #include <nanvix/hal/resource.h>
+#include <nanvix/servers/vfs.h>
 #include <nanvix/config.h>
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
-#include "../include/const.h"
-#include "../include/bcache.h"
 
 /**
  * @brief Block Buffer
