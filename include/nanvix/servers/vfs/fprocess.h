@@ -22,21 +22,48 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_LIMITS_FS_H_
-#define NANVIX_LIMITS_FS_H_
+#ifndef NANVIX_SERVERS_VFS_FPROCESS_H_
+#define NANVIX_SERVERS_VFS_FPROCESS_H_
 
-	#ifndef __NEED_LIMITS_FS
+	#ifndef __VFS_SERVER
 	#error "do not include this file"
 	#endif
 
-	/**
-	 * @brief Maximum Size for a File
-	 */
-	#define NANVIX_MAX_FILE_SIZE (64*1024*1024)
+	/* Must come first. */
+	#define __NEED_LIMITS_FS
+
+	#include <nanvix/limits/fs.h>
 
 	/**
-	 * @brief Maximum of Opened Files for a Process
+	 * @brief (File System) Process
 	 */
-	#define NANVIX_OPEN_MAX 16
+	struct fprocess
+	{
+		int errcode;                          /**< Error Code        */
+		struct inode *pwd;                    /**< Working Directory */
+		struct inode *root;                   /**< Root Directory    */
+		struct file *ofiles[NANVIX_OPEN_MAX]; /**< Opened Files      */
+	};
 
-#endif /* NANVIX_LIMITS_FS_H_ */
+	/**
+	 * @brief Initialize the table of file system processes.
+	 */
+	extern void fprocess_init(void);
+
+	/**
+	 * @brief Launches a file system process.
+	 *
+	 * @param connection Target connection
+	 *
+	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
+	 * negative error code is returned instead.
+	 */
+	extern int fprocess_launch(int connection);
+
+	/**
+	 * @brief Current Process
+	 */
+	extern struct fprocess *curr_proc;
+
+#endif /* NANVIX_SERVERS_VFS_FPROCESS_H_*/
+

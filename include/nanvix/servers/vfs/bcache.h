@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef _BCACHE_H_
-#define _BCACHE_H_
+#ifndef NANVIX_SERVERS_VFS_BCACHE_H_
+#define NANVIX_SERVERS_VFS_BCACHE_H_
 
 	#include <posix/sys/types.h>
 	#include "types.h"
@@ -119,5 +119,5 @@
 
 	/**@}*/
 
-#endif /* _BCACHE_H_ */
+#endif /* NANVIX_SERVERS_VFS_BCACHE_H_ */
 

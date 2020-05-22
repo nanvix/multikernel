@@ -25,17 +25,38 @@
 #ifndef NANVIX_SERVERS_VFS_H_
 #define NANVIX_SERVERS_VFS_H_
 
+	#include <nanvix/servers/vfs/const.h>
+	#include <nanvix/servers/vfs/types.h>
+
 #if defined(__NEED_FS_VFS_SERVER) || defined(__VFS_SERVER)
 
 	#include <nanvix/servers/message.h>
+
+#ifdef __VFS_SERVER
+	#include <nanvix/servers/vfs/bcache.h>
+	#include <nanvix/servers/vfs/fs.h>
+	#include <nanvix/servers/vfs/minix.h>
+	#include <nanvix/servers/vfs/fprocess.h>
+	#include <nanvix/servers/vfs/vfs.h>
+#endif
 
 	/**
 	 * @bried Virtual File System Operations
 	 */
 	/**@{*/
-	#define VFS_EXIT    0  /**< Exit    */
-	#define VFS_SUCCESS 1  /**< Success */
-	#define VFS_FAIL    2  /**< Failure */
+	#define VFS_EXIT      0 /**< Exit     */
+	#define VFS_SUCCESS   1 /**< Success  */
+	#define VFS_FAIL      2 /**< Failure  */
+	#define VFS_CREAT     3 /**< Create   */
+	#define VFS_OPEN      4 /**< Open     */
+	#define VFS_UNLINK    5 /**< Unlink   */
+	#define VFS_CLOSE     6 /**< Close    */
+	#define VFS_LINK      7 /**< Link     */
+	#define VFS_TRUNCATE  8 /**< Truncate */
+	#define VFS_STAT      9 /**< Stat     */
+	#define VFS_READ     10 /**< Read     */
+	#define VFS_WRITE    11 /**< Write    */
+	#define VFS_SEEK     12 /**< Seek     */
 	/**@}*/
 
 	/**
@@ -56,7 +77,6 @@
 			} ret;
 		} op;
 	};
-
 
 #ifdef __VFS_SERVER
 

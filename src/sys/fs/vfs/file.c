@@ -22,21 +22,35 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_LIMITS_FS_H_
-#define NANVIX_LIMITS_FS_H_
+/* Must come first. */
+#define __VFS_SERVER
 
-	#ifndef __NEED_LIMITS_FS
-	#error "do not include this file"
-	#endif
+#include <nanvix/servers/vfs.h>
+#include <posix/sys/types.h>
+#include <posix/errno.h>
 
-	/**
-	 * @brief Maximum Size for a File
-	 */
-	#define NANVIX_MAX_FILE_SIZE (64*1024*1024)
+/**
+ * @todo TODO: Provide a detailed description for this function.
+ */
+ssize_t file_read(struct inode *ip, void *buf, size_t n, off_t off)
+{
+	((void) ip);
+	((void) buf);
+	((void) n);
+	((void) off);
 
-	/**
-	 * @brief Maximum of Opened Files for a Process
-	 */
-	#define NANVIX_OPEN_MAX 16
+	return (-ENOTSUP);
+}
 
-#endif /* NANVIX_LIMITS_FS_H_ */
+/**
+ * @todo TODO: Provide a detailed description for this function.
+ */
+ssize_t file_write(struct inode *ip, void *buf, size_t n, off_t off)
+{
+	((void) ip);
+	((void) buf);
+	((void) n);
+	((void) off);
+
+	return (-ENOTSUP);
+}

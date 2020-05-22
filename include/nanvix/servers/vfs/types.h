@@ -22,8 +22,8 @@
  * SOFTWARE.
  */
 
-#ifndef _TYPES_H_
-#define _TYPES_H_
+#ifndef NANVIX_SERVERS_VFS_TYPES_H_
+#define NANVIX_SERVERS_VFS_TYPES_H_
 
 	#include <posix/stdint.h>
 
@@ -32,4 +32,5 @@
 	 */
 	typedef uint32_t block_t;
 
-#endif /* _TYPES_H_ */
+#endif /* NANVIX_SERVERS_VFS_TYPES_H_ */
+

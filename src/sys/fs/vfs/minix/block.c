@@ -22,11 +22,14 @@
  * SOFTWARE.
  */
 
-#include <posix/sys/types.h>
-#include <posix/errno.h>
+/* Must come first. */
+#define __VFS_SERVER
+
+#include <nanvix/servers/vfs.h>
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
-#include "../include/minix.h"
+#include <posix/sys/types.h>
+#include <posix/errno.h>
 
 /**
  * @brirf Number of Block address per Block

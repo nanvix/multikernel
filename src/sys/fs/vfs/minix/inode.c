@@ -22,11 +22,14 @@
  * SOFTWARE.
  */
 
+/* Must come first. */
+#define __VFS_SERVER
+
+#include <nanvix/servers/vfs.h>
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
-#include "../include/minix.h"
 
 /**
  * @brief Inodes per Block
