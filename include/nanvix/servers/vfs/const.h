@@ -28,6 +28,6 @@
 	/**
 	 * @brief Block Size (in bytes)
 	 */
-	#define NANVIX_FS_BLOCK_SIZE 512
+	#define NANVIX_FS_BLOCK_SIZE 1024
 
 #endif /* NANVIX_SERVERS_VFS_CONST_H_ */
