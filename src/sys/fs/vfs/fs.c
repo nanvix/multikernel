@@ -25,6 +25,7 @@
 /* Must come first. */
 #define __VFS_SERVER
 
+#include <nanvix/config.h>
 #include <nanvix/servers/vfs.h>
 #include <nanvix/dev.h>
 #include <nanvix/limits.h>
