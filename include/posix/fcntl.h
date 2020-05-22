@@ -53,4 +53,9 @@
 	#define O_NONBLOCK 04000 /**< Non-blocking mode. */
 	/**@}*/
 
+	/**
+	 * @brief Returns access mode of a file.
+	 */
+	#define ACCMODE(m) (m & O_ACCMODE)
+
 #endif /* POSIX_FCNTL_H_ */
