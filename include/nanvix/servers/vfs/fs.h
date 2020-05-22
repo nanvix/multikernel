@@ -33,20 +33,19 @@
 	#include "minix.h"
 
 	/**
-	 * @brief Length for Table of Files
+	 * @brief In-Memory Superblock
 	 */
-	#define NANVIX_NR_FILES 64
-
-	/**
-	 * @brief In-Memory Inode
-	 */
-	struct inode
+	struct superblock
 	{
-		struct d_inode data; /**< Underlying Disk Inode  */
-		dev_t dev;           /**< Underlying Device      */
-		ino_t num;           /**< Inode Number           */
-		int count;           /**< Reference count        */
+		struct d_superblock data; /**< Underlying Disk Superblock */
+		dev_t dev;                /**< Underlying Device.         */
+		bitmap_t *imap;           /**< Inode Map                  */
+		bitmap_t *bmap;           /**< Block Map                  */	
 	};
+
+/*============================================================================*
+ * Interface for Concrete File System                                         *
+ *============================================================================*/
 
 	/**
 	 * @brief File
@@ -60,19 +59,19 @@
 	};
 
 	/**
+	 * @brief File System
+	 */
+	struct filesystem
+	{
+		dev_t dev;                /**< Underlying Device */
+		struct inode *root;       /**< Root Directory    */
+		struct superblock *super; /**< Superblock        */
+	};
+
+	/**
 	 * @brief Initializes the file system manager.
 	 */
 	extern void fs_init(void);
-
-	/**
-	 * @brief Gets an empty file.
-	 *
-	 * The getfile() function searches the table of files for a free entry.
-	 *
-	 * @returns Upon successful completion, a pointer to an empty file is
-	 * returned. Upon failure, a NULL pointer is returned instead.
-	 */
-	extern struct file *getfile(void);
 
 	/**
 	 * @brief Opens a file.
@@ -137,6 +136,15 @@
 	extern off_t fs_lseek(int fd, off_t offset, int whence);
 
 	/**
+	 * @brief Root File System
+	 */
+	struct filesystem fs_root;
+
+/*============================================================================*
+ * Interface for Refule Files                                                 *
+ *============================================================================*/
+
+	/**
 	 * @brief Reads data from a regular file.
 	 *
 	 * @param ip  Inode of target regular file.
@@ -174,9 +182,25 @@
 		off_t off
 	);
 
+/*============================================================================*
+ * Interface for In-Memory Inodes                                             *
+ *============================================================================*/
+
+	/**
+	 * @brief In-Memory Inode
+	 */
+	struct inode
+	{
+		struct d_inode data; /**< Underlying Disk Inode  */
+		dev_t dev;           /**< Underlying Device      */
+		ino_t num;           /**< Inode Number           */
+		int count;           /**< Reference count        */
+	};
+
 	/**
 	 * @brief Allocates an in-memory inode.
 	 *
+	 * @param fs   Target file system.
 	 * @param mode Access permissions.
 	 * @param uid  User ID of the onwer.
 	 * @param gid  Group ID of the owner.
@@ -185,36 +209,44 @@
 	 * allocated inode is returned. Upon failure, a negative error code is
 	 * returned instead.
 	 */
-	extern struct inode *inode_alloc(mode_t mode, uid_t uid, gid_t gid);
+	extern struct inode *inode_alloc(
+		struct filesystem *fs,
+		mode_t mode,
+		uid_t uid,
+		gid_t gid
+	);
 
 	/**
 	 * @brief Releases an in-memory inode.
 	 *
+	 * @param fs   Target file system.
 	 * @param ip Target inode.
 	 *
 	 * @returns Upon successful completion, zero is returned. Upon failure,
 	 * a negative error code is returned instead.
 	 */
-	extern int inode_free(struct inode *ip);
+	extern int inode_free(struct filesystem *fs, struct inode *ip);
 
 	/**
 	 * @brief Reads an inode to memory.
 	 *
+	 * @param fs   Target file system.
 	 * @param num Number of the target inode.
 	 *
 	 * @returns Upon successful completion, a pointer to the target inode is
 	 * returned. Upon failure, a negative error code is returned instead.
 	 */
-	extern struct inode *inode_read(ino_t num);
+	extern struct inode *inode_read(struct filesystem *fs, ino_t num);
 
 	/**
 	 * @brief Writes an in-memory inode back to disk.
 	 *
+	 * @param fs   Target file system.
 	 * @param num Number of the target inode.
 	 *
 	 * @returns Upon successful completion, zero is returned. Upon failure,
 	 * a negative error code is returned instead.
 	 */
-	extern int inode_write(struct inode *ip);
+	extern int inode_write(struct filesystem *fs, struct inode *ip);
 
 #endif /* NANVIX_SERVERS_VFS_FS_H_*/

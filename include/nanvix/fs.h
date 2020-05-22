@@ -25,5 +25,46 @@
 #ifndef NANVIX_FS_H_
 #define NANVIX_FS_H_
 
+	#include <nanvix/runtime/fs.h>
+	#include <nanvix/servers/vfs.h>
+	#include <posix/unistd.h>
+
+	/**
+	 * @brief Asserts if file access mode is O_RDONLY.
+	 *
+	 * @param x Target mode
+	 *
+	 * @returns Non-zero if @p x equals to @p O_RDONLY and zero otherwise.
+	 */
+	#define ACCMODE_RDONLY(x) (ACCMODE(x) == O_RDONLY)
+
+	/**
+	 * @brief Asserts if file access mode is O_WRONLY.
+	 *
+	 * @param x Target mode
+	 *
+	 * @returns Non-zero if @p x equals to @p O_WRONLY and zero otherwise.
+	 */
+	#define ACCMODE_WRONLY(x) (ACCMODE(x) == O_WRONLY)
+
+	/**
+	 * @brief Asserts if file access mode is O_RDWR.
+	 *
+	 * @param x Target mode
+	 *
+	 * @returns Non-zero if @p x equals to @p O_RDWR and zero otherwise.
+	 */
+	#define ACCMODE_RDWR(x) (ACCMODE(x) == O_RDWR)
+
+	/**
+	 * @brief Asserts if a file descriptor is valid.
+	 *
+	 * @param x
+	 *
+	 * @returns Non-zero if @p x refers to a valid file descriptor and zero
+	 * otherwise.
+	 */
+	#define NANVIX_VFS_FD_IS_VALID(x) \
+		(WITHIN(fd, 0, NANVIX_OPEN_MAX))
 
 #endif /* NANVIX_FS_H_ */

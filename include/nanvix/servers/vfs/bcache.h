@@ -25,6 +25,10 @@
 #ifndef NANVIX_SERVERS_VFS_BCACHE_H_
 #define NANVIX_SERVERS_VFS_BCACHE_H_
 
+	#ifndef __VFS_SERVER
+	#error "do not include this file"
+	#endif
+
 	#include <posix/sys/types.h>
 	#include "types.h"
 

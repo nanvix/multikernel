@@ -32,10 +32,6 @@
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 
-/* Import definitions. */
-extern void ramdisk_test(void);
-extern void bcache_test(void);
-
 /*============================================================================*
  * MINIX File System Tests                                                    *
  *============================================================================*/
@@ -49,15 +45,15 @@ static void test_api_minix_block_alloc_free(void)
 
 	uassert((
 		num = minix_block_alloc(
-			&minix_fs.super,
-			minix_fs.zmap
+			&fs_root.super->data,
+			fs_root.super->bmap
 		)) != MINIX_BLOCK_NULL
 	);
 
 	uassert(
 		minix_block_free_direct(
-			&minix_fs.super,
-			minix_fs.zmap,
+			&fs_root.super->data,
+			fs_root.super->bmap,
 			num
 		)  == 0
 	);
@@ -73,16 +69,16 @@ static void test_api_minix_inode_alloc_free(void)
 	uassert((
 		ino = minix_inode_alloc(
 			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -99,8 +95,8 @@ static void test_api_minix_inode_read_write(void)
 	uassert((
 		ino = minix_inode_alloc(
 			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
@@ -108,7 +104,7 @@ static void test_api_minix_inode_read_write(void)
 		uassert((
 			minix_inode_read(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
+				&fs_root.super->data,
 				&inode,
 				ino)
 			) == 0
@@ -117,7 +113,7 @@ static void test_api_minix_inode_read_write(void)
 		uassert((
 			minix_inode_write(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
+				&fs_root.super->data,
 				&inode,
 				ino)
 			) == 0
@@ -125,8 +121,8 @@ static void test_api_minix_inode_read_write(void)
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -142,16 +138,19 @@ static void test_api_minix_dirent_add_remove(void)
 
 	uassert((
 		ino = minix_inode_alloc(
-			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			fs_root.dev,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
 
 		uassert((
 			minix_dirent_add(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename,
 				ino)
 			) == 0
@@ -159,15 +158,18 @@ static void test_api_minix_dirent_add_remove(void)
 
 		uassert((
 			minix_dirent_remove(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename)
 			) == 0
 		);
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -183,16 +185,19 @@ static void test_api_minix_dirent_search(void)
 
 	uassert((
 		ino = minix_inode_alloc(
-			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			fs_root.dev,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
 
 		uassert((
 			minix_dirent_add(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename,
 				ino)
 			) == 0
@@ -200,7 +205,10 @@ static void test_api_minix_dirent_search(void)
 
 			uassert((
 				minix_dirent_search(
-					&minix_fs.root->data,
+					fs_root.dev,
+					&fs_root.super->data,
+					fs_root.super->bmap,
+					&fs_root.root->data,
 					filename,
 					0)
 				) >= 0
@@ -208,15 +216,18 @@ static void test_api_minix_dirent_search(void)
 
 		uassert((
 			minix_dirent_remove(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename)
 			) == 0
 		);
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -230,13 +241,13 @@ static void test_fault_minix_block_alloc_inval(void)
 	uassert(
 		minix_block_alloc(
 			NULL,
-			minix_fs.zmap
+			fs_root.super->bmap
 		) == MINIX_BLOCK_NULL
 	);
 
 	uassert(
 		minix_block_alloc(
-			&minix_fs.super,
+			&fs_root.super->data,
 			NULL
 		) == MINIX_BLOCK_NULL
 	);
@@ -251,37 +262,37 @@ static void test_fault_minix_block_free_inval(void)
 
 	uassert((
 		num = minix_block_alloc(
-			&minix_fs.super,
-			minix_fs.zmap
+			&fs_root.super->data,
+			fs_root.super->bmap
 		)) != MINIX_BLOCK_NULL
 	);
 
 		uassert(
 			minix_block_free_direct(
 				NULL,
-				minix_fs.zmap,
+				fs_root.super->bmap,
 				num
 			)  == -EINVAL
 		);
 		uassert(
 			minix_block_free_direct(
-				&minix_fs.super,
+				&fs_root.super->data,
 				NULL,
 				num
 			)  == -EINVAL
 		);
 		uassert(
 			minix_block_free_direct(
-				&minix_fs.super,
-				minix_fs.zmap,
+				&fs_root.super->data,
+				fs_root.super->bmap,
 				MINIX_BLOCK_NULL
 			)  == -EINVAL
 		);
 
 	uassert(
 		minix_block_free_direct(
-			&minix_fs.super,
-			minix_fs.zmap,
+			&fs_root.super->data,
+			fs_root.super->bmap,
 			num
 		)  == 0
 	);
@@ -387,8 +398,8 @@ static void test_fault_minix_inode_alloc_inval(void)
 	uassert((
 		minix_inode_alloc(
 			-1,
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) == MINIX_INODE_NULL
 	);
@@ -396,14 +407,14 @@ static void test_fault_minix_inode_alloc_inval(void)
 		minix_inode_alloc(
 			NANVIX_ROOT_DEV,
 			NULL,
-			minix_fs.imap,
+			fs_root.super->imap,
 			0, 0, 0)
 		) == MINIX_INODE_NULL
 	);
 	uassert((
 		minix_inode_alloc(
 			NANVIX_ROOT_DEV,
-			&minix_fs.super,
+			&fs_root.super->data,
 			NULL,
 			0, 0, 0)
 		) == MINIX_INODE_NULL
@@ -420,8 +431,8 @@ static void test_fault_minix_inode_free_inval(void)
 	uassert((
 		ino = minix_inode_alloc(
 			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
@@ -429,36 +440,36 @@ static void test_fault_minix_inode_free_inval(void)
 		uassert((
 			minix_inode_free(
 				NULL,
-				minix_fs.imap,
+				fs_root.super->imap,
 				ino)
 			) == -EINVAL
 		);
 		uassert((
 			minix_inode_free(
-				&minix_fs.super,
+				&fs_root.super->data,
 				NULL,
 				ino)
 			) == -EINVAL
 		);
 		uassert((
 			minix_inode_free(
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				MINIX_INODE_NULL)
 			) == -EINVAL
 		);
 		uassert((
 			minix_inode_free(
-				&minix_fs.super,
-				minix_fs.imap,
-				minix_fs.super.s_ninodes + 1)
+				&fs_root.super->data,
+				fs_root.super->imap,
+				fs_root.super->data.s_ninodes + 1)
 			) == -EINVAL
 		);
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -475,8 +486,8 @@ static void test_fault_minix_inode_read_inval(void)
 	uassert((
 		ino = minix_inode_alloc(
 			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
@@ -484,7 +495,7 @@ static void test_fault_minix_inode_read_inval(void)
 		uassert((
 			minix_inode_read(
 				-1,
-				&minix_fs.super,
+				&fs_root.super->data,
 				&inode,
 				ino)
 			) == -EAGAIN
@@ -502,7 +513,7 @@ static void test_fault_minix_inode_read_inval(void)
 		uassert((
 			minix_inode_read(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
+				&fs_root.super->data,
 				NULL,
 				ino)
 			) == -EINVAL
@@ -511,7 +522,7 @@ static void test_fault_minix_inode_read_inval(void)
 		uassert((
 			minix_inode_read(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
+				&fs_root.super->data,
 				&inode,
 				MINIX_INODE_NULL)
 			) == -EINVAL
@@ -520,16 +531,16 @@ static void test_fault_minix_inode_read_inval(void)
 		uassert((
 			minix_inode_read(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
+				&fs_root.super->data,
 				&inode,
-				minix_fs.super.s_ninodes + 1)
+				fs_root.super->data.s_ninodes + 1)
 			) == -EINVAL
 		);
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -546,8 +557,8 @@ static void test_fault_minix_inode_write_inval(void)
 	uassert((
 		ino = minix_inode_alloc(
 			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
@@ -555,7 +566,7 @@ static void test_fault_minix_inode_write_inval(void)
 		uassert((
 			minix_inode_write(
 				-1,
-				&minix_fs.super,
+				&fs_root.super->data,
 				&inode,
 				ino)
 			) == -EAGAIN
@@ -571,7 +582,7 @@ static void test_fault_minix_inode_write_inval(void)
 		uassert((
 			minix_inode_write(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
+				&fs_root.super->data,
 				NULL,
 				ino)
 			) == -EINVAL
@@ -579,7 +590,7 @@ static void test_fault_minix_inode_write_inval(void)
 		uassert((
 			minix_inode_write(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
+				&fs_root.super->data,
 				&inode,
 				MINIX_INODE_NULL)
 			) == -EINVAL
@@ -587,16 +598,16 @@ static void test_fault_minix_inode_write_inval(void)
 		uassert((
 			minix_inode_write(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
+				&fs_root.super->data,
 				&inode,
-				minix_fs.super.s_ninodes + 1)
+				fs_root.super->data.s_ninodes + 1)
 			) == -EINVAL
 		);
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -614,16 +625,19 @@ static void test_fault_minix_dirent_add_inval(void)
 
 	uassert((
 		ino = minix_inode_alloc(
-			minix_fs.dev,
-			&minix_fs.super,
-			minix_fs.imap,
+			fs_root.dev,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
 
 		uassert((
 			minix_dirent_add(
+				fs_root.dev,
 				NULL,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename,
 				ino)
 			) == -EINVAL
@@ -631,7 +645,10 @@ static void test_fault_minix_dirent_add_inval(void)
 
 		uassert((
 			minix_dirent_add(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				NULL,
 				ino)
 			) == -EINVAL
@@ -639,7 +656,10 @@ static void test_fault_minix_dirent_add_inval(void)
 
 		uassert((
 			minix_dirent_add(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				longname,
 				ino)
 			) == -ENAMETOOLONG
@@ -647,7 +667,10 @@ static void test_fault_minix_dirent_add_inval(void)
 
 		uassert((
 			minix_dirent_add(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename,
 				MINIX_INODE_NULL)
 			) == -EINVAL
@@ -655,8 +678,8 @@ static void test_fault_minix_dirent_add_inval(void)
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -675,15 +698,18 @@ static void test_fault_minix_dirent_remove_inval(void)
 	uassert((
 		ino = minix_inode_alloc(
 			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
 
 		uassert((
 			minix_dirent_add(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename,
 				ino)
 			) == 0
@@ -691,6 +717,19 @@ static void test_fault_minix_dirent_remove_inval(void)
 
 			uassert((
 				minix_dirent_remove(
+					fs_root.dev,
+					NULL,
+					fs_root.super->bmap,
+					&fs_root.root->data,
+					filename)
+				) == -EINVAL
+			);
+
+			uassert((
+				minix_dirent_remove(
+					fs_root.dev,
+					&fs_root.super->data,
+					fs_root.super->bmap,
 					NULL,
 					filename)
 				) == -EINVAL
@@ -698,29 +737,38 @@ static void test_fault_minix_dirent_remove_inval(void)
 
 			uassert((
 				minix_dirent_remove(
-					&minix_fs.root->data,
+					fs_root.dev,
+					&fs_root.super->data,
+					fs_root.super->bmap,
+					&fs_root.root->data,
 					NULL)
 				) == -EINVAL
 			);
 
 			uassert((
 				minix_dirent_remove(
-					&minix_fs.root->data,
+					fs_root.dev,
+					&fs_root.super->data,
+					fs_root.super->bmap,
+					&fs_root.root->data,
 					longname)
 				) == -ENAMETOOLONG
 			);
 
 		uassert((
 			minix_dirent_remove(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename)
 			) == 0
 		);
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -739,15 +787,18 @@ static void test_fault_minix_dirent_search_inval(void)
 	uassert((
 		ino = minix_inode_alloc(
 			NANVIX_ROOT_DEV,
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			0, 0, 0)
 		) != MINIX_INODE_NULL
 	);
 
 		uassert((
 			minix_dirent_add(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename,
 				ino)
 			) == 0
@@ -755,6 +806,9 @@ static void test_fault_minix_dirent_search_inval(void)
 
 			uassert((
 				minix_dirent_search(
+					fs_root.dev,
+					&fs_root.super->data,
+					fs_root.super->bmap,
 					NULL,
 					filename,
 					0)
@@ -763,7 +817,10 @@ static void test_fault_minix_dirent_search_inval(void)
 
 			uassert((
 				minix_dirent_search(
-					&minix_fs.root->data,
+					fs_root.dev,
+					&fs_root.super->data,
+					fs_root.super->bmap,
+					&fs_root.root->data,
 					NULL,
 					0)
 				) == -EINVAL
@@ -771,7 +828,10 @@ static void test_fault_minix_dirent_search_inval(void)
 
 			uassert((
 				minix_dirent_search(
-					&minix_fs.root->data,
+					fs_root.dev,
+					&fs_root.super->data,
+					fs_root.super->bmap,
+					&fs_root.root->data,
 					longname,
 					0)
 				) == -ENAMETOOLONG
@@ -779,15 +839,18 @@ static void test_fault_minix_dirent_search_inval(void)
 
 		uassert((
 			minix_dirent_remove(
-				&minix_fs.root->data,
+				fs_root.dev,
+				&fs_root.super->data,
+				fs_root.super->bmap,
+				&fs_root.root->data,
 				filename)
 			) == 0
 		);
 
 	uassert((
 		minix_inode_free(
-			&minix_fs.super,
-			minix_fs.imap,
+			&fs_root.super->data,
+			fs_root.super->imap,
 			ino)
 		) == 0
 	);
@@ -804,15 +867,15 @@ static void test_stress_minix_block_alloc_free1(void)
 	{
 		uassert((
 			blocks[i] = minix_block_alloc(
-				&minix_fs.super,
-				minix_fs.zmap
+				&fs_root.super->data,
+				fs_root.super->bmap
 			)) != MINIX_BLOCK_NULL
 		);
 
 		uassert(
 			minix_block_free_direct(
-				&minix_fs.super,
-				minix_fs.zmap,
+				&fs_root.super->data,
+				fs_root.super->bmap,
 				blocks[i]
 			)  == 0
 		);
@@ -830,8 +893,8 @@ static void test_stress_minix_block_alloc_free2(void)
 	{
 		uassert((
 			blocks[i] = minix_block_alloc(
-				&minix_fs.super,
-				minix_fs.zmap
+				&fs_root.super->data,
+				fs_root.super->bmap
 			)) != MINIX_BLOCK_NULL
 		);
 	}
@@ -840,8 +903,8 @@ static void test_stress_minix_block_alloc_free2(void)
 	{
 		uassert(
 			minix_block_free_direct(
-				&minix_fs.super,
-				minix_fs.zmap,
+				&fs_root.super->data,
+				fs_root.super->bmap,
 				blocks[i]
 			)  == 0
 		);
@@ -853,23 +916,23 @@ static void test_stress_minix_block_alloc_free2(void)
  */
 static void test_stress_minix_inode_alloc_free1(void)
 {
-	minix_ino_t inos[NR_INODES];
+	minix_ino_t inos[NANVIX_NR_INODES];
 
-	for (minix_ino_t i = 2; i < minix_fs.super.s_ninodes; i++)
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i++)
 	{
 		uassert((
 			inos[i] = minix_inode_alloc(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				0, 0, 0)
 			) != MINIX_INODE_NULL
 		);
 
 		uassert((
 			minix_inode_free(
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				inos[i])
 			) == 0
 		);
@@ -881,27 +944,27 @@ static void test_stress_minix_inode_alloc_free1(void)
  */
 static void test_stress_minix_inode_alloc_free2(void)
 {
-	minix_ino_t inos[NR_INODES];
+	minix_ino_t inos[NANVIX_NR_INODES];
 
-	for (minix_ino_t i = 2; i < minix_fs.super.s_ninodes; i++)
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i++)
 	{
 		uassert((
 			inos[i] = minix_inode_alloc(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				0, 0, 0)
 			) != MINIX_INODE_NULL
 		);
 	}
 
-	for (minix_ino_t i = 2; i < minix_fs.super.s_ninodes; i++)
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i++)
 	{
 
 		uassert((
 			minix_inode_free(
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				inos[i])
 			) == 0
 		);
@@ -913,16 +976,16 @@ static void test_stress_minix_inode_alloc_free2(void)
  */
 static void test_stress_minix_inode_read_write1(void)
 {
-	minix_ino_t inos[NR_INODES];
+	minix_ino_t inos[NANVIX_NR_INODES];
 	struct d_inode inode;
 
-	for (minix_ino_t i = 2; i < minix_fs.super.s_ninodes; i++)
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i++)
 	{
 		uassert((
 			inos[i] = minix_inode_alloc(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				0, 0, 0)
 			) != MINIX_INODE_NULL
 		);
@@ -930,7 +993,7 @@ static void test_stress_minix_inode_read_write1(void)
 			uassert((
 				minix_inode_read(
 					NANVIX_ROOT_DEV,
-					&minix_fs.super,
+					&fs_root.super->data,
 					&inode,
 					inos[i])
 				) == 0
@@ -939,7 +1002,7 @@ static void test_stress_minix_inode_read_write1(void)
 			uassert((
 				minix_inode_write(
 					NANVIX_ROOT_DEV,
-					&minix_fs.super,
+					&fs_root.super->data,
 					&inode,
 					inos[i])
 				) == 0
@@ -947,8 +1010,8 @@ static void test_stress_minix_inode_read_write1(void)
 
 		uassert((
 			minix_inode_free(
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				inos[i])
 			) == 0
 		);
@@ -960,53 +1023,53 @@ static void test_stress_minix_inode_read_write1(void)
  */
 static void test_stress_minix_inode_read_write2(void)
 {
-	minix_ino_t inos[NR_INODES];
+	minix_ino_t inos[NANVIX_NR_INODES];
 	struct d_inode inode;
 
-	for (minix_ino_t i = 2; i < minix_fs.super.s_ninodes; i++)
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i++)
 	{
 		uassert((
 			inos[i] = minix_inode_alloc(
 				NANVIX_ROOT_DEV,
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				0, 0, 0)
 			) != MINIX_INODE_NULL
 		);
 
 	}
 
-		for (minix_ino_t i = 2; i < minix_fs.super.s_ninodes; i++)
+		for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i++)
 		{
 			uassert((
 				minix_inode_read(
 					NANVIX_ROOT_DEV,
-					&minix_fs.super,
+					&fs_root.super->data,
 					&inode,
 					inos[i])
 				) == 0
 			);
 		}
 
-		for (minix_ino_t i = 2; i < minix_fs.super.s_ninodes; i++)
+		for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i++)
 		{
 			uassert((
 				minix_inode_write(
 					NANVIX_ROOT_DEV,
-					&minix_fs.super,
+					&fs_root.super->data,
 					&inode,
 					inos[i])
 				) == 0
 			);
 		}
 
-	for (minix_ino_t i = 2; i < minix_fs.super.s_ninodes; i++)
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i++)
 	{
 
 		uassert((
 			minix_inode_free(
-				&minix_fs.super,
-				minix_fs.imap,
+				&fs_root.super->data,
+				fs_root.super->imap,
 				inos[i])
 			) == 0
 		);

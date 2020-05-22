@@ -30,7 +30,10 @@
 
 #if defined(__NEED_FS_VFS_SERVER) || defined(__VFS_SERVER)
 
+	#define __NEED_LIMITS_FS
+
 	#include <nanvix/servers/message.h>
+	#include <nanvix/limits/fs.h>
 
 #ifdef __VFS_SERVER
 	#include <nanvix/servers/vfs/bcache.h>
@@ -44,19 +47,20 @@
 	 * @bried Virtual File System Operations
 	 */
 	/**@{*/
-	#define VFS_EXIT      0 /**< Exit     */
-	#define VFS_SUCCESS   1 /**< Success  */
-	#define VFS_FAIL      2 /**< Failure  */
-	#define VFS_CREAT     3 /**< Create   */
-	#define VFS_OPEN      4 /**< Open     */
-	#define VFS_UNLINK    5 /**< Unlink   */
-	#define VFS_CLOSE     6 /**< Close    */
-	#define VFS_LINK      7 /**< Link     */
-	#define VFS_TRUNCATE  8 /**< Truncate */
-	#define VFS_STAT      9 /**< Stat     */
-	#define VFS_READ     10 /**< Read     */
-	#define VFS_WRITE    11 /**< Write    */
-	#define VFS_SEEK     12 /**< Seek     */
+	#define VFS_EXIT      0 /**< Exit        */
+	#define VFS_SUCCESS   1 /**< Success     */
+	#define VFS_FAIL      2 /**< Failure     */
+	#define VFS_CREAT     3 /**< Create      */
+	#define VFS_OPEN      4 /**< Open        */
+	#define VFS_UNLINK    5 /**< Unlink      */
+	#define VFS_CLOSE     6 /**< Close       */
+	#define VFS_LINK      7 /**< Link        */
+	#define VFS_TRUNCATE  8 /**< Truncate    */
+	#define VFS_STAT      9 /**< Stat        */
+	#define VFS_READ     10 /**< Read        */
+	#define VFS_WRITE    11 /**< Write       */
+	#define VFS_SEEK     12 /**< Seek        */
+	#define VFS_ACK      12 /**< Acknowledge */
 	/**@}*/
 
 	/**
@@ -69,11 +73,58 @@
 		/* Operation-specific Fields */
 		union
 		{
+			/**
+			 * @brief Open
+			 */
+			struct
+			{
+				char filename[NANVIX_NAME_MAX]; /**< File Name  */
+				int oflag;                      /**< Open Flags */
+			} open;
+
+			/**
+			 * @brief Close
+			 */
+			struct
+			{
+				int fd; /**< File Descriptor */
+			} close;
+
+			/**
+			 * @brief Seek
+			 */
+			struct
+			{
+				int fd;       /**< File Descriptor */
+				off_t offset; /**< File Offset     */
+				int whence;   /**< Reposition Base */
+			} seek;
+
+			/**
+			 * @brief Read
+			 */
+			struct
+			{
+				int fd;   /**< File Descriptor */
+				size_t n; /**< Read            */
+			} read;
+
+			/**
+			 * @brief Write
+			 */
+			struct
+			{
+				int fd;   /**< File Descriptor */
+				size_t n; /**< Write           */
+			} write;
 
 			/* Return Message */
 			struct
 			{
-				int status;  /**< Status Code */
+				int fd;        /**< File Descriptor  */
+				ssize_t count; /**< Read/Write Count */
+				int status;    /**< Status Code      */
+				off_t offset;  /**< File Offset      */
 			} ret;
 		} op;
 	};

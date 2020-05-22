@@ -67,6 +67,25 @@
 	extern int vfs_close(int connection, int fd);
 
 	/**
+	 * @brief Repositions the read/write pointer of a file.
+	 *
+	 * @param connection Target connection.
+	 * @param fd         Target file descriptor.
+	 * @param offset     Offset for read/write pointer.
+	 * @param whence     Reposition base location.
+	 *
+	 * @returns Upon successful completion, the resulting offset
+	 * location is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern off_t vfs_seek(
+		int connection,
+	   	int fd,
+		off_t offset,
+		int whence
+	);
+
+	/**
 	 * @brief Reads data from a file.
 	 *
 	 * @param connection Target connection.
@@ -102,25 +121,6 @@
 		int fd,
 		void *buf,
 		size_t n
-	);
-
-	/**
-	 * @brief Repositions the read/write pointer of a file.
-	 *
-	 * @param connection Target connection.
-	 * @param fd         Target file descriptor.
-	 * @param offset     Offset for read/write pointer.
-	 * @param whence     Reposition base location.
-	 *
-	 * @returns Upon successful completion, the resulting offset
-	 * location is returned. Upon failure, a negative error code is
-	 * returned instead.
-	 */
-	extern off_t vfs_seek(
-		int connection,
-	   	int fd,
-		off_t offset,
-		int whence
 	);
 
 #endif /* NANVIX_SERVERS_VFS_VFS_H_*/

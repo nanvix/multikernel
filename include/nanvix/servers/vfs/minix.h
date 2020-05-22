@@ -35,43 +35,6 @@
 	 */
 	#define MINIX_BLOCK_BIT_LENGTH (8*MINIX_BLOCK_SIZE)
 
-	/**
-	 * @brief File System Information
-	 */
-	struct minix_fs_info
-	{
-		/**
-		 * @brief Underlying Device
-		 */
-		dev_t dev;
-
-		/**
-		 * @brief Root Directory
-		 */
-		struct inode *root;
-
-		/**
-		 * @brief Superblock
-		 */
-		struct d_superblock super;
-
-		/**
-		 * @brief Inode Map
-		 */
-		bitmap_t *imap;
-
-		/**
-		 * @brief Zone Map
-		 */
-		bitmap_t *zmap;
-
-	};
-
-	/**
-	 * @brief Minix File System Information
-	 */
-	extern struct minix_fs_info minix_fs;
-
 /*============================================================================*
  * Block Interface                                                            *
  *============================================================================*/
@@ -299,14 +262,20 @@
 	/**
 	 * @brief Adds an entry in a directory.
 	 *
-	 * @param dip  Target directory.
-	 * @param name Name of the entry.
-	 * @param num  Number of linked inode.
+	 * @param dev   Target device.
+	 * @param super Target superblock
+	 * @param zmap  Target zone map.
+	 * @param dip   Target directory.
+	 * @param name  Name of the entry.
+	 * @param num   Number of linked inode.
 	 *
 	 * @returns upon successful completion, zero is returned. Upon failure,
 	 * a negative error code is returned instead.
 	 */
 	extern int minix_dirent_add(
+		dev_t dev,
+		struct d_superblock *super,
+		bitmap_t *zmap,
 		struct d_inode *dip,
 		const char *name,
 		minix_ino_t num
@@ -315,8 +284,11 @@
 	/**
 	 * @brief Removes a directory entry.
 	 *
-	 * @param dip  Target directory.
-	 * @param name Symbolic name of target entry.
+	 * @param dev   Target device.
+	 * @param super Target superblock
+	 * @param zmap  Target zone map.
+	 * @param dip   Target directory.
+	 * @param name  Symbolic name of target entry.
 	 *
 	 * The nanvix_dirent_remove() function removes the directory entry named
 	 * @p name from the directory pointed to by @p dip.
@@ -325,6 +297,9 @@
 	 * negative error code is returned instead.
 	 */
 	extern int minix_dirent_remove(
+		dev_t dev,
+		struct d_superblock *super,
+		bitmap_t *zmap,
 		struct d_inode *dip,
 		const char *name
 	);
@@ -336,6 +311,9 @@
 	 * pointed to by @p dip for the entry named @p name. If the entry does
 	 * not exist and @p create is non zero, the entry is created.
 	 *
+	 * @param dev    Target device.
+	 * @param super  Target superblock
+	 * @param zmap   Target zone map.
 	 * @param dip    Directory where the directory entry shall be searched.
 	 * @param name   Name of the directory entry that shall be searched.
 	 * @param create Create directory entry?
@@ -345,6 +323,9 @@
 	 * returned instead..
 	 */
 	extern off_t minix_dirent_search(
+		dev_t dev,
+		struct d_superblock *super,
+		bitmap_t *zmap,
 		struct d_inode *dip,
 		const char *name,
 		int create
@@ -367,6 +348,10 @@
 	 * failure, a negative error code is returned instead.
 	 */
 	extern int minix_mkfs(
+		struct d_superblock *super,
+		bitmap_t **imap,
+		bitmap_t **bmap,
+		struct d_inode *root,
 		dev_t dev,
 		minix_ino_t ninodes,
 		minix_block_t nblocks,

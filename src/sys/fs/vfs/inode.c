@@ -36,15 +36,24 @@
  *============================================================================*/
 
 /**
- * @brief Releases an in-memory inode.
+ * @todo TODO: Provide a detailed description for this function.
  */
-struct inode *inode_alloc(mode_t mode, uid_t uid, gid_t gid)
+struct inode *inode_alloc(
+	struct filesystem *fs,
+	mode_t mode,
+	uid_t uid,
+	gid_t gid
+)
 {
 	ino_t num;        /* Inode Number */
 	struct inode *ip; /* Inode        */
 
+	/* Invalid file system */
+	if (fs == NULL)
+		return (NULL);
+
 	/* Allocate disk inode. */
-	if ((num = minix_inode_alloc(minix_fs.dev, &minix_fs.super, minix_fs.imap, mode, uid, gid)) == MINIX_INODE_NULL)
+	if ((num = minix_inode_alloc(fs->dev, &fs->super->data, fs->super->imap, mode, uid, gid)) == MINIX_INODE_NULL)
 	{
 		curr_proc->errcode = -EAGAIN;
 		goto error0;
@@ -58,23 +67,23 @@ struct inode *inode_alloc(mode_t mode, uid_t uid, gid_t gid)
 	}
 
 	/* Read disk inode. */
-	if (minix_inode_read(minix_fs.dev, &minix_fs.super, &ip->data, num) < 0)
+	if (minix_inode_read(fs->dev, &fs->super->data, &ip->data, num) < 0)
 		goto error2;
 
 	/* Initialize inode. */
 	ip->count = 1;
 	ip->num = num;
-	ip->dev = minix_fs.dev;
+	ip->dev = fs->dev;
 
 	return (ip);
 
-error2:
-	ufree(ip);
-error1:
-	uassert(minix_inode_free(&minix_fs.super, minix_fs.imap, num) == 0);
-error0:
-	return (NULL);
-}
+	error2:
+		ufree(ip);
+	error1:
+		uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
+	error0:
+		return (NULL);
+	}
 
 /*============================================================================*
  * inode_free()                                                               *
@@ -83,8 +92,12 @@ error0:
 /**
  * @todo TODO: Provide a detailed description for this function.
  */
-int inode_free(struct inode *ip)
+int inode_free(struct filesystem *fs, struct inode *ip)
 {
+	/* Invalid file system */
+	if (fs == NULL)
+		return (-EINVAL);
+
 	/* Invalid inode. */
 	if (ip == NULL)
 		return (-EINVAL);
@@ -101,14 +114,14 @@ int inode_free(struct inode *ip)
 		return (0);
 
 	/* Write inode back to disk. */
-	if (minix_inode_write(ip->dev, &minix_fs.super, &ip->data, ip->num) < 0)
+	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
 		return (-EAGAIN);
 	}
 
 	/* Release inode. */
-	if (minix_inode_free(&minix_fs.super, minix_fs.imap, ip->num) < 0)
+	if (minix_inode_free(&fs->super->data, fs->super->imap, ip->num) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to release inode %d", ip->num);
 		return (-EAGAIN);
@@ -127,9 +140,13 @@ int inode_free(struct inode *ip)
 /**
  * @todo TODO: Provide a detailed description for this function.
  */
-struct inode *inode_read(ino_t num)
+struct inode *inode_read(struct filesystem *fs, ino_t num)
 {
 	struct inode *ip;
+
+	/* Invalid file system */
+	if (fs == NULL)
+		return (NULL);
 
 	/* Allocate memory inode. */
 	if ((ip = umalloc(sizeof(struct inode))) == NULL)
@@ -139,20 +156,20 @@ struct inode *inode_read(ino_t num)
 	}
 
 	/* Read disk inode. */
-	if (minix_inode_read(minix_fs.dev, &minix_fs.super, &ip->data, num) < 0)
+	if (minix_inode_read(fs->dev, &fs->super->data, &ip->data, num) < 0)
 		goto error1;
 
 	/* Initialize inode. */
 	ip->count = 1;
 	ip->num = num;
-	ip->dev = minix_fs.dev;
+	ip->dev = fs->dev;
 
 	return (ip);
 
-error1:
-	ufree(ip);
-error0:
-	uassert(minix_inode_free(&minix_fs.super, minix_fs.imap, num) == 0);
+	error1:
+		ufree(ip);
+	error0:
+	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
 	return (NULL);
 }
 
@@ -163,14 +180,18 @@ error0:
 /**
  * @todo TODO: Provide a detailed description for this function.
  */
-int inode_write(struct inode *ip)
+int inode_write(struct filesystem *fs, struct inode *ip)
 {
+	/* Invalid file system */
+	if (fs == NULL)
+		return (-EINVAL);
+
 	/* Invalid inode. */
 	if (ip == NULL)
 		return (-EINVAL);
 
 	/* Write disk inode. */
-	if (minix_inode_write(ip->dev, &minix_fs.super, &ip->data, ip->num) < 0)
+	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
 		return (-EAGAIN);

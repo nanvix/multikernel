@@ -36,6 +36,11 @@
 #include <posix/unistd.h>
 
 /**
+ * Root file system.
+ */
+struct filesystem fs_root;
+
+/**
  * @brief Table of Files
  */
 static struct file filetab[NANVIX_NR_FILES];
@@ -56,9 +61,14 @@ static struct file filetab[NANVIX_NR_FILES];
  *============================================================================*/
 
 /**
+ * @brief Gets an empty file.
+ *
  * The getfile() function searches the table of files for a free entry.
+ *
+ * @returns Upon successful completion, a pointer to an empty file is
+ * returned. Upon failure, a NULL pointer is returned instead.
  */
-struct file *getfile(void)
+static struct file *getfile(void)
 {
 	struct file *f;
 
@@ -115,6 +125,7 @@ static struct inode *do_creat(
 	((void) mode);
 	((void) oflag);
 
+	curr_proc->errcode = -ENOENT;
 	return (NULL);
 }
 
@@ -135,7 +146,7 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 		return (NULL);
 
 	/* Search file. */
-	if ((off = minix_dirent_search(&dinode->data, filename, 0)) < 0)
+	if ((off = minix_dirent_search(fs_root.dev, &fs_root.super->data, fs_root.super->bmap, &dinode->data, filename, 0)) < 0)
 	{
 		/* Create it. */
 		if ((i = do_creat(dinode, filename, mode, oflag)) == NULL)
@@ -145,11 +156,11 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 	}
 
 	/* Read Directory entry */
-	if (bdev_read(minix_fs.dev, (char *) &dirent, sizeof(struct d_dirent), off) < 0)
+	if (bdev_read(fs_root.dev, (char *) &dirent, sizeof(struct d_dirent), off) < 0)
 		return (NULL);
 
 	/* Read inode. */
-	if ((i = inode_read(dirent.d_ino)) == NULL)
+	if ((i = inode_read(&fs_root, dirent.d_ino)) == NULL)
 		return (NULL);
 
 	/* Block special file. */
@@ -236,7 +247,7 @@ int fs_close(int fd)
 
 	/* Bad file descriptor. */
 	if ((f = curr_proc->ofiles[fd]) == NULL)
-		return (-ENFILE);
+		return (curr_proc->errcode = -EBADF);
 
 	curr_proc->ofiles[fd] = NULL;
 
@@ -265,7 +276,7 @@ int fs_close(int fd)
 	else
 		return (curr_proc->errcode = -ENOTSUP);
 
-	return (inode_free(ip));
+	return (inode_free(&fs_root, ip));
 }
 
 /*============================================================================*
@@ -284,7 +295,7 @@ ssize_t fs_read(int fd, void *buf, size_t n)
 
 	/* Bad file descriptor. */
 	if ((f = curr_proc->ofiles[fd]) == NULL)
-		return (-ENFILE);
+		return (-EBADF);
 
 	/* File not opened for reading. */
 	if (ACCMODE(f->oflag) == O_WRONLY)
@@ -336,7 +347,7 @@ ssize_t fs_write(int fd, void *buf, size_t n)
 
 	/* Bad file descriptor. */
 	if ((f = curr_proc->ofiles[fd]) == NULL)
-		return (-ENFILE);
+		return (-EBADF);
 
 	/* File not opened for writing. */
 	if (ACCMODE(f->oflag) == O_RDONLY)
@@ -386,12 +397,12 @@ off_t fs_lseek(int fd, off_t offset, int whence)
 
 	/* Bad file descriptor. */
 	if ((f = curr_proc->ofiles[fd]) == NULL)
-		return (-ENFILE);
+		return (-EBADF);
 
 	/* Pipe file. */
 	if (S_ISFIFO(f->inode->data.i_mode))
 		return (-ESPIPE);
-	
+
 	/* Move read/write file offset. */
 	switch (whence)
 	{
@@ -401,26 +412,74 @@ off_t fs_lseek(int fd, off_t offset, int whence)
 				return (-EINVAL);
 			f->pos += offset;
 			break;
-		
+
 		case SEEK_END :
 			/* Invalid offset. */
 			if ((tmp = f->inode->data.i_size + offset) < 0)
 				return (-EINVAL);
 			f->pos = tmp;
 			break;
-		
+
 		case SEEK_SET :
 			/* Invalid offset. */
 			if (offset < 0)
 				return (-EINVAL);
 			f->pos = offset;
 			break;
-		
+
 		default :
 			return (-EINVAL);
 	}
-	
+
 	return (f->pos);
+}
+
+/*============================================================================*
+ * fs_make()                                                                  *
+ *============================================================================*/
+
+/**
+ * The fs_make() function create a file system on the device @p dev. The
+ * file system is formatted to feature @p ninode inodes, @p nblocks @p
+ * nblocks. Furthermore, the user ID and the user group ID of the file
+ * system are set to @p uid, and @p gid, respectively.
+ */
+int fs_make(
+	struct filesystem *fs,
+	dev_t dev,
+	ino_t ninodes,
+	block_t nblocks,
+	uid_t uid,
+	gid_t gid
+)
+{
+	int errcode;
+
+	/* Invalid argument. */
+	if (fs == NULL)
+		return (curr_proc->errcode = -EINVAL);
+
+	uassert((fs->super = umalloc(sizeof(struct superblock))) != NULL);
+	uassert((fs->root = umalloc(sizeof(struct inode))) != NULL);
+
+	errcode = minix_mkfs(
+		&fs->super->data,
+		&fs->super->imap,
+		&fs->super->bmap,
+		&fs->root->data,
+		fs->dev = dev,
+		ninodes,
+		nblocks,
+		uid,
+		gid
+	);
+
+	/* Failed to create file system. */
+	if (errcode < 0)
+		return (errcode);
+
+
+	return (0);
 }
 
 /*============================================================================*
@@ -434,15 +493,21 @@ off_t fs_lseek(int fd, off_t offset, int whence)
  */
 void fs_init(void)
 {
+	int errcode;
+
 	ramdisk_init();
 	binit();
-	minix_mkfs(
+
+	errcode = fs_make(
+		&fs_root,
 		NANVIX_ROOT_DEV,
-		NR_INODES,
+		NANVIX_NR_INODES,
 		NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE,
 		NANVIX_ROOT_UID,
 		NANVIX_ROOT_GID
 	);
+
+	uassert(errcode == 0);
 
 	/* Initialize table of files. */
 	for (int i = 0; i < NANVIX_NR_FILES; i++)

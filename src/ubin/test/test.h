@@ -72,6 +72,11 @@
 	extern void test_posix(void);
 
 	/**
+	 * @brief Launches regression tests on VFS manager.
+	 */
+	extern void test_vfs(void);
+
+	/**
 	 * @brief Horizontal line for tests.
 	 */
 	extern const char *HLINE;
