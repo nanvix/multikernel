@@ -77,8 +77,8 @@ void fprocess_init(void)
 	for (int i = 0; i < NANVIX_PROC_MAX; i++)
 	{
 		processes[i].errcode = 0;
-		processes[i].pwd = minix_fs.root;
-		processes[i].root = minix_fs.root;
+		processes[i].pwd = fs_root.root;
+		processes[i].root = fs_root.root;
 		for (int j = 0; j < NANVIX_OPEN_MAX; j++)
 			processes[i].ofiles[j] = NULL;
 	}

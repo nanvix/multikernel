@@ -28,6 +28,11 @@
 	/**
 	 * @brief Block Size (in bytes)
 	 */
-	#define NANVIX_FS_BLOCK_SIZE 512
+	#define NANVIX_FS_BLOCK_SIZE 1024
+
+	/**
+	 * @brief Length for Table of Files
+	 */
+	#define NANVIX_NR_FILES 64
 
 #endif /* NANVIX_SERVERS_VFS_CONST_H_ */

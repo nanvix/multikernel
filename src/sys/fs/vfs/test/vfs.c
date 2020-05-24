@@ -38,8 +38,6 @@
  */
 #define CONNECTION 0
 
-extern struct minix_fs_info minix_fs;
-
 /**
  * @brief Buffer for Read/Write Tests
  */
@@ -94,12 +92,12 @@ static void test_api_vfs_read_write(void)
 
 	uassert((fd = vfs_open(CONNECTION, filename, O_RDWR, 0)) >= 0);
 
-		uassert(vfs_seek(CONNECTION, fd, minix_fs.super.s_first_data_block*NANVIX_FS_BLOCK_SIZE, SEEK_SET) >= 0);
+		uassert(vfs_seek(CONNECTION, fd, fs_root.super->data.s_first_data_block*NANVIX_FS_BLOCK_SIZE, SEEK_SET) >= 0);
 
 		umemset(data, 1, NANVIX_FS_BLOCK_SIZE);
 		uassert(vfs_write(CONNECTION, fd, data, NANVIX_FS_BLOCK_SIZE) == NANVIX_FS_BLOCK_SIZE);
 
-		uassert(vfs_seek(CONNECTION, fd, minix_fs.super.s_first_data_block*NANVIX_FS_BLOCK_SIZE, SEEK_SET) >= 0);
+		uassert(vfs_seek(CONNECTION, fd, fs_root.super->data.s_first_data_block*NANVIX_FS_BLOCK_SIZE, SEEK_SET) >= 0);
 
 		umemset(data, 0, NANVIX_FS_BLOCK_SIZE);
 		uassert(vfs_read(CONNECTION, fd, data, NANVIX_FS_BLOCK_SIZE) == NANVIX_FS_BLOCK_SIZE);

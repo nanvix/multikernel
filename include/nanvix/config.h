@@ -67,7 +67,7 @@
 	/**
 	 * @brief Number of inodes.
 	 */
-	#define NR_INODES 64
+	#define NANVIX_NR_INODES 64
 
 /*============================================================================*
  * Memory Management System                                                   *

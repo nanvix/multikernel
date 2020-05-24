@@ -25,6 +25,8 @@
 #ifndef NANVIX_RUNTIME_FS_VFS_H_
 #define NANVIX_RUNTIME_FS_VFS_H_
 
+	#include <posix/sys/types.h>
+
 	/**
 	 * @brief Initializes the VFS Service.
 	 *
@@ -35,14 +37,79 @@
 
 	/**
 	 * @brief Shutdowns the VFS Service.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
 	 */
 	extern int __nanvix_vfs_cleanup(void);
 
 	/**
 	 * @brief Shutdowns the VFS Service.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
 	 */
 	extern int nanvix_vfs_shutdown(void);
 
+	/**
+	 * @brief Opens a file.
+	 *
+	 * @param filename Filename Name of the target file.
+	 * @param oflag    Open flag.
+	 *
+	 * @returns Upon successful completion, the file descriptor of the
+	 * opened file is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern int nanvix_vfs_open(const char *filename, int oflag);
+
+	/**
+	 * @brief Closes a file.
+	 *
+	 * @param fd Target file descriptor.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int nanvix_vfs_close(int fd);
+
+	/**
+	 * @brief Repositions the read/write pointer of a file.
+	 *
+	 * @param fd     Target file descriptor.
+	 * @param offset Offset for read/write pointer.
+	 * @param whence Reposition base location.
+	 *
+	 * @returns Upon successful completion, the resulting offset
+	 * location is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern off_t nanvix_vfs_seek(int fd, off_t offset, int whence);
+
+	/**
+	 * @brief Reads data from a file.
+	 *
+	 * @param fd  Target file descriptor.
+	 * @param buf Target buffer.
+	 * @param n   Number of bytes to read.
+	 *
+	 * @returns Upon successful completion, the number of bytes
+	 * successfully read is returned. Upon failure, a negative error
+	 * code is returned instead.
+	 */
+	extern ssize_t nanvix_vfs_read(int fd, void *buf, size_t n);
+
+	/**
+	 * @brief Writes data to a file.
+	 *
+	 * @param fd  Target file descriptor.
+	 * @param buf Target buffer.
+	 * @param n   Number of bytes to write.
+	 *
+	 * @returns Upon successful completion, the number of bytes
+	 * successfully written is returned. Upon failure, a negative error
+	 * code is returned instead.
+	 */
+	extern ssize_t nanvix_vfs_write(int fd, const void *buf, size_t n);
+
 #endif /* NANVIX_RUNTIME_FS_VFS_H_ */
-
-

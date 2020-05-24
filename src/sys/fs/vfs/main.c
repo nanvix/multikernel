@@ -23,16 +23,17 @@
  */
 
 /* Must come first. */
+#include "nanvix/servers/vfs/const.h"
 #define __VFS_SERVER
 
 #include <nanvix/servers/connection.h>
-#include <nanvix/servers/vfs.h>
 #include <nanvix/runtime/runtime.h>
 #include <nanvix/sys/semaphore.h>
 #include <nanvix/sys/mailbox.h>
 #include <nanvix/sys/noc.h>
 #include <nanvix/config.h>
 #include <nanvix/dev.h>
+#include <nanvix/fs.h>
 #include <nanvix/ulib.h>
 
 /* Import definitions. */
@@ -50,6 +51,291 @@ static struct
 } server = {
 	-1, -1, -1, VFS_SERVER_NAME
 };
+
+/**
+ * @brief Buffer for Read/Write Requests
+ */
+static char buffer[NANVIX_FS_BLOCK_SIZE];
+
+/*============================================================================*
+ * do_vfs_open()                                                              *
+ *============================================================================*/
+
+/**
+ * @brief Handles an open request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_vfs_open(
+	const struct vfs_message *request,
+	struct vfs_message *response
+)
+{
+	int ret;
+	const pid_t pid = request->header.source;
+	const int connection = connect(pid);
+
+	/* XXX: forward parameter checking to lower level function. */
+
+	ret = vfs_open(
+		connection,
+		request->op.open.filename,
+		request->op.open.oflag,
+		0
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+	{
+		disconnect(pid);
+		return (ret);
+	}
+
+	response->op.ret.fd = ret;
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_vfs_close()                                                             *
+ *============================================================================*/
+
+/**
+ * @brief Handles a close request.
+ *
+ * @param request Target request.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_vfs_close(const struct vfs_message *request)
+{
+	int ret;
+	const pid_t pid = request->header.source;
+	const int connection = lookup(pid);
+
+	/* XXX: forwarding parameter checking to lower level function. */
+
+	ret = vfs_close(
+		connection,
+		request->op.close.fd
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+		return (ret);
+
+	disconnect(pid);
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_vfs_seek()                                                              *
+ *============================================================================*/
+
+/**
+ * @brief Handles an seek request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_vfs_seek(
+	const struct vfs_message *request,
+	struct vfs_message *response
+)
+{
+	off_t ret;
+	const pid_t pid = request->header.source;
+	const int connection = lookup(pid);
+
+	/* XXX: forward parameter checking to lower level function. */
+
+	ret = vfs_seek(
+		connection,
+		request->op.seek.fd,
+		request->op.seek.offset,
+		request->op.seek.whence
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+		return (ret);
+
+	response->op.ret.offset = ret;
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_vfs_write()                                                             *
+ *============================================================================*/
+
+/**
+ * @brief Handles an write request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_vfs_write(
+	const struct vfs_message *request,
+	struct vfs_message *response
+)
+{
+	ssize_t ret;
+	const pid_t pid = request->header.source;
+	const int connection = lookup(pid);
+
+	/* Invalid write size. */
+	if ((request->op.write.n == 0) || (request->op.write.n > NANVIX_FS_BLOCK_SIZE))
+		return (-EINVAL);
+
+	/* XXX: forward parameter checking to lower level function. */
+
+	/* Allow remote write. */
+	uassert(
+		kportal_allow(
+			server.inportal,
+			request->header.source,
+			request->header.portal_port
+		) == 0
+	);
+
+	/* Read data in. */
+	uassert(
+		kportal_read(
+			server.inportal,
+			buffer,
+			request->op.write.n
+		) == (ssize_t) request->op.write.n
+	);
+
+	ret = vfs_write(
+		connection,
+		request->op.write.fd,
+		buffer,
+		request->op.write.n
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+		return (ret);
+
+	response->op.ret.count = ret;
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_vfs_read()                                                              *
+ *============================================================================*/
+
+/**
+ * @brief Handles an read request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_vfs_read(
+	const struct vfs_message *request,
+	struct vfs_message *response
+)
+{
+	ssize_t ret;
+	int outportal;
+	int outbox;
+	struct vfs_message msg;
+	const pid_t pid = request->header.source;
+	const int connection = lookup(pid);
+
+	/* Invalid read size. */
+	if ((request->op.read.n == 0) || (request->op.read.n > NANVIX_FS_BLOCK_SIZE))
+		return (-EINVAL);
+
+	/* XXX: forward parameter checking to lower level function. */
+
+	uassert((
+		outbox = kmailbox_open(
+			request->header.source,
+			request->header.mailbox_port
+		)) >= 0
+	);
+
+	/* Open portal to remote. */
+	uassert((outportal =
+		kportal_open(
+			knode_get_num(),
+			request->header.source,
+			request->header.portal_port)
+		) >= 0
+	);
+
+	/* Build operation header. */
+	message_header_build2(
+		&msg.header,
+		VFS_ACK,
+		kcomm_get_port(outportal, COMM_TYPE_PORTAL)
+	);
+
+	/* Send acknowledge. */
+	uassert(
+		kmailbox_write(outbox,
+			&msg,
+			sizeof(struct vfs_message)
+		) == sizeof(struct vfs_message)
+	);
+
+	/* Write to remote. */
+	uassert(
+		kportal_write(
+			outportal,
+			buffer,
+			request->op.read.n
+		) == (ssize_t) request->op.read.n
+	);
+
+	/* House keeping. */
+	uassert(kportal_close(outportal) == 0);
+	uassert(kmailbox_close(outbox) == 0);
+
+	ret = vfs_read(
+		connection,
+		request->op.read.fd,
+		buffer,
+		request->op.read.n
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+		return (ret);
+
+	response->op.ret.count = ret;
+
+	return (0);
+}
 
 /*============================================================================*
  * vfs_loop()                                                                 *
@@ -101,6 +387,7 @@ static int do_vfs_loop(void)
 				break;
 
 			case VFS_OPEN:
+				ret = do_vfs_open(&request, &response);
 				reply = 1;
 				break;
 
@@ -109,6 +396,7 @@ static int do_vfs_loop(void)
 				break;
 
 			case VFS_CLOSE:
+				ret = do_vfs_close(&request);
 				reply = 1;
 				break;
 
@@ -125,15 +413,18 @@ static int do_vfs_loop(void)
 				break;
 
 			case VFS_READ:
+				ret = do_vfs_read(&request, &response);
 				reply = 1;
 				break;
 
 			case VFS_WRITE:
+				ret = do_vfs_write(&request, &response);
 				reply = 1;
 				break;
 
 			case VFS_SEEK:
 				reply = 1;
+				ret = do_vfs_seek(&request, &response);
 				break;
 
 			default:

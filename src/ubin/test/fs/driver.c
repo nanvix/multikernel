@@ -22,26 +22,31 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_LIMITS_FS_H_
-#define NANVIX_LIMITS_FS_H_
+#include <nanvix/ulib.h>
+#include "../test.h"
 
-	#ifndef __NEED_LIMITS_FS
-	#error "do not include this file"
-	#endif
+/* Import definitions. */
+extern struct test tests_vfs_api[];
+extern struct test tests_vfs_stress[];
+extern struct test tests_vfs_fault[];
 
-	/**
-	 * @brief Maximum Size for a File
-	 */
-	#define NANVIX_MAX_FILE_SIZE (64*1024*1024)
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+void test_vfs(void)
+{
 
-	/**
-	 * @brief Maximum of Opened Files for a Process
-	 */
-	#define NANVIX_OPEN_MAX 16
+	/* Run fault tests. */
+	for (int i = 0; tests_vfs_fault[i].test_fn != NULL; i++)
+	{
+		uprintf("[nanvix][test][vfs][fault] %s", tests_vfs_fault[i].name);
+		tests_vfs_fault[i].test_fn();
+	}
 
-	/**
-	 * @brief Maximum Name for a File
-	 */
-	#define NANVIX_NAME_MAX 16
-
-#endif /* NANVIX_LIMITS_FS_H_ */
+	/* Run stress tests. */
+	for (int i = 0; tests_vfs_stress[i].test_fn != NULL; i++)
+	{
+		uprintf("[nanvix][test][vfs][stress] %s", tests_vfs_stress[i].name);
+		tests_vfs_stress[i].test_fn();
+	}
+}
