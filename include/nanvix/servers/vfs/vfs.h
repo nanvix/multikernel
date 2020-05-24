@@ -32,7 +32,7 @@
 	#include <posix/sys/types.h>
 
 	/**
-	 * @brief Initializes the virtual file system manager.
+	 * @brief Initializes the virtual file system.
 	 */
 	extern void vfs_init(void);
 

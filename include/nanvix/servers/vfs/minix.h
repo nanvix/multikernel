@@ -290,9 +290,6 @@
 	 * @param dip   Target directory.
 	 * @param name  Symbolic name of target entry.
 	 *
-	 * The nanvix_dirent_remove() function removes the directory entry named
-	 * @p name from the directory pointed to by @p dip.
-	 *
 	 * @returns Upon successful return, zero is returned. Upon failure, a
 	 * negative error code is returned instead.
 	 */
@@ -318,7 +315,7 @@
 	 * @param name   Name of the directory entry that shall be searched.
 	 * @param create Create directory entry?
 	 *
-	 * @returns iUpon successful completion, the offset where the directory
+	 * @returns Upon successful completion, the offset where the directory
 	 * entry is located is returned. Upon failure, a negative error code is
 	 * returned instead..
 	 */
@@ -339,10 +336,6 @@
 	 * @param nblocks  Number of blocks.
 	 * @param uid      User ID.
 	 * @param gid      User group ID.
-	 *
-	 * @note @p diskfile must refer to a valid file.
-	 * @note @p ninodes must be valid.
-	 * @note @p nblocks must be valid.
 	 *
 	 * @returns Upon successful completion, zero is returned. Upon
 	 * failure, a negative error code is returned instead.

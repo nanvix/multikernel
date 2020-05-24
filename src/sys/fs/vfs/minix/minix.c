@@ -244,7 +244,9 @@ int minix_dirent_add(
  *============================================================================*/
 
 /**
- * @todo TODO: provide a detailed description for this function.
+ *
+ * The minix_dirent_remove() function removes the directory entry named
+ * @p name from the directory pointed to by @p dip.
  */
 int minix_dirent_remove(
 	dev_t dev,

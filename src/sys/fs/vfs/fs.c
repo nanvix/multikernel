@@ -427,7 +427,7 @@ off_t fs_lseek(int fd, off_t offset, int whence)
 			f->pos = offset;
 			break;
 
-		default :
+		default:
 			return (-EINVAL);
 	}
 

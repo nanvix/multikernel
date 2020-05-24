@@ -69,7 +69,7 @@
 	};
 
 	/**
-	 * @brief Initializes the file system manager.
+	 * @brief Initializes the file system.
 	 */
 	extern void fs_init(void);
 
