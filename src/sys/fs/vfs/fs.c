@@ -439,13 +439,13 @@ off_t fs_lseek(int fd, off_t offset, int whence)
  *============================================================================*/
 
 /**
- * The fs_make() function create a file system on the device @p dev. The
- * file system is formatted to feature @p ninode inodes, @p nblocks @p
- * nblocks. Furthermore, the user ID and the user group ID of the file
- * system are set to @p uid, and @p gid, respectively.
+ * The fs_make() function creates a file system on the device @p dev.
+ * The file system is formatted to feature @p ninode inodes, @p nblocks
+ * @p nblocks. Furthermore, the user ID and the user group ID of the
+ * file system are set to @p uid, and @p gid, respectively.
+ * @author Pedro Henrique Penna
  */
 int fs_make(
-	struct filesystem *fs,
 	dev_t dev,
 	ino_t ninodes,
 	block_t nblocks,
@@ -453,33 +453,64 @@ int fs_make(
 	gid_t gid
 )
 {
-	int errcode;
+	return (
+		minix_mkfs(
+			dev,
+			ninodes,
+			nblocks,
+			uid,
+			gid
+		)
+	);
+}
 
+/*============================================================================*
+ * fs_mount()                                                                 *
+ *============================================================================*/
+
+/**
+ * The fs_mount() function mounts the file system that resides in the
+ * device specified by @p dev. The information concerning the mounted
+ * file system is stored in the location pointed to by @p fs.
+ *
+ * @author Pedro Henrique Penna
+ */
+int fs_mount(struct filesystem *fs, dev_t dev)
+{
 	/* Invalid argument. */
 	if (fs == NULL)
 		return (curr_proc->errcode = -EINVAL);
 
-	uassert((fs->super = umalloc(sizeof(struct superblock))) != NULL);
-	uassert((fs->root = umalloc(sizeof(struct inode))) != NULL);
+	/* Allocate memory for superblock */
+	if ((fs->super = umalloc(sizeof(struct superblock))) == NULL)
+		return (curr_proc->errcode = -ENOMEM);
 
-	errcode = minix_mkfs(
-		&fs->super->data,
-		&fs->super->imap,
-		&fs->super->bmap,
-		&fs->root->data,
-		fs->dev = dev,
-		ninodes,
-		nblocks,
-		uid,
-		gid
-	);
+	/* Allocate memory for root inode. */
+	if ((fs->root = umalloc(sizeof(struct inode))) == NULL)
+	{
+		curr_proc->errcode = -ENOMEM;
+		goto error0;
+	}
 
-	/* Failed to create file system. */
-	if (errcode < 0)
-		return (errcode);
-
+	/* Mount file system. */
+	uprintf("[nanvix][vfs][minix] mounting file system on device %d", dev);
+	if (minix_mount(
+			&fs->super->data,
+			&fs->super->imap,
+			&fs->super->bmap,
+			&fs->root->data,
+			fs->dev = dev
+		) < 0
+	)
+		goto error1;
 
 	return (0);
+
+error1:
+	ufree(fs->root);
+error0:
+	ufree(fs->super);
+	return (curr_proc->errcode);
 }
 
 /*============================================================================*
@@ -493,21 +524,22 @@ int fs_make(
  */
 void fs_init(void)
 {
-	int errcode;
-
 	ramdisk_init();
 	binit();
 
-	errcode = fs_make(
-		&fs_root,
-		NANVIX_ROOT_DEV,
-		NANVIX_NR_INODES,
-		NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE,
-		NANVIX_ROOT_UID,
-		NANVIX_ROOT_GID
+	/* Create root file system. */
+	uassert(
+		fs_make(
+			NANVIX_ROOT_DEV,
+			NANVIX_NR_INODES,
+			NANVIX_DISK_SIZE/NANVIX_FS_BLOCK_SIZE,
+			NANVIX_ROOT_UID,
+			NANVIX_ROOT_GID
+		) == 0
 	);
 
-	uassert(errcode == 0);
+	/* Mount root file system. */
+	uassert(fs_mount(&fs_root, NANVIX_ROOT_DEV) == 0);
 
 	/* Initialize table of files. */
 	for (int i = 0; i < NANVIX_NR_FILES; i++)

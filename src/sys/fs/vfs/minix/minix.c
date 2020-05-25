@@ -333,10 +333,6 @@ int minix_dirent_remove(
  * the file system are set to @p uid, and @p gid, respectively.
  */
 int minix_mkfs(
-	struct d_superblock *super,
-	bitmap_t **imap,
-	bitmap_t **bmap,
-	struct d_inode *root,
 	dev_t dev,
 	minix_ino_t ninodes,
 	minix_block_t nblocks,
@@ -353,10 +349,10 @@ int minix_mkfs(
 	mode_t mode;                    /* Access permissions to root dir. */
 	minix_ino_t num;                /* Inode number of root directory. */
 	struct d_inode winode;          /* Working Inode                   */
-
-	/* Sanity check */
-	if ((super == NULL) || (imap == NULL) || (bmap == NULL) || (root == NULL))
-		return (-EINVAL);
+	struct d_superblock super;
+	bitmap_t *imap;
+	bitmap_t *bmap;
+	struct d_inode root;
 
 	/*
 	 * TODO: sanity check arguments.
@@ -383,40 +379,80 @@ int minix_mkfs(
 		uassert(bdev_write(dev, buf, MINIX_BLOCK_SIZE, off) == MINIX_BLOCK_SIZE);
 
 	/* Write superblock. */
-	super->s_ninodes = ninodes;
-	super->s_nblocks = nblocks;
-	super->s_imap_nblocks = imap_nblocks;
-	super->s_bmap_nblocks = bmap_nblocks;
-	super->s_first_data_block = first_data_block;
-	super->s_max_size = NANVIX_MAX_FILE_SIZE;
-	super->s_magic = MINIX_SUPER_MAGIC;
+	super.s_ninodes = ninodes;
+	super.s_nblocks = nblocks;
+	super.s_imap_nblocks = imap_nblocks;
+	super.s_bmap_nblocks = bmap_nblocks;
+	super.s_first_data_block = first_data_block;
+	super.s_max_size = NANVIX_MAX_FILE_SIZE;
+	super.s_magic = MINIX_SUPER_MAGIC;
 
 	/* Create inode and zone maps. */
-	uassert((*imap = ucalloc(imap_nblocks, MINIX_BLOCK_SIZE)) != NULL);
-	uassert((*bmap = ucalloc(bmap_nblocks, MINIX_BLOCK_SIZE)) != NULL);
+	uassert((imap = ucalloc(imap_nblocks, MINIX_BLOCK_SIZE)) != NULL);
+	uassert((bmap = ucalloc(bmap_nblocks, MINIX_BLOCK_SIZE)) != NULL);
 
 	/* Access permission to root directory. */
 	mode = S_IFDIR| S_IRWXU | S_IRGRP | S_IXGRP | S_IROTH | S_IXOTH;
 
-	uassert(minix_inode_alloc(dev, super, *imap, mode, uid, gid) == MINIX_INODE_ROOT);
+	uassert(minix_inode_alloc(dev, &super, imap, mode, uid, gid) == MINIX_INODE_ROOT);
 
 	/* Create root directory. */
-	uassert(minix_inode_read(dev, super, root, MINIX_INODE_ROOT) == 0);
-	minix_dirent_add(dev, super, *bmap, root, ".", MINIX_INODE_ROOT);
-	minix_dirent_add(dev, super,  *bmap, root, "..", MINIX_INODE_ROOT);
-	uassert(minix_inode_write(dev, super, root, MINIX_INODE_ROOT) == 0);
+	uassert(minix_inode_read(dev, &super, &root, MINIX_INODE_ROOT) == 0);
+	minix_dirent_add(dev, &super, bmap, &root, ".", MINIX_INODE_ROOT);
+	minix_dirent_add(dev, &super,  bmap, &root, "..", MINIX_INODE_ROOT);
+	uassert(minix_inode_write(dev, &super, &root, MINIX_INODE_ROOT) == 0);
 	uprintf("[nanvix][vfs][minix] root inode = %d", MINIX_INODE_ROOT);
 
 	/* Create disk device. */
-	uassert((num = minix_inode_alloc(dev, super, *imap, mode | S_IFBLK, uid, gid)) != MINIX_INODE_NULL);
-	uassert(minix_inode_read(dev, super, &winode, num) == 0);
+	uassert((num = minix_inode_alloc(dev, &super, imap, mode | S_IFBLK, uid, gid)) != MINIX_INODE_NULL);
+	uassert(minix_inode_read(dev, &super, &winode, num) == 0);
 	winode.i_size = NANVIX_DISK_SIZE;
-	minix_dirent_add(dev, super, *bmap, root, "disk", num);
-	uassert(minix_inode_write(dev, super, &winode, MINIX_INODE_ROOT) == 0);
-	uassert(minix_inode_write(dev, super, root, MINIX_INODE_ROOT) == 0);
+	minix_dirent_add(dev, &super, bmap, &root, "disk", num);
+	uassert(minix_inode_write(dev, &super, &winode, MINIX_INODE_ROOT) == 0);
+	uassert(minix_inode_write(dev, &super, &root, MINIX_INODE_ROOT) == 0);
 	uprintf("[nanvix][vfs][minix] disk inode = %d", num);
 
-	uprintf("[nanvix][vfs][minix] first data block =  %d", super->s_first_data_block);
+	uprintf("[nanvix][vfs][minix] first data block =  %d", super.s_first_data_block);
 
-	return (minix_super_write(dev, super, *bmap, *imap));
+	/* Write superblock */
+	uassert(minix_super_write(dev, &super, bmap, imap) == 0);
+
+	/* House keeping. */
+	ufree(bmap);
+	ufree(imap);
+
+	return (0);
+}
+
+/*============================================================================*
+ * minix_mount()                                                              *
+ *============================================================================*/
+
+/**
+ * The minix_mount() function mounts the MINIX file system that resides
+ * in the device specified by @p dev. The information concerning the
+ * file system, such as superblock, inode map, block map, root inode are
+ * placed in @p super, @p imap, @p bmap and @p root, respectively.
+ */
+int minix_mount(
+	struct d_superblock *super,
+	bitmap_t **imap,
+	bitmap_t **bmap,
+	struct d_inode *root,
+	dev_t dev
+)
+{
+	/* Sanity check */
+	if ((super == NULL) || (imap == NULL) || (bmap == NULL) || (root == NULL))
+		return (-EINVAL);
+
+	/* Read superblock. */
+	if (minix_super_read(dev, super, bmap, imap) < 0)
+		return (-EIO);
+
+	/* Read root directory. */
+	if (minix_inode_read(dev, super, root, MINIX_INODE_ROOT) < 0)
+		return (-EIO);
+
+	return (0);
 }

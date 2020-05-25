@@ -136,6 +136,37 @@
 	extern off_t fs_lseek(int fd, off_t offset, int whence);
 
 	/**
+	 * @brief Creates a file system.
+	 *
+	 * @param dev     Number of target device.
+	 * @param ninodes Number of inodes.
+	 * @param nblocks Number of blocks
+	 * @param uid     User ID of owner.
+	 * @param gid     Group ID of owner.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure a negative error code is returned instead.
+	 */
+	extern int fs_make(
+		dev_t dev,
+		ino_t ninodes,
+		block_t nblocks,
+		uid_t uid,
+		gid_t gid
+	);
+
+	/**
+	 * @brief Mounts a file system.
+	 *
+	 * @param fs  Store location for target file system.
+	 * @param dev Number of target device.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure a negative error code is returned instead.
+	 */
+	extern int fs_mount(struct filesystem *fs, dev_t dev);
+
+	/**
 	 * @brief Root File System
 	 */
 	struct filesystem fs_root;

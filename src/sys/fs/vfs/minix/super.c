@@ -45,8 +45,8 @@
 int minix_super_read(
 	dev_t dev,
 	struct d_superblock *sb,
-	bitmap_t *zmap,
-	bitmap_t *imap
+	bitmap_t **zmap,
+	bitmap_t **imap
 )
 {
 	int err;
@@ -67,31 +67,53 @@ int minix_super_read(
 	if (sb->s_magic != MINIX_SUPER_MAGIC)
 		return (-EINVAL);
 
+	/* Create inode map. */
+	if ((*imap = umalloc(sb->s_imap_nblocks*MINIX_BLOCK_SIZE)) == NULL)
+	{
+		err = -ENOMEM;
+		goto error0;
+	}
+
 	/* I-Node Map */
 	err = bdev_read(
 		dev,
-		(char *)imap,
+		(char *)*imap,
 		sb->s_imap_nblocks*MINIX_BLOCK_SIZE,
 		2*MINIX_BLOCK_SIZE
 	);
 
 	/* Read failure. */
 	if (err < 0)
-		return (err);
+		goto error1;
+
+	/* Create block map. */
+	if ((*zmap = umalloc(sb->s_bmap_nblocks*MINIX_BLOCK_SIZE)) == NULL)
+	{
+		err = -ENOMEM;
+		goto error1;
+	}
 
 	/* Zone Map */
 	err = bdev_read(
 		dev,
-		(char *)zmap,
+		(char *)*zmap,
 		sb->s_bmap_nblocks*MINIX_BLOCK_SIZE,
 		(2 + sb->s_imap_nblocks)*MINIX_BLOCK_SIZE
 	);
 
 	/* Read failure. */
 	if (err < 0)
-		return (err);
+		goto error2;
 
 	return (0);
+
+
+error2:
+	ufree(*zmap);
+error1:
+	ufree(*imap);
+error0:
+	return (err);
 }
 
 /*============================================================================*

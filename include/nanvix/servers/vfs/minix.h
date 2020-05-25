@@ -153,8 +153,8 @@
 	extern int minix_super_read(
 		dev_t dev,
 		struct d_superblock *sb,
-		bitmap_t *zmap,
-		bitmap_t *imap
+		bitmap_t **zmap,
+		bitmap_t **imap
 	);
 
 	/**
@@ -341,15 +341,31 @@
 	 * failure, a negative error code is returned instead.
 	 */
 	extern int minix_mkfs(
-		struct d_superblock *super,
-		bitmap_t **imap,
-		bitmap_t **bmap,
-		struct d_inode *root,
 		dev_t dev,
 		minix_ino_t ninodes,
 		minix_block_t nblocks,
 		minix_uid_t uid,
 		minix_gid_t gid
+	);
+
+	/**
+	 * @brief Mounts a MINIX file system.
+	 *
+	 * @param super Target store location for superblock.
+	 * @param imap  Target store location for inode map.
+	 * @param bmap  Target store location for block map.
+	 * @param root  Target store location for root inode.
+	 * @param dev   Target device.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_mount(
+		struct d_superblock *super,
+		bitmap_t **imap,
+		bitmap_t **bmap,
+		struct d_inode *root,
+		dev_t dev
 	);
 
 #endif /* NANVIX_SERVERS_VFS_MINIX_H_ */
