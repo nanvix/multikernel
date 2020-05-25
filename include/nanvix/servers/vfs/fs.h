@@ -167,6 +167,16 @@
 	extern int fs_mount(struct filesystem *fs, dev_t dev);
 
 	/**
+	 * @brief Unmounts a file system.
+	 *
+	 * @param fs Target file system.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure a negative error code is returned instead.
+	 */
+	extern int fs_unmount(struct filesystem *fs);
+
+	/**
 	 * @brief Root File System
 	 */
 	struct filesystem fs_root;

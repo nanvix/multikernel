@@ -349,6 +349,26 @@
 	);
 
 	/**
+	 * @brief Synchronizes a MINIX file system.
+	 *
+	 * @param super Target superblock.
+	 * @param imap  Target inode map.
+	 * @param bmap  Target block map.
+	 * @param root  Target root inode.
+	 * @param dev   Target device.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_sync(
+		struct d_superblock *super,
+		bitmap_t *imap,
+		bitmap_t *bmap,
+		struct d_inode *root,
+		dev_t dev
+	);
+
+	/**
 	 * @brief Mounts a MINIX file system.
 	 *
 	 * @param super Target store location for superblock.
@@ -364,6 +384,26 @@
 		struct d_superblock *super,
 		bitmap_t **imap,
 		bitmap_t **bmap,
+		struct d_inode *root,
+		dev_t dev
+	);
+
+	/**
+	 * @brief Unmounts a MINIX file system.
+	 *
+	 * @param super Target superblock.
+	 * @param imap  Target inode map.
+	 * @param bmap  Target block map.
+	 * @param root  Target root inode.
+	 * @param dev   Target device.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_unmount(
+		struct d_superblock *super,
+		bitmap_t *imap,
+		bitmap_t *bmap,
 		struct d_inode *root,
 		dev_t dev
 	);

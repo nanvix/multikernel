@@ -514,6 +514,42 @@ error0:
 }
 
 /*============================================================================*
+ * fs_unmount()                                                               *
+ *============================================================================*/
+
+/**
+ * The minix_unmount() function unmounts the file system pointed to by
+ * @p fs. Any changes made to the file system structure are flushed back
+ * to disk.
+ *
+ * @author Pedro Henrique Penna
+ */
+int fs_unmount(struct filesystem *fs)
+{
+	/* Invalid argument. */
+	if (fs == NULL)
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Unmount file system. */
+	uprintf("[nanvix][vfs][minix] unmounting file system on device %d", fs->dev);
+	if (minix_unmount(
+			&fs->super->data,
+			fs->super->imap,
+			fs->super->bmap,
+			&fs->root->data,
+			fs->dev
+		) < 0
+	)
+		return (curr_proc->errcode);
+
+	/* House keeping. */
+	ufree(fs->root);
+	ufree(fs->super);
+
+	return (0);
+}
+
+/*============================================================================*
  * fs_init()                                                                  *
  *============================================================================*/
 

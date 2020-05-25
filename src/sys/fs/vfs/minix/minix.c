@@ -425,6 +425,40 @@ int minix_mkfs(
 }
 
 /*============================================================================*
+ * minix_sync()                                                               *
+ *============================================================================*/
+
+/**
+ * The minix_sync() function synchronizes the MINIX file system that
+ * resides in the device specified by @p dev with in-memory file system
+ * information. Any changes made to the file system structure are
+ * flushed back to disk.
+ */
+int minix_sync(
+	struct d_superblock *super,
+	bitmap_t *imap,
+	bitmap_t *bmap,
+	struct d_inode *root,
+	dev_t dev
+)
+{
+	/* Sanity check */
+	if ((super == NULL) || (imap == NULL) || (bmap == NULL) || (root == NULL))
+		return (-EINVAL);
+
+	/* Write superblock. */
+	if (minix_super_write(dev, super, bmap, imap) < 0)
+		return (-EIO);
+
+	/* Write root directory. */
+	if (minix_inode_write(dev, super, root, MINIX_INODE_ROOT) < 0)
+		return (-EIO);
+
+	return (0);
+}
+
+
+/*============================================================================*
  * minix_mount()                                                              *
  *============================================================================*/
 
@@ -455,4 +489,24 @@ int minix_mount(
 		return (-EIO);
 
 	return (0);
+}
+
+/*============================================================================*
+ * minix_unmount()                                                            *
+ *============================================================================*/
+
+/**
+ * The minix_unmount() function unmounts the MINIX file system that
+ * resides in the device specified by @p dev. Any changes made to the
+ * file system structure are flushed back to disk.
+ */
+int minix_unmount(
+	struct d_superblock *super,
+	bitmap_t *imap,
+	bitmap_t *bmap,
+	struct d_inode *root,
+	dev_t dev
+)
+{
+	return (minix_sync(super, imap, bmap, root, dev));
 }
