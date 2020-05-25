@@ -304,15 +304,15 @@ static void test_fault_minix_block_free_inval(void)
 static void test_fault_minix_super_read_inval(void)
 {
 	struct d_superblock sb;
-	bitmap_t imap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
-	bitmap_t zmap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+	bitmap_t *imap;
+	bitmap_t *zmap;
 
 	uassert(
 		minix_super_read(
 			-1,
 			&sb,
-			zmap,
-			imap
+			&zmap,
+			&imap
 		) == -EINVAL
 	);
 
@@ -320,8 +320,8 @@ static void test_fault_minix_super_read_inval(void)
 		minix_super_read(
 			NANVIX_ROOT_DEV,
 			NULL,
-			zmap,
-			imap
+			&zmap,
+			&imap
 		) == -EINVAL
 	);
 
@@ -330,7 +330,7 @@ static void test_fault_minix_super_read_inval(void)
 			NANVIX_ROOT_DEV,
 			&sb,
 			NULL,
-			imap
+			&imap
 		) == -EINVAL
 	);
 
@@ -338,7 +338,7 @@ static void test_fault_minix_super_read_inval(void)
 		minix_super_read(
 			NANVIX_ROOT_DEV,
 			&sb,
-			zmap,
+			&zmap,
 			NULL
 		) == -EINVAL
 	);
