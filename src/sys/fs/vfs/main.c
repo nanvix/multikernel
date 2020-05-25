@@ -514,6 +514,7 @@ static int do_vfs_server_startup(struct nanvix_semaphore *lock)
 static int do_vfs_server_shutdown(void)
 {
 	uprintf("[nanvix][vfs] shutting down server");
+	vfs_shutdown();
 
 	return (0);
 }

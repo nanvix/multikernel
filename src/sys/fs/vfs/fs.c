@@ -581,3 +581,16 @@ void fs_init(void)
 	for (int i = 0; i < NANVIX_NR_FILES; i++)
 		FILE_INITIALIZER(&filetab[i]);
 }
+
+/*============================================================================*
+ * fs_shutdown()                                                              *
+ *============================================================================*/
+
+/**
+ * The fs_shutdown() function shutdowns the file system.
+ */
+void fs_shutdown(void)
+{
+	/* Unmount root file system. */
+	uassert(fs_unmount(&fs_root) == 0);
+}

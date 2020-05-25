@@ -37,6 +37,11 @@
 	extern void vfs_init(void);
 
 	/**
+	 * @brief Shutdowns the virtual file system.
+	 */
+	extern void vfs_shutdown(void);
+
+	/**
 	 * @brief Opens a file.
 	 *
 	 * @param connection Target connection.

@@ -74,6 +74,11 @@
 	extern void fs_init(void);
 
 	/**
+	 * @brief Shustdowns the file system.
+	 */
+	extern void fs_shutdown(void);
+
+	/**
 	 * @brief Opens a file.
 	 *
 	 * @param filename Filename Name of the target file.
