@@ -51,6 +51,10 @@ int minix_super_read(
 {
 	int err;
 
+	/* Invalid arguments. */
+	if ((sb == NULL) || (zmap == NULL) || (imap == NULL))
+		return (-EINVAL);
+
 	/* Superblock */
 	err = bdev_read(
 		dev,
@@ -135,6 +139,10 @@ int minix_super_write(
 )
 {
 	int err;
+
+	/* Invalid arguments. */
+	if ((sb == NULL) || (zmap == NULL) || (imap == NULL))
+		return (-EINVAL);
 
 	/* Superblock */
 	err = bdev_write(
