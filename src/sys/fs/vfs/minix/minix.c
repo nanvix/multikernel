@@ -438,25 +438,19 @@ int minix_sync(
 	struct d_superblock *super,
 	bitmap_t *imap,
 	bitmap_t *bmap,
-	struct d_inode *root,
 	dev_t dev
 )
 {
 	/* Sanity check */
-	if ((super == NULL) || (imap == NULL) || (bmap == NULL) || (root == NULL))
+	if ((super == NULL) || (imap == NULL) || (bmap == NULL))
 		return (-EINVAL);
 
 	/* Write superblock. */
 	if (minix_super_write(dev, super, bmap, imap) < 0)
 		return (-EIO);
 
-	/* Write root directory. */
-	if (minix_inode_write(dev, super, root, MINIX_INODE_ROOT) < 0)
-		return (-EIO);
-
 	return (0);
 }
-
 
 /*============================================================================*
  * minix_mount()                                                              *
@@ -466,26 +460,21 @@ int minix_sync(
  * The minix_mount() function mounts the MINIX file system that resides
  * in the device specified by @p dev. The information concerning the
  * file system, such as superblock, inode map, block map, root inode are
- * placed in @p super, @p imap, @p bmap and @p root, respectively.
+ * placed in @p super, @p imap and @p bmap, respectively.
  */
 int minix_mount(
 	struct d_superblock *super,
 	bitmap_t **imap,
 	bitmap_t **bmap,
-	struct d_inode *root,
 	dev_t dev
 )
 {
 	/* Sanity check */
-	if ((super == NULL) || (imap == NULL) || (bmap == NULL) || (root == NULL))
+	if ((super == NULL) || (imap == NULL) || (bmap == NULL))
 		return (-EINVAL);
 
 	/* Read superblock. */
 	if (minix_super_read(dev, super, bmap, imap) < 0)
-		return (-EIO);
-
-	/* Read root directory. */
-	if (minix_inode_read(dev, super, root, MINIX_INODE_ROOT) < 0)
 		return (-EIO);
 
 	return (0);
@@ -504,9 +493,8 @@ int minix_unmount(
 	struct d_superblock *super,
 	bitmap_t *imap,
 	bitmap_t *bmap,
-	struct d_inode *root,
 	dev_t dev
 )
 {
-	return (minix_sync(super, imap, bmap, root, dev));
+	return (minix_sync(super, imap, bmap, dev));
 }

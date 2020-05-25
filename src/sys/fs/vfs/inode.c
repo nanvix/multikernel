@@ -38,6 +38,20 @@
 #define INODES_LENGTH (NANVIX_NR_INODES/4)
 
 /**
+ * @brief In-Memory Inode
+ */
+struct inode
+{
+	/* Must come first. */
+	struct resource resource;
+
+	struct d_inode data; /**< Underlying Disk Inode  */
+	dev_t dev;           /**< Underlying Device      */
+	ino_t num;           /**< Inode Number           */
+	int count;           /**< Reference count        */
+};
+
+/**
  * @brief Table of Inodes
  */
 static struct inode inodes[INODES_LENGTH];
@@ -50,6 +64,27 @@ static struct resource_pool pool = {
 	.nresources = INODES_LENGTH,
 	.resource_size = sizeof(struct inode)
 };
+
+/*============================================================================*
+ * inode_disk_get()                                                           *
+ *============================================================================*/
+
+/**
+ * The inode_disk_get() function gets the reference for the underlying
+ * disk inode.
+ */
+struct d_inode *inode_disk_get(struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+		return (NULL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return (NULL);
+
+	return (&ip->data);
+}
 
 /*============================================================================*
  * inode_alloc()                                                              *
@@ -246,7 +281,7 @@ void inode_init(void)
 	{
 		inodes[i].resource = RESOURCE_INITIALIZER;
 		inodes[i].dev = -1;
-		inodes[i].num = NANVIX_INODE_NULL;
+		inodes[i].num = MINIX_INODE_NULL;
 		inodes[i].count = 0;
 	}
 }

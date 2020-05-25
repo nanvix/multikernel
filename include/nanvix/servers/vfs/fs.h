@@ -237,23 +237,13 @@
  *============================================================================*/
 
 	/**
-	 * @brief Null Inode
+	 * @brief Gets disk inode.
+	 *
+	 * @param ip Target inode.
+	 *
+	 * @returns A pointer to the underlying disk inode data.
 	 */
-	#define NANVIX_INODE_NULL -1
-
-	/**
-	 * @brief In-Memory Inode
-	 */
-	struct inode
-	{
-		/* Must come first. */
-		struct resource resource;
-
-		struct d_inode data; /**< Underlying Disk Inode  */
-		dev_t dev;           /**< Underlying Device      */
-		ino_t num;           /**< Inode Number           */
-		int count;           /**< Reference count        */
-	};
+	extern struct d_inode *inode_disk_get(struct inode *ip);
 
 	/**
 	 * @brief Allocates an in-memory inode.

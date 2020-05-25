@@ -354,7 +354,6 @@
 	 * @param super Target superblock.
 	 * @param imap  Target inode map.
 	 * @param bmap  Target block map.
-	 * @param root  Target root inode.
 	 * @param dev   Target device.
 	 *
 	 * @returns Upon successful completion, zero is returned. Upon
@@ -364,7 +363,6 @@
 		struct d_superblock *super,
 		bitmap_t *imap,
 		bitmap_t *bmap,
-		struct d_inode *root,
 		dev_t dev
 	);
 
@@ -374,7 +372,6 @@
 	 * @param super Target store location for superblock.
 	 * @param imap  Target store location for inode map.
 	 * @param bmap  Target store location for block map.
-	 * @param root  Target store location for root inode.
 	 * @param dev   Target device.
 	 *
 	 * @returns Upon successful completion, zero is returned. Upon
@@ -384,7 +381,6 @@
 		struct d_superblock *super,
 		bitmap_t **imap,
 		bitmap_t **bmap,
-		struct d_inode *root,
 		dev_t dev
 	);
 
@@ -394,7 +390,6 @@
 	 * @param super Target superblock.
 	 * @param imap  Target inode map.
 	 * @param bmap  Target block map.
-	 * @param root  Target root inode.
 	 * @param dev   Target device.
 	 *
 	 * @returns Upon successful completion, zero is returned. Upon
@@ -404,7 +399,6 @@
 		struct d_superblock *super,
 		bitmap_t *imap,
 		bitmap_t *bmap,
-		struct d_inode *root,
 		dev_t dev
 	);
 

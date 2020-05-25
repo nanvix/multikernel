@@ -146,7 +146,7 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 		return (NULL);
 
 	/* Search file. */
-	if ((off = minix_dirent_search(fs_root.dev, &fs_root.super->data, fs_root.super->bmap, &dinode->data, filename, 0)) < 0)
+	if ((off = minix_dirent_search(fs_root.dev, &fs_root.super->data, fs_root.super->bmap, inode_disk_get(dinode), filename, 0)) < 0)
 	{
 		/* Create it. */
 		if ((i = do_creat(dinode, filename, mode, oflag)) == NULL)
@@ -164,21 +164,21 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 		return (NULL);
 
 	/* Block special file. */
-	if (S_ISBLK(i->data.i_mode))
+	if (S_ISBLK(inode_disk_get(i)->i_mode))
 	{
-		if (bdev_open(i->data.i_zones[0]) < 0)
+		if (bdev_open(inode_disk_get(i)->i_zones[0]) < 0)
 			goto error;
 	}
 
 	/* Regular file. */
-	else if (S_ISREG(i->data.i_mode))
+	else if (S_ISREG(inode_disk_get(i)->i_mode))
 	{
 		curr_proc->errcode = -ENOTSUP;
 		goto error;
 	}
 
 	/* Directory. */
-	else if (S_ISDIR(i->data.i_mode))
+	else if (S_ISDIR(inode_disk_get(i)->i_mode))
 	{
 		curr_proc->errcode = -ENOTSUP;
 		goto error;
@@ -187,7 +187,7 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 	return (i);
 
 error:
-	ufree(i);
+	inode_free(&fs_root, i);
 	return (NULL);
 }
 
@@ -258,18 +258,18 @@ int fs_close(int fd)
 	ip = f->inode;
 
 	/* Block special file. */
-	if (S_ISBLK(ip->data.i_mode))
+	if (S_ISBLK(inode_disk_get(ip)->i_mode))
 	{
-		if (bdev_close(ip->data.i_zones[0]) < 0)
+		if (bdev_close(inode_disk_get(ip)->i_zones[0]) < 0)
 			return (curr_proc->errcode);
 	}
 
 	/* Regular file. */
-	else if (S_ISREG(ip->data.i_mode))
+	else if (S_ISREG(inode_disk_get(ip)->i_mode))
 		return (curr_proc->errcode = -ENOTSUP);
 
 	/* Directory. */
-	else if (S_ISDIR(ip->data.i_mode))
+	else if (S_ISDIR(inode_disk_get(ip)->i_mode))
 		return (curr_proc->errcode = -ENOTSUP);
 
 	/* Unknown file type. */
@@ -308,14 +308,14 @@ ssize_t fs_read(int fd, void *buf, size_t n)
 	 ip = f->inode;
 
 	/* Block special file. */
-	if (S_ISBLK(ip->data.i_mode))
+	if (S_ISBLK(inode_disk_get(ip)->i_mode))
 	{
-		dev = ip->data.i_zones[0];
+		dev = inode_disk_get(ip)->i_zones[0];
 		count = bdev_read(dev, buf, n, f->pos);
 	}
 
 	/* Regular file/directory. */
-	else if ((S_ISDIR(ip->data.i_mode)) || (S_ISREG(ip->data.i_mode)))
+	else if ((S_ISDIR(inode_disk_get(ip)->i_mode)) || (S_ISREG(inode_disk_get(ip)->i_mode)))
 		count = file_read(ip, buf, n, f->pos);
 
 	/* Unknown file type. */
@@ -361,17 +361,17 @@ ssize_t fs_write(int fd, void *buf, size_t n)
 
 	/* Append mode. */
 	if (f->oflag & O_APPEND)
-		f->pos = ip->data.i_size;
+		f->pos = inode_disk_get(ip)->i_size;
 
 	/* Block special file. */
-	if (S_ISBLK(ip->data.i_mode))
+	if (S_ISBLK(inode_disk_get(ip)->i_mode))
 	{
-		dev = ip->data.i_zones[0];
+		dev = inode_disk_get(ip)->i_zones[0];
 		count = bdev_write(dev, buf, n, f->pos);
 	}
 
 	/* Regular file. */
-	else if (S_ISREG(ip->data.i_mode))
+	else if (S_ISREG(inode_disk_get(ip)->i_mode))
 		count = file_write(ip, buf, n, f->pos);
 
 	/* Failed to write. */
@@ -400,7 +400,7 @@ off_t fs_lseek(int fd, off_t offset, int whence)
 		return (-EBADF);
 
 	/* Pipe file. */
-	if (S_ISFIFO(f->inode->data.i_mode))
+	if (S_ISFIFO(inode_disk_get(f->inode)->i_mode))
 		return (-ESPIPE);
 
 	/* Move read/write file offset. */
@@ -415,7 +415,7 @@ off_t fs_lseek(int fd, off_t offset, int whence)
 
 		case SEEK_END :
 			/* Invalid offset. */
-			if ((tmp = f->inode->data.i_size + offset) < 0)
+			if ((tmp = inode_disk_get(f->inode)->i_size + offset) < 0)
 				return (-EINVAL);
 			f->pos = tmp;
 			break;
@@ -485,31 +485,29 @@ int fs_mount(struct filesystem *fs, dev_t dev)
 	if ((fs->super = umalloc(sizeof(struct superblock))) == NULL)
 		return (curr_proc->errcode = -ENOMEM);
 
-	/* Allocate memory for root inode. */
-	if ((fs->root = umalloc(sizeof(struct inode))) == NULL)
-	{
-		curr_proc->errcode = -ENOMEM;
-		goto error0;
-	}
-
 	/* Mount file system. */
 	uprintf("[nanvix][vfs][minix] mounting file system on device %d", dev);
 	if (minix_mount(
 			&fs->super->data,
 			&fs->super->imap,
 			&fs->super->bmap,
-			&fs->root->data,
 			fs->dev = dev
 		) < 0
 	)
+		goto error0;
+
+	/* Allocate memory for root inode. */
+	if ((fs->root = inode_read(fs, MINIX_INODE_ROOT)) == NULL)
+	{
+		curr_proc->errcode = -ENOMEM;
 		goto error1;
+	}
 
 	return (0);
 
 error1:
-	ufree(fs->root);
-error0:
 	ufree(fs->super);
+error0:
 	return (curr_proc->errcode);
 }
 
@@ -526,24 +524,28 @@ error0:
  */
 int fs_unmount(struct filesystem *fs)
 {
+	int err;
+
 	/* Invalid argument. */
 	if (fs == NULL)
 		return (curr_proc->errcode = -EINVAL);
 
+	/* Release root inode. */
+	if ((err = inode_free(fs, fs->root)) < 0)
+		return (curr_proc->errcode = err);
+
 	/* Unmount file system. */
 	uprintf("[nanvix][vfs][minix] unmounting file system on device %d", fs->dev);
-	if (minix_unmount(
+	if ((err = minix_unmount(
 			&fs->super->data,
 			fs->super->imap,
 			fs->super->bmap,
-			&fs->root->data,
 			fs->dev
-		) < 0
+		)) < 0
 	)
-		return (curr_proc->errcode);
+		return (curr_proc->errcode = err);
 
 	/* House keeping. */
-	ufree(fs->root);
 	ufree(fs->super);
 
 	return (0);
