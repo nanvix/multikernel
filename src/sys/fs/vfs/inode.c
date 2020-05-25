@@ -26,10 +26,30 @@
 #define __VFS_SERVER
 
 #include <nanvix/servers/vfs.h>
+#include <nanvix/config.h>
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
+
+/**
+ * @brief Length of Inodes Table
+ */
+#define INODES_LENGTH (NANVIX_NR_INODES/4)
+
+/**
+ * @brief Table of Inodes
+ */
+static struct inode inodes[INODES_LENGTH];
+
+/**
+ * @brief Pool of Inodes
+ */
+static struct resource_pool pool = {
+	.resources = inodes,
+	.nresources = INODES_LENGTH,
+	.resource_size = sizeof(struct inode)
+};
 
 /*============================================================================*
  * inode_alloc()                                                              *
@@ -45,6 +65,7 @@ struct inode *inode_alloc(
 	gid_t gid
 )
 {
+	int idx;          /* inode index  */
 	ino_t num;        /* Inode Number */
 	struct inode *ip; /* Inode        */
 
@@ -60,11 +81,13 @@ struct inode *inode_alloc(
 	}
 
 	/* Allocate memory inode. */
-	if ((ip = umalloc(sizeof(struct inode))) == NULL)
+	if ((idx = resource_alloc(&pool)) < 0)
 	{
 		curr_proc->errcode = -ENOMEM;
 		goto error1;
 	}
+
+	ip = &inodes[idx];
 
 	/* Read disk inode. */
 	if (minix_inode_read(fs->dev, &fs->super->data, &ip->data, num) < 0)
@@ -77,13 +100,13 @@ struct inode *inode_alloc(
 
 	return (ip);
 
-	error2:
-		ufree(ip);
-	error1:
-		uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
-	error0:
-		return (NULL);
-	}
+error2:
+	resource_free(&pool, idx);
+error1:
+	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
+error0:
+	return (NULL);
+}
 
 /*============================================================================*
  * inode_free()                                                               *
@@ -94,12 +117,19 @@ struct inode *inode_alloc(
  */
 int inode_free(struct filesystem *fs, struct inode *ip)
 {
+	int idx;
+
 	/* Invalid file system */
 	if (fs == NULL)
 		return (-EINVAL);
 
 	/* Invalid inode. */
 	if (ip == NULL)
+		return (-EINVAL);
+
+	/* Bad inode. */
+	idx = ip - inodes;
+	if (!WITHIN(idx, 0, INODES_LENGTH))
 		return (-EINVAL);
 
 	/* Bad inode. */
@@ -128,7 +158,7 @@ int inode_free(struct filesystem *fs, struct inode *ip)
 	}
 
 	/* House keeping. */
-	ufree(ip);
+	resource_free(&pool, idx);
 
 	return (0);
 }
@@ -142,18 +172,21 @@ int inode_free(struct filesystem *fs, struct inode *ip)
  */
 struct inode *inode_read(struct filesystem *fs, ino_t num)
 {
-	struct inode *ip;
+	int idx;          /* inode index  */
+	struct inode *ip; /* Inode        */
 
 	/* Invalid file system */
 	if (fs == NULL)
 		return (NULL);
 
 	/* Allocate memory inode. */
-	if ((ip = umalloc(sizeof(struct inode))) == NULL)
+	if ((idx = resource_alloc(&pool)) < 0)
 	{
 		curr_proc->errcode = -ENOMEM;
 		goto error0;
 	}
+
+	ip = &inodes[idx];
 
 	/* Read disk inode. */
 	if (minix_inode_read(fs->dev, &fs->super->data, &ip->data, num) < 0)
@@ -166,11 +199,11 @@ struct inode *inode_read(struct filesystem *fs, ino_t num)
 
 	return (ip);
 
-	error1:
-		ufree(ip);
-	error0:
+error1:
+	resource_free(&pool, idx);
+error0:
 	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
-	return (NULL);
+return (NULL);
 }
 
 /*============================================================================*
@@ -198,4 +231,22 @@ int inode_write(struct filesystem *fs, struct inode *ip)
 	}
 
 	return (0);
+}
+
+/*============================================================================*
+ * inode_init()                                                               *
+ *============================================================================*/
+
+/**
+ * The inode_init() function initializes the inodes module.
+ */
+void inode_init(void)
+{
+	for (int i = 0; i < INODES_LENGTH; i++)
+	{
+		inodes[i].resource = RESOURCE_INITIALIZER;
+		inodes[i].dev = -1;
+		inodes[i].num = NANVIX_INODE_NULL;
+		inodes[i].count = 0;
+	}
 }

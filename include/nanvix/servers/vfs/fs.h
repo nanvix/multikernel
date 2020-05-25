@@ -29,6 +29,10 @@
 	#error "do not include this file"
 	#endif
 
+	/* Must come first. */
+	#define __NEED_RESOURCE
+
+	#include <nanvix/hal/resource.h>
 	#include <posix/sys/types.h>
 	#include "minix.h"
 
@@ -233,10 +237,18 @@
  *============================================================================*/
 
 	/**
+	 * @brief Null Inode
+	 */
+	#define NANVIX_INODE_NULL -1
+
+	/**
 	 * @brief In-Memory Inode
 	 */
 	struct inode
 	{
+		/* Must come first. */
+		struct resource resource;
+
 		struct d_inode data; /**< Underlying Disk Inode  */
 		dev_t dev;           /**< Underlying Device      */
 		ino_t num;           /**< Inode Number           */
