@@ -58,7 +58,7 @@ static struct
 static char buffer[NANVIX_FS_BLOCK_SIZE];
 
 /*============================================================================*
- * do_vfs_open()                                                              *
+ * do_vfs_server_open()                                                       *
  *============================================================================*/
 
 /**
@@ -72,7 +72,7 @@ static char buffer[NANVIX_FS_BLOCK_SIZE];
  *
  * @author Pedro Henrique Penna
  */
-static int do_vfs_open(
+static int do_vfs_server_open(
 	const struct vfs_message *request,
 	struct vfs_message *response
 )
@@ -103,7 +103,7 @@ static int do_vfs_open(
 }
 
 /*============================================================================*
- * do_vfs_close()                                                             *
+ * do_vfs_server_close()                                                      *
  *============================================================================*/
 
 /**
@@ -116,7 +116,7 @@ static int do_vfs_open(
  *
  * @author Pedro Henrique Penna
  */
-static int do_vfs_close(const struct vfs_message *request)
+static int do_vfs_server_close(const struct vfs_message *request)
 {
 	int ret;
 	const pid_t pid = request->header.source;
@@ -139,7 +139,7 @@ static int do_vfs_close(const struct vfs_message *request)
 }
 
 /*============================================================================*
- * do_vfs_seek()                                                              *
+ * do_vfs_server_seek()                                                       *
  *============================================================================*/
 
 /**
@@ -153,7 +153,7 @@ static int do_vfs_close(const struct vfs_message *request)
  *
  * @author Pedro Henrique Penna
  */
-static int do_vfs_seek(
+static int do_vfs_server_seek(
 	const struct vfs_message *request,
 	struct vfs_message *response
 )
@@ -181,7 +181,7 @@ static int do_vfs_seek(
 }
 
 /*============================================================================*
- * do_vfs_write()                                                             *
+ * do_vfs_server_write()                                                      *
  *============================================================================*/
 
 /**
@@ -195,7 +195,7 @@ static int do_vfs_seek(
  *
  * @author Pedro Henrique Penna
  */
-static int do_vfs_write(
+static int do_vfs_server_write(
 	const struct vfs_message *request,
 	struct vfs_message *response
 )
@@ -245,7 +245,7 @@ static int do_vfs_write(
 }
 
 /*============================================================================*
- * do_vfs_read()                                                              *
+ * do_vfs_server_read()                                                       *
  *============================================================================*/
 
 /**
@@ -259,7 +259,7 @@ static int do_vfs_write(
  *
  * @author Pedro Henrique Penna
  */
-static int do_vfs_read(
+static int do_vfs_server_read(
 	const struct vfs_message *request,
 	struct vfs_message *response
 )
@@ -347,7 +347,7 @@ static int do_vfs_read(
  * @returns Upon successful completion zero is returned. Upon failure,
  * a negative error code is returned instead.
  */
-static int do_vfs_loop(void)
+static int do_vfs_server_loop(void)
 {
 	int shutdown = 0;
 
@@ -387,7 +387,7 @@ static int do_vfs_loop(void)
 				break;
 
 			case VFS_OPEN:
-				ret = do_vfs_open(&request, &response);
+				ret = do_vfs_server_open(&request, &response);
 				reply = 1;
 				break;
 
@@ -396,7 +396,7 @@ static int do_vfs_loop(void)
 				break;
 
 			case VFS_CLOSE:
-				ret = do_vfs_close(&request);
+				ret = do_vfs_server_close(&request);
 				reply = 1;
 				break;
 
@@ -413,18 +413,18 @@ static int do_vfs_loop(void)
 				break;
 
 			case VFS_READ:
-				ret = do_vfs_read(&request, &response);
+				ret = do_vfs_server_read(&request, &response);
 				reply = 1;
 				break;
 
 			case VFS_WRITE:
-				ret = do_vfs_write(&request, &response);
+				ret = do_vfs_server_write(&request, &response);
 				reply = 1;
 				break;
 
 			case VFS_SEEK:
 				reply = 1;
-				ret = do_vfs_seek(&request, &response);
+				ret = do_vfs_server_seek(&request, &response);
 				break;
 
 			default:
@@ -463,7 +463,7 @@ static int do_vfs_loop(void)
 }
 
 /*============================================================================*
- * do_vfs_startup()                                                           *
+ * do_vfs_server_startup()                                                    *
  *============================================================================*/
 
 /**
@@ -472,7 +472,7 @@ static int do_vfs_loop(void)
  * @returns Upon successful completion zero is returned. Upon failure,
  * a negative error code is returned instead.
  */
-static int do_vfs_startup(struct nanvix_semaphore *lock)
+static int do_vfs_server_startup(struct nanvix_semaphore *lock)
 {
 	int ret;
 
@@ -502,7 +502,7 @@ static int do_vfs_startup(struct nanvix_semaphore *lock)
 }
 
 /*============================================================================*
- * do_vfs_shutdown()                                                          *
+ * do_vfs_server_shutdown()                                                   *
  *============================================================================*/
 
 /**
@@ -511,7 +511,7 @@ static int do_vfs_startup(struct nanvix_semaphore *lock)
  * @returns Upon successful completion zero is returned. Upon failure,
  * a negative error code is returned instead.
  */
-static int do_vfs_shutdown(void)
+static int do_vfs_server_shutdown(void)
 {
 	uprintf("[nanvix][vfs] shutting down server");
 
@@ -519,7 +519,7 @@ static int do_vfs_shutdown(void)
 }
 
 /*============================================================================*
- * do_vfs_server()                                                            *
+ * do_vfs_server_server()                                                     *
  *============================================================================*/
 
 /**
@@ -528,23 +528,23 @@ static int do_vfs_shutdown(void)
  * @returns Upon successful completion zero is returned. Upon failure,
  * a negative error code is returned instead.
  */
-static int do_vfs_server(struct nanvix_semaphore *lock)
+static int do_vfs_server_server(struct nanvix_semaphore *lock)
 {
 	int ret;
 
-	if ((ret = do_vfs_startup(lock)) < 0)
+	if ((ret = do_vfs_server_startup(lock)) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to startup server!");
 		goto error;
 	}
 
-	if ((ret = do_vfs_loop()) < 0)
+	if ((ret = do_vfs_server_loop()) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to launch server!");
 		goto error;
 	}
 
-	if ((ret = do_vfs_shutdown()) < 0)
+	if ((ret = do_vfs_server_shutdown()) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to shutdown server!");
 		goto error;
@@ -567,7 +567,7 @@ error:
  */
 int vfs_server(struct nanvix_semaphore *lock)
 {
-	uassert(do_vfs_server(lock) == 0);
+	uassert(do_vfs_server_server(lock) == 0);
 
 	return (0);
 }
