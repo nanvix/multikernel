@@ -26,7 +26,9 @@
 #define __VFS_SERVER
 
 #include <nanvix/servers/vfs.h>
+#include <nanvix/sys/perf.h>
 #include <nanvix/config.h>
+#include <nanvix/dev.h>
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
@@ -87,6 +89,271 @@ struct d_inode *inode_disk_get(struct inode *ip)
 }
 
 /*============================================================================*
+ * inode_get_num()                                                            *
+ *============================================================================*/
+
+/**
+ * The inode_get_num() function gets the number of the inode pointed to
+ * by @p ip.
+ */
+ino_t inode_get_num(const struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (MINIX_INODE_NULL);
+	}
+
+	/* Bad inode. */
+	if (ip->count == 0)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (MINIX_INODE_NULL);
+	}
+
+	return (ip->num);
+}
+
+/*============================================================================*
+ * inode_read()                                                               *
+ *============================================================================*/
+
+/**
+ * @brief Reads an inode to memory.
+ *
+ * @param fs   Target file system.
+ * @param num Number of the target inode.
+ *
+ * @returns Upon successful completion, a pointer to the target inode is
+ * returned. Upon failure, a negative error code is returned instead.
+ */
+static struct inode *inode_read(struct filesystem *fs, ino_t num)
+{
+	int idx;          /* inode index  */
+	struct inode *ip; /* Inode        */
+
+	/* Invalid file system */
+	if (fs == NULL)
+		return (NULL);
+
+	/* Allocate memory inode. */
+	if ((idx = resource_alloc(&pool)) < 0)
+	{
+		uprintf("[nanvix][vfs] inodes table overflow");
+		curr_proc->errcode = -ENOMEM;
+		goto error0;
+	}
+
+	ip = &inodes[idx];
+
+	/* Read disk inode. */
+	if (minix_inode_read(fs->dev, &fs->super->data, &ip->data, num) < 0)
+		goto error1;
+
+	/* Initialize inode. */
+	ip->count = 1;
+	ip->num = num;
+	ip->dev = fs->dev;
+
+	return (ip);
+
+error1:
+	resource_free(&pool, idx);
+error0:
+	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
+	return (NULL);
+}
+
+/*============================================================================*
+ * inode_touch()                                                              *
+ *============================================================================*/
+
+/**
+ * The inode_touch() function updates the time stamp of the inode
+ * pointed to by @p ip.
+ */
+int inode_touch(struct inode *ip)
+{
+	uint64_t now;
+
+	/* Invalid inode. */
+	if (ip == NULL)
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return (curr_proc->errcode = -EINVAL);
+
+	kclock(&now);
+	ip->data.i_time = now;
+
+	return (0);
+}
+
+/*============================================================================*
+ * inode_free()                                                               *
+ *============================================================================*/
+
+/**
+ * @brief Releases an in-memory inode.
+ *
+ * @param fs   Target file system.
+ * @param ip Target inode.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ */
+static int inode_free(struct filesystem *fs, struct inode *ip)
+{
+	int idx;
+
+	idx = ip - inodes;
+
+	/* Bad inode. */
+	if (!WITHIN(idx, 0, INODES_LENGTH))
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return (curr_proc->errcode = -EBUSY);
+	
+	/* Release inode. */
+	if (ip->count-- == 1)
+	{
+		if (ip->data.i_nlinks-- == 1)
+		{
+			if (minix_inode_free(&fs->super->data, fs->super->imap, ip->num) < 0)
+			{
+				uprintf("[nanvix][vfs] failed to release inode %d", ip->num);
+				return (curr_proc->errcode = -EAGAIN);
+			}
+		}
+
+		/* House keeping. */
+		resource_free(&pool, idx);
+	}
+
+	return (0);
+}
+
+/*============================================================================*
+ * inode_put()                                                                *
+ *============================================================================*/
+
+/**
+ * @brief Releases the reference to an inode.
+ *
+ * @param fs Target file system.
+ * @param ip Target inode.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ */
+int inode_put(struct filesystem *fs, struct inode *ip)
+{
+	int idx;
+
+	/* Invalid file system */
+	if (fs == NULL)
+		return(curr_proc->errcode = -EINVAL);
+
+	/* Invalid inode. */
+	if (ip == NULL)
+		return(curr_proc->errcode = -EINVAL);
+
+	idx = ip - inodes;
+
+	/* Bad inode. */
+	if (!WITHIN(idx, 0, INODES_LENGTH))
+		return(curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (fs->dev != ip->dev)
+		return(curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return(curr_proc->errcode = -EINVAL);
+
+	/* Write inode back to disk. */
+	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
+	{
+		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
+		return(curr_proc->errcode = -EAGAIN);
+	}
+
+	return (inode_free(fs, ip));
+}
+
+/*============================================================================*
+ * inode_write()                                                              *
+ *============================================================================*/
+
+/**
+ * @todo TODO: Provide a detailed description for this function.
+ */
+int inode_write(struct filesystem *fs, struct inode *ip)
+{
+	/* Invalid file system */
+	if (fs == NULL)
+		return(curr_proc->errcode = -EINVAL);
+
+	/* Invalid inode. */
+	if (ip == NULL)
+		return(curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (fs->dev != ip->dev)
+		return(curr_proc->errcode = -EINVAL);
+
+	/* Write disk inode. */
+	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
+	{
+		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
+		return(curr_proc->errcode = -EAGAIN);
+	}
+
+	return (0);
+}
+
+/*============================================================================*
+ * inode_get()                                                                *
+ *============================================================================*/
+
+/**
+ * The inode_get() function gets a reference to the inode specified by
+ * @p num that resides in the file system pointed to by @p fs.
+ */
+struct inode *inode_get(struct filesystem *fs, ino_t num)
+{
+	/* Invalid file system */
+	if (fs == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	/* Search for inode in the table of inodes. */
+	for (int i = 0; i < INODES_LENGTH; i++)
+	{
+		/* Skip invalid entries. */
+		if (!resource_is_used(&inodes[i].resource))
+			continue;
+
+		/* Found. */
+		if ((inodes[i].dev == fs->dev) && (inodes[i].num == num))
+		{
+			inodes[i].count++;
+			return (&inodes[i]);
+		}
+	}
+
+	/* Read inode in. */
+	return (inode_read(fs, num));
+}
+
+/*============================================================================*
  * inode_alloc()                                                              *
  *============================================================================*/
 
@@ -100,172 +367,81 @@ struct inode *inode_alloc(
 	gid_t gid
 )
 {
-	int idx;          /* inode index  */
-	ino_t num;        /* Inode Number */
-	struct inode *ip; /* Inode        */
+	ino_t num;
 
 	/* Invalid file system */
 	if (fs == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
 		return (NULL);
+	}
 
 	/* Allocate disk inode. */
 	if ((num = minix_inode_alloc(fs->dev, &fs->super->data, fs->super->imap, mode, uid, gid)) == MINIX_INODE_NULL)
 	{
 		curr_proc->errcode = -EAGAIN;
-		goto error0;
-	}
-
-	/* Allocate memory inode. */
-	if ((idx = resource_alloc(&pool)) < 0)
-	{
-		curr_proc->errcode = -ENOMEM;
-		goto error1;
-	}
-
-	ip = &inodes[idx];
-
-	/* Read disk inode. */
-	if (minix_inode_read(fs->dev, &fs->super->data, &ip->data, num) < 0)
-		goto error2;
-
-	/* Initialize inode. */
-	ip->count = 1;
-	ip->num = num;
-	ip->dev = fs->dev;
-
-	return (ip);
-
-error2:
-	resource_free(&pool, idx);
-error1:
-	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
-error0:
-	return (NULL);
-}
-
-/*============================================================================*
- * inode_free()                                                               *
- *============================================================================*/
-
-/**
- * @todo TODO: Provide a detailed description for this function.
- */
-int inode_free(struct filesystem *fs, struct inode *ip)
-{
-	int idx;
-
-	/* Invalid file system */
-	if (fs == NULL)
-		return (-EINVAL);
-
-	/* Invalid inode. */
-	if (ip == NULL)
-		return (-EINVAL);
-
-	/* Bad inode. */
-	idx = ip - inodes;
-	if (!WITHIN(idx, 0, INODES_LENGTH))
-		return (-EINVAL);
-
-	/* Bad inode. */
-	if (ip->count == 0)
-		return (-EINVAL);
-
-	/*
-	 * This inode is used by other processes. Let us just
-	 * decrement the reference counter and return.
-	 */
-	if (ip->count-- > 1)
-		return (0);
-
-	/* Write inode back to disk. */
-	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
-	{
-		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
-		return (-EAGAIN);
-	}
-
-	/* Release inode. */
-	if (minix_inode_free(&fs->super->data, fs->super->imap, ip->num) < 0)
-	{
-		uprintf("[nanvix][vfs] failed to release inode %d", ip->num);
-		return (-EAGAIN);
-	}
-
-	/* House keeping. */
-	resource_free(&pool, idx);
-
-	return (0);
-}
-
-/*============================================================================*
- * inode_read()                                                               *
- *============================================================================*/
-
-/**
- * @todo TODO: Provide a detailed description for this function.
- */
-struct inode *inode_read(struct filesystem *fs, ino_t num)
-{
-	int idx;          /* inode index  */
-	struct inode *ip; /* Inode        */
-
-	/* Invalid file system */
-	if (fs == NULL)
 		return (NULL);
-
-	/* Allocate memory inode. */
-	if ((idx = resource_alloc(&pool)) < 0)
-	{
-		curr_proc->errcode = -ENOMEM;
-		goto error0;
 	}
 
-	ip = &inodes[idx];
-
-	/* Read disk inode. */
-	if (minix_inode_read(fs->dev, &fs->super->data, &ip->data, num) < 0)
-		goto error1;
-
-	/* Initialize inode. */
-	ip->count = 1;
-	ip->num = num;
-	ip->dev = fs->dev;
-
-	return (ip);
-
-error1:
-	resource_free(&pool, idx);
-error0:
-	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
-return (NULL);
+	return (inode_read(fs, num));
 }
 
 /*============================================================================*
- * inode_read()                                                               *
+ * inode_name()                                                               *
  *============================================================================*/
 
 /**
- * @todo TODO: Provide a detailed description for this function.
+ * The inode_name() function lookups an inode by the name pointed to by
+ * @p name. The root directory of @p fs is used as start point for the
+ * search.
+ *
+ * @todo TODO: recursive lookup.
+ * @todo TODO: support relative path search.
  */
-int inode_write(struct filesystem *fs, struct inode *ip)
+struct inode *inode_name(struct filesystem *fs, const char *name)
 {
+	struct inode *dinode;   /* Directory's inode.     */
+	off_t off;              /* Offset of Target Inode */
+	struct d_dirent dirent; /* Directory Entry        */
+
 	/* Invalid file system */
 	if (fs == NULL)
-		return (-EINVAL);
-
-	/* Invalid inode. */
-	if (ip == NULL)
-		return (-EINVAL);
-
-	/* Write disk inode. */
-	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
 	{
-		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
-		return (-EAGAIN);
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
 	}
 
-	return (0);
+	/* Invalid name. */
+	if (name == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	dinode = curr_proc->root;
+
+	/* Failed to get directory. */
+	if (dinode == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	/* Search file. */
+	if ((off = minix_dirent_search(fs->dev, &fs->super->data, fs->super->bmap, inode_disk_get(dinode), name, 0)) < 0)
+	{
+		curr_proc->errcode = -ENOENT;
+		return (NULL);
+	}
+
+	/* Read Directory entry */
+	if (bdev_read(fs->dev, (char *) &dirent, sizeof(struct d_dirent), off) < 0)
+	{
+		curr_proc->errcode = -EIO;
+		return (NULL);
+	}
+
+	return (inode_get(&fs_root, dirent.d_ino));
 }
 
 /*============================================================================*

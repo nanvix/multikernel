@@ -139,4 +139,3 @@ void test_vfs(void)
 		uprintf("[nanvix][vfs]%s passed", vfs_tests[i].name);
 	}
 }
-
