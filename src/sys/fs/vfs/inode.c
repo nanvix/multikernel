@@ -100,34 +100,42 @@ struct inode *inode_alloc(
 	uid_t uid,
 	gid_t gid
 )
+
+/*============================================================================*
+ * inode_read()                                                               *
+ *============================================================================*/
+
+/**
+ * @brief Reads an inode to memory.
+ *
+ * @param fs   Target file system.
+ * @param num Number of the target inode.
+ *
+ * @returns Upon successful completion, a pointer to the target inode is
+ * returned. Upon failure, a negative error code is returned instead.
+ */
+static struct inode *inode_read(struct filesystem *fs, ino_t num)
 {
 	int idx;          /* inode index  */
-	ino_t num;        /* Inode Number */
 	struct inode *ip; /* Inode        */
 
 	/* Invalid file system */
 	if (fs == NULL)
 		return (NULL);
 
-	/* Allocate disk inode. */
-	if ((num = minix_inode_alloc(fs->dev, &fs->super->data, fs->super->imap, mode, uid, gid)) == MINIX_INODE_NULL)
-	{
-		curr_proc->errcode = -EAGAIN;
-		goto error0;
-	}
-
 	/* Allocate memory inode. */
 	if ((idx = resource_alloc(&pool)) < 0)
 	{
+		uprintf("[nanvix][vfs] inodes table overflow");
 		curr_proc->errcode = -ENOMEM;
-		goto error1;
+		goto error0;
 	}
 
 	ip = &inodes[idx];
 
 	/* Read disk inode. */
 	if (minix_inode_read(fs->dev, &fs->super->data, &ip->data, num) < 0)
-		goto error2;
+		goto error1;
 
 	/* Initialize inode. */
 	ip->count = 1;
@@ -136,12 +144,13 @@ struct inode *inode_alloc(
 
 	return (ip);
 
-error2:
-	resource_free(&pool, idx);
 error1:
-	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
+	resource_free(&pool, idx);
 error0:
+	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
 	return (NULL);
+}
+
 /*============================================================================*
  * inode_touch()                                                              *
  *============================================================================*/

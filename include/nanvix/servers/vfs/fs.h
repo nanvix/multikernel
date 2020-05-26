@@ -265,26 +265,37 @@
 	);
 
 	/**
-	 * @brief Releases an in-memory inode.
+	 * @brief Lookups an inode by name.
 	 *
-	 * @param fs   Target file system.
+	 * @param fs Target file system.
+	 * @param name Name of the target inode.
+	 *
+	 * @returns Upon successful completion, a reference to the target inode
+	 * is returned. Upon failure, a NULL pointer is returned instead.
+	 */
+	extern struct inode *inode_name(struct filesystem *fs, const char *name);
+
+	/**
+	 * @brief Releases the reference to an inode.
+	 *
+	 * @param fs Target file system.
 	 * @param ip Target inode.
 	 *
 	 * @returns Upon successful completion, zero is returned. Upon failure,
 	 * a negative error code is returned instead.
 	 */
-	extern int inode_free(struct filesystem *fs, struct inode *ip);
+	extern int inode_put(struct filesystem *fs, struct inode *ip);
 
 	/**
-	 * @brief Reads an inode to memory.
+	 * @brief Gets a reference to an inode.
 	 *
-	 * @param fs   Target file system.
-	 * @param num Number of the target inode.
+	 * @param fs Target file system
+	 * @param num Number of target inode.
 	 *
-	 * @returns Upon successful completion, a pointer to the target inode is
-	 * returned. Upon failure, a negative error code is returned instead.
+	 * @returns Upon successful completion, a reference to the target inode
+	 * is returned. Upon failure, a NULL pointer is returned instead.
 	 */
-	extern struct inode *inode_read(struct filesystem *fs, ino_t num);
+	extern struct inode *inode_get(struct filesystem *fs, ino_t num);
 
 	/**
 	 * @brief Writes an in-memory inode back to disk.
