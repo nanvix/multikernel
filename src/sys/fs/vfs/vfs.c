@@ -151,3 +151,15 @@ void vfs_init(void)
 	fs_init();
 	fprocess_init();
 }
+
+/*============================================================================*
+ * vfs_shutdown()                                                             *
+ *============================================================================*/
+
+/**
+ * The vfs_shutdown() function shutdowns the virtual file system.
+ */
+void vfs_shutdown(void)
+{
+	fs_shutdown();
+}

@@ -33,12 +33,8 @@ extern void test_vfs(void);
  */
 void vfs_test(void)
 {
-#if 0
-
-	test_ramdisk();
-	test_bcache();
-	test_minix();
 	test_vfs();
-
-#endif
+	test_minix();
+	test_bcache();
+	test_ramdisk();
 }

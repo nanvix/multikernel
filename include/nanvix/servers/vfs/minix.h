@@ -153,8 +153,8 @@
 	extern int minix_super_read(
 		dev_t dev,
 		struct d_superblock *sb,
-		bitmap_t *zmap,
-		bitmap_t *imap
+		bitmap_t **zmap,
+		bitmap_t **imap
 	);
 
 	/**
@@ -290,9 +290,6 @@
 	 * @param dip   Target directory.
 	 * @param name  Symbolic name of target entry.
 	 *
-	 * The nanvix_dirent_remove() function removes the directory entry named
-	 * @p name from the directory pointed to by @p dip.
-	 *
 	 * @returns Upon successful return, zero is returned. Upon failure, a
 	 * negative error code is returned instead.
 	 */
@@ -318,7 +315,7 @@
 	 * @param name   Name of the directory entry that shall be searched.
 	 * @param create Create directory entry?
 	 *
-	 * @returns iUpon successful completion, the offset where the directory
+	 * @returns Upon successful completion, the offset where the directory
 	 * entry is located is returned. Upon failure, a negative error code is
 	 * returned instead..
 	 */
@@ -340,23 +337,69 @@
 	 * @param uid      User ID.
 	 * @param gid      User group ID.
 	 *
-	 * @note @p diskfile must refer to a valid file.
-	 * @note @p ninodes must be valid.
-	 * @note @p nblocks must be valid.
-	 *
 	 * @returns Upon successful completion, zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
 	extern int minix_mkfs(
-		struct d_superblock *super,
-		bitmap_t **imap,
-		bitmap_t **bmap,
-		struct d_inode *root,
 		dev_t dev,
 		minix_ino_t ninodes,
 		minix_block_t nblocks,
 		minix_uid_t uid,
 		minix_gid_t gid
+	);
+
+	/**
+	 * @brief Synchronizes a MINIX file system.
+	 *
+	 * @param super Target superblock.
+	 * @param imap  Target inode map.
+	 * @param bmap  Target block map.
+	 * @param dev   Target device.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_sync(
+		struct d_superblock *super,
+		bitmap_t *imap,
+		bitmap_t *bmap,
+		dev_t dev
+	);
+
+	/**
+	 * @brief Mounts a MINIX file system.
+	 *
+	 * @param super Target store location for superblock.
+	 * @param imap  Target store location for inode map.
+	 * @param bmap  Target store location for block map.
+	 * @param dev   Target device.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_mount(
+		struct d_superblock *super,
+		bitmap_t **imap,
+		bitmap_t **bmap,
+		dev_t dev
+	);
+
+	/**
+	 * @brief Unmounts a MINIX file system.
+	 *
+	 * @param super Target superblock.
+	 * @param imap  Target inode map.
+	 * @param bmap  Target block map.
+	 * @param dev   Target device.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int minix_unmount(
+		struct d_superblock *super,
+		bitmap_t *imap,
+		bitmap_t *bmap,
+		dev_t dev
 	);
 
 #endif /* NANVIX_SERVERS_VFS_MINIX_H_ */

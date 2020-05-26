@@ -29,6 +29,10 @@
 	#error "do not include this file"
 	#endif
 
+	/* Must come first. */
+	#define __NEED_RESOURCE
+
+	#include <nanvix/hal/resource.h>
 	#include <posix/sys/types.h>
 	#include "minix.h"
 
@@ -69,9 +73,14 @@
 	};
 
 	/**
-	 * @brief Initializes the file system manager.
+	 * @brief Initializes the file system.
 	 */
 	extern void fs_init(void);
+
+	/**
+	 * @brief Shustdowns the file system.
+	 */
+	extern void fs_shutdown(void);
 
 	/**
 	 * @brief Opens a file.
@@ -136,6 +145,47 @@
 	extern off_t fs_lseek(int fd, off_t offset, int whence);
 
 	/**
+	 * @brief Creates a file system.
+	 *
+	 * @param dev     Number of target device.
+	 * @param ninodes Number of inodes.
+	 * @param nblocks Number of blocks
+	 * @param uid     User ID of owner.
+	 * @param gid     Group ID of owner.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure a negative error code is returned instead.
+	 */
+	extern int fs_make(
+		dev_t dev,
+		ino_t ninodes,
+		block_t nblocks,
+		uid_t uid,
+		gid_t gid
+	);
+
+	/**
+	 * @brief Mounts a file system.
+	 *
+	 * @param fs  Store location for target file system.
+	 * @param dev Number of target device.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure a negative error code is returned instead.
+	 */
+	extern int fs_mount(struct filesystem *fs, dev_t dev);
+
+	/**
+	 * @brief Unmounts a file system.
+	 *
+	 * @param fs Target file system.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure a negative error code is returned instead.
+	 */
+	extern int fs_unmount(struct filesystem *fs);
+
+	/**
 	 * @brief Root File System
 	 */
 	struct filesystem fs_root;
@@ -187,15 +237,13 @@
  *============================================================================*/
 
 	/**
-	 * @brief In-Memory Inode
+	 * @brief Gets disk inode.
+	 *
+	 * @param ip Target inode.
+	 *
+	 * @returns A pointer to the underlying disk inode data.
 	 */
-	struct inode
-	{
-		struct d_inode data; /**< Underlying Disk Inode  */
-		dev_t dev;           /**< Underlying Device      */
-		ino_t num;           /**< Inode Number           */
-		int count;           /**< Reference count        */
-	};
+	extern struct d_inode *inode_disk_get(struct inode *ip);
 
 	/**
 	 * @brief Allocates an in-memory inode.

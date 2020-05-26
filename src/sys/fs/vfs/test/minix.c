@@ -150,7 +150,7 @@ static void test_api_minix_dirent_add_remove(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename,
 				ino)
 			) == 0
@@ -161,7 +161,7 @@ static void test_api_minix_dirent_add_remove(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename)
 			) == 0
 		);
@@ -197,7 +197,7 @@ static void test_api_minix_dirent_search(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename,
 				ino)
 			) == 0
@@ -208,7 +208,7 @@ static void test_api_minix_dirent_search(void)
 					fs_root.dev,
 					&fs_root.super->data,
 					fs_root.super->bmap,
-					&fs_root.root->data,
+					inode_disk_get(fs_root.root),
 					filename,
 					0)
 				) >= 0
@@ -219,7 +219,7 @@ static void test_api_minix_dirent_search(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename)
 			) == 0
 		);
@@ -304,15 +304,15 @@ static void test_fault_minix_block_free_inval(void)
 static void test_fault_minix_super_read_inval(void)
 {
 	struct d_superblock sb;
-	bitmap_t imap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
-	bitmap_t zmap[MINIX_BLOCK_SIZE/sizeof(bitmap_t)];
+	bitmap_t *imap;
+	bitmap_t *zmap;
 
 	uassert(
 		minix_super_read(
 			-1,
 			&sb,
-			zmap,
-			imap
+			&zmap,
+			&imap
 		) == -EINVAL
 	);
 
@@ -320,8 +320,8 @@ static void test_fault_minix_super_read_inval(void)
 		minix_super_read(
 			NANVIX_ROOT_DEV,
 			NULL,
-			zmap,
-			imap
+			&zmap,
+			&imap
 		) == -EINVAL
 	);
 
@@ -330,7 +330,7 @@ static void test_fault_minix_super_read_inval(void)
 			NANVIX_ROOT_DEV,
 			&sb,
 			NULL,
-			imap
+			&imap
 		) == -EINVAL
 	);
 
@@ -338,7 +338,7 @@ static void test_fault_minix_super_read_inval(void)
 		minix_super_read(
 			NANVIX_ROOT_DEV,
 			&sb,
-			zmap,
+			&zmap,
 			NULL
 		) == -EINVAL
 	);
@@ -637,7 +637,7 @@ static void test_fault_minix_dirent_add_inval(void)
 				fs_root.dev,
 				NULL,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename,
 				ino)
 			) == -EINVAL
@@ -648,7 +648,7 @@ static void test_fault_minix_dirent_add_inval(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				NULL,
 				ino)
 			) == -EINVAL
@@ -659,7 +659,7 @@ static void test_fault_minix_dirent_add_inval(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				longname,
 				ino)
 			) == -ENAMETOOLONG
@@ -670,7 +670,7 @@ static void test_fault_minix_dirent_add_inval(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename,
 				MINIX_INODE_NULL)
 			) == -EINVAL
@@ -709,7 +709,7 @@ static void test_fault_minix_dirent_remove_inval(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename,
 				ino)
 			) == 0
@@ -720,7 +720,7 @@ static void test_fault_minix_dirent_remove_inval(void)
 					fs_root.dev,
 					NULL,
 					fs_root.super->bmap,
-					&fs_root.root->data,
+					inode_disk_get(fs_root.root),
 					filename)
 				) == -EINVAL
 			);
@@ -740,7 +740,7 @@ static void test_fault_minix_dirent_remove_inval(void)
 					fs_root.dev,
 					&fs_root.super->data,
 					fs_root.super->bmap,
-					&fs_root.root->data,
+					inode_disk_get(fs_root.root),
 					NULL)
 				) == -EINVAL
 			);
@@ -750,7 +750,7 @@ static void test_fault_minix_dirent_remove_inval(void)
 					fs_root.dev,
 					&fs_root.super->data,
 					fs_root.super->bmap,
-					&fs_root.root->data,
+					inode_disk_get(fs_root.root),
 					longname)
 				) == -ENAMETOOLONG
 			);
@@ -760,7 +760,7 @@ static void test_fault_minix_dirent_remove_inval(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename)
 			) == 0
 		);
@@ -798,7 +798,7 @@ static void test_fault_minix_dirent_search_inval(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename,
 				ino)
 			) == 0
@@ -820,7 +820,7 @@ static void test_fault_minix_dirent_search_inval(void)
 					fs_root.dev,
 					&fs_root.super->data,
 					fs_root.super->bmap,
-					&fs_root.root->data,
+					inode_disk_get(fs_root.root),
 					NULL,
 					0)
 				) == -EINVAL
@@ -831,7 +831,7 @@ static void test_fault_minix_dirent_search_inval(void)
 					fs_root.dev,
 					&fs_root.super->data,
 					fs_root.super->bmap,
-					&fs_root.root->data,
+					inode_disk_get(fs_root.root),
 					longname,
 					0)
 				) == -ENAMETOOLONG
@@ -842,7 +842,7 @@ static void test_fault_minix_dirent_search_inval(void)
 				fs_root.dev,
 				&fs_root.super->data,
 				fs_root.super->bmap,
-				&fs_root.root->data,
+				inode_disk_get(fs_root.root),
 				filename)
 			) == 0
 		);
