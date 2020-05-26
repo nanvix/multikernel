@@ -114,13 +114,11 @@ static int getfildes(void)
  * @todo TODO: provide a detailed description for this function.
  */
 static struct inode *do_creat(
-	struct inode *d,
 	const char *name,
 	mode_t mode,
 	int oflag
 )
 {
-	((void) d);
 	((void) name);
 	((void) mode);
 	((void) oflag);
@@ -134,60 +132,50 @@ static struct inode *do_creat(
  */
 static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 {
-	struct inode *dinode;   /* Directory's inode.       */
-	off_t off;              /* Offset of Target Inode   */
-	struct inode *i;        /* Inode of the Target File */
-	struct d_dirent dirent; /* Directory Entry          */
+	struct inode *ip;
 
-	dinode = curr_proc->root;
-
-	/* Failed to get directory. */
-	if (dinode == NULL)
-		return (NULL);
-
-	/* Search file. */
-	if ((off = minix_dirent_search(fs_root.dev, &fs_root.super->data, fs_root.super->bmap, inode_disk_get(dinode), filename, 0)) < 0)
+	/* Invalid filename. */
+	if (filename == NULL)
 	{
-		/* Create it. */
-		if ((i = do_creat(dinode, filename, mode, oflag)) == NULL)
-			return (NULL);
-
-		return (i);
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
 	}
 
-	/* Read Directory entry */
-	if (bdev_read(fs_root.dev, (char *) &dirent, sizeof(struct d_dirent), off) < 0)
-		return (NULL);
+	/* Search file. */
+	if ((ip = inode_name(&fs_root, filename)) == NULL)
+	{
+		/* Create it. */
+		if ((ip = do_creat(filename, mode, oflag)) == NULL)
+			return (NULL);
 
-	/* Read inode. */
-	if ((i = inode_read(&fs_root, dirent.d_ino)) == NULL)
-		return (NULL);
+		return (ip);
+	}
 
 	/* Block special file. */
-	if (S_ISBLK(inode_disk_get(i)->i_mode))
+	if (S_ISBLK(inode_disk_get(ip)->i_mode))
 	{
-		if (bdev_open(inode_disk_get(i)->i_zones[0]) < 0)
+		if (bdev_open(inode_disk_get(ip)->i_zones[0]) < 0)
 			goto error;
 	}
 
 	/* Regular file. */
-	else if (S_ISREG(inode_disk_get(i)->i_mode))
+	else if (S_ISREG(inode_disk_get(ip)->i_mode))
 	{
 		curr_proc->errcode = -ENOTSUP;
 		goto error;
 	}
 
 	/* Directory. */
-	else if (S_ISDIR(inode_disk_get(i)->i_mode))
+	else if (S_ISDIR(inode_disk_get(ip)->i_mode))
 	{
 		curr_proc->errcode = -ENOTSUP;
 		goto error;
 	}
 
-	return (i);
+	return (ip);
 
 error:
-	inode_free(&fs_root, i);
+	inode_put(&fs_root, ip);
 	return (NULL);
 }
 
@@ -276,7 +264,7 @@ int fs_close(int fd)
 	else
 		return (curr_proc->errcode = -ENOTSUP);
 
-	return (inode_free(&fs_root, ip));
+	return (inode_put(&fs_root, ip));
 }
 
 /*============================================================================*
@@ -496,8 +484,8 @@ int fs_mount(struct filesystem *fs, dev_t dev)
 	)
 		goto error0;
 
-	/* Allocate memory for root inode. */
-	if ((fs->root = inode_read(fs, MINIX_INODE_ROOT)) == NULL)
+	/* Get reference root inode. */
+	if ((fs->root = inode_get(fs, MINIX_INODE_ROOT)) == NULL)
 	{
 		curr_proc->errcode = -ENOMEM;
 		goto error1;
@@ -531,7 +519,7 @@ int fs_unmount(struct filesystem *fs)
 		return (curr_proc->errcode = -EINVAL);
 
 	/* Release root inode. */
-	if ((err = inode_free(fs, fs->root)) < 0)
+	if ((err = inode_put(fs, fs->root)) < 0)
 		return (curr_proc->errcode = err);
 
 	/* Unmount file system. */

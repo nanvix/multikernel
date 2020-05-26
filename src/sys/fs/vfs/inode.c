@@ -28,6 +28,7 @@
 #include <nanvix/servers/vfs.h>
 #include <nanvix/sys/perf.h>
 #include <nanvix/config.h>
+#include <nanvix/dev.h>
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>

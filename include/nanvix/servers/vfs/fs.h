@@ -44,7 +44,7 @@
 		struct d_superblock data; /**< Underlying Disk Superblock */
 		dev_t dev;                /**< Underlying Device.         */
 		bitmap_t *imap;           /**< Inode Map                  */
-		bitmap_t *bmap;           /**< Block Map                  */	
+		bitmap_t *bmap;           /**< Block Map                  */
 	};
 
 /*============================================================================*
