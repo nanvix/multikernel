@@ -26,6 +26,7 @@
 #define __VFS_SERVER
 
 #include <nanvix/servers/vfs.h>
+#include <nanvix/sys/perf.h>
 #include <nanvix/config.h>
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
@@ -141,6 +142,30 @@ error1:
 	uassert(minix_inode_free(&fs->super->data, fs->super->imap, num) == 0);
 error0:
 	return (NULL);
+/*============================================================================*
+ * inode_touch()                                                              *
+ *============================================================================*/
+
+/**
+ * The inode_touch() function updates the time stamp of the inode
+ * pointed to by @p ip.
+ */
+int inode_touch(struct inode *ip)
+{
+	uint64_t now;
+
+	/* Invalid inode. */
+	if (ip == NULL)
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return (curr_proc->errcode = -EINVAL);
+
+	kclock(&now);
+	ip->data.i_time = now;
+
+	return (0);
 }
 
 /*============================================================================*

@@ -297,4 +297,14 @@
 	 */
 	extern int inode_write(struct filesystem *fs, struct inode *ip);
 
+	/**
+	 * @brief Updates the time stamp of an inode.
+	 *
+	 * @param ip Target inode.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int inode_touch(struct inode *ip);
+
 #endif /* NANVIX_SERVERS_VFS_FS_H_*/

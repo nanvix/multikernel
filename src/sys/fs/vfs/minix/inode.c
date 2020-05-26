@@ -26,6 +26,7 @@
 #define __VFS_SERVER
 
 #include <nanvix/servers/vfs.h>
+#include <nanvix/sys/perf.h>
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
@@ -172,6 +173,7 @@ minix_ino_t minix_inode_alloc(
 	minix_gid_t gid
 )
 {
+	uint64_t now;      /* Current Time                */
 	minix_ino_t num;   /* Inode number                */
 	bitmap_t bit;      /* Bit Number in the Inode Map */
 	struct d_inode ip; /* New inode                   */
@@ -202,11 +204,12 @@ minix_ino_t minix_inode_alloc(
 	num = bit + 1;
 
 	/* Initialize inode. */
+	kclock(&now);
 	minix_inode_read(dev, sb, &ip, num);
 	ip.i_mode = mode;
 	ip.i_uid = uid;
 	ip.i_size = 0;
-	ip.i_time = 0;
+	ip.i_time = now;
 	ip.i_gid = gid;
 	ip.i_nlinks = 1;
 	for (unsigned i = 0; i < MINIX_NR_ZONES; i++)
