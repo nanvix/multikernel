@@ -253,9 +253,9 @@
 	 * @param uid  User ID of the onwer.
 	 * @param gid  Group ID of the owner.
 	 *
-	 * @returns Upon successful completion, an in-memory pointer to the
-	 * allocated inode is returned. Upon failure, a negative error code is
-	 * returned instead.
+	 * @returns Upon successful completion, a reference to the allocated
+	 * inode is returned. Upon failure, a NULL pointer is returned
+	 * instead.
 	 */
 	extern struct inode *inode_alloc(
 		struct filesystem *fs,
