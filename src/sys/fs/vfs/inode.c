@@ -88,18 +88,31 @@ struct d_inode *inode_disk_get(struct inode *ip)
 }
 
 /*============================================================================*
- * inode_alloc()                                                              *
+ * inode_get_num()                                                            *
  *============================================================================*/
 
 /**
- * @todo TODO: Provide a detailed description for this function.
+ * The inode_get_num() function gets the number of the inode pointed to
+ * by @p ip.
  */
-struct inode *inode_alloc(
-	struct filesystem *fs,
-	mode_t mode,
-	uid_t uid,
-	gid_t gid
-)
+ino_t inode_get_num(const struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (MINIX_INODE_NULL);
+	}
+
+	/* Bad inode. */
+	if (ip->count == 0)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (MINIX_INODE_NULL);
+	}
+
+	return (ip->num);
+}
 
 /*============================================================================*
  * inode_read()                                                               *

@@ -246,6 +246,15 @@
 	extern struct d_inode *inode_disk_get(struct inode *ip);
 
 	/**
+	 * @brief Get inode number.
+	 *
+	 * @param ip Target inode.
+	 *
+	 * @returns The number of the target inode @p ip.
+	 */
+	extern ino_t inode_get_num(const struct inode *ip);
+
+	/**
 	 * @brief Allocates an in-memory inode.
 	 *
 	 * @param fs   Target file system.
