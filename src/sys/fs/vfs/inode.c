@@ -364,6 +364,64 @@ struct inode *inode_alloc(
 }
 
 /*============================================================================*
+ * inode_name()                                                               *
+ *============================================================================*/
+
+/**
+ * The inode_name() function lookups an inode by the name pointed to by
+ * @p name. The root directory of @p fs is used as start point for the
+ * search.
+ *
+ * @todo TODO: recursive lookup.
+ * @todo TODO: support relative path search.
+ */
+struct inode *inode_name(struct filesystem *fs, const char *name)
+{
+	struct inode *dinode;   /* Directory's inode.     */
+	off_t off;              /* Offset of Target Inode */
+	struct d_dirent dirent; /* Directory Entry        */
+
+	/* Invalid file system */
+	if (fs == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	/* Invalid name. */
+	if (name == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	dinode = curr_proc->root;
+
+	/* Failed to get directory. */
+	if (dinode == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	/* Search file. */
+	if ((off = minix_dirent_search(fs->dev, &fs->super->data, fs->super->bmap, inode_disk_get(dinode), name, 0)) < 0)
+	{
+		curr_proc->errcode = -ENOENT;
+		return (NULL);
+	}
+
+	/* Read Directory entry */
+	if (bdev_read(fs->dev, (char *) &dirent, sizeof(struct d_dirent), off) < 0)
+	{
+		curr_proc->errcode = -EIO;
+		return (NULL);
+	}
+
+	return (inode_get(&fs_root, dirent.d_ino));
+}
+
+/*============================================================================*
  * inode_init()                                                               *
  *============================================================================*/
 
