@@ -185,7 +185,7 @@ static struct inode *inode_read(struct filesystem *fs, ino_t num)
 	int idx;          /* inode index  */
 	struct inode *ip; /* Inode        */
 
-	/* Invalid file system */
+	/* Invalid file system. */
 	if (fs == NULL)
 		return (NULL);
 
@@ -308,31 +308,31 @@ int inode_put(struct filesystem *fs, struct inode *ip)
 
 	/* Invalid file system */
 	if (fs == NULL)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Invalid inode. */
 	if (ip == NULL)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	idx = ip - inodes;
 
 	/* Bad inode. */
 	if (!WITHIN(idx, 0, NANVIX_INODES_TABLE_LENGTH))
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
 	if (fs->dev != ip->dev)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
 	if (ip->count == 0)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Write inode back to disk. */
 	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
-		return(curr_proc->errcode = -EAGAIN);
+		return (curr_proc->errcode = -EAGAIN);
 	}
 
 	return (inode_free(fs, ip));
@@ -349,21 +349,25 @@ int inode_write(struct filesystem *fs, struct inode *ip)
 {
 	/* Invalid file system */
 	if (fs == NULL)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Invalid inode. */
 	if (ip == NULL)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
 	if (fs->dev != ip->dev)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Write disk inode. */
 	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
-		return(curr_proc->errcode = -EAGAIN);
+		return (curr_proc->errcode = -EAGAIN);
 	}
 
 	return (0);
@@ -379,8 +383,15 @@ int inode_write(struct filesystem *fs, struct inode *ip)
  */
 struct inode *inode_get(struct filesystem *fs, ino_t num)
 {
-	/* Invalid file system */
+	/* Invalid file system. */
 	if (fs == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	/* Invalid inode number. */
+	if (num >= NANVIX_NR_INODES)
 	{
 		curr_proc->errcode = -EINVAL;
 		return (NULL);
@@ -423,6 +434,13 @@ struct inode *inode_alloc(
 
 	/* Invalid file system */
 	if (fs == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	/* Bad file system */
+	if (fs->root == NULL)
 	{
 		curr_proc->errcode = -EINVAL;
 		return (NULL);
