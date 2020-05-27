@@ -28,6 +28,11 @@
 	#include <posix/sys/types.h>
 
 	/**
+	 * @brief Null Device
+	 */
+	#define NANVIX_DEV_NULL 0
+
+	/**
 	 * @brief Dummy function.
 	 */
 	#define bdev_open(x) (0)
