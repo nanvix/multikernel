@@ -111,6 +111,33 @@ ino_t inode_get_num(const struct inode *ip)
 }
 
 /*============================================================================*
+ * inode_get_dev()                                                            *
+ *============================================================================*/
+
+/**
+ * The inode_get_dev() function gets the device number of the inode
+ * pointed to by @p ip.
+ */
+dev_t inode_get_dev(const struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NANVIX_DEV_NULL);
+	}
+
+	/* Bad inode. */
+	if (ip->count == 0)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NANVIX_DEV_NULL);
+	}
+
+	return (ip->dev);
+}
+
+/*============================================================================*
  * inode_read()                                                               *
  *============================================================================*/
 

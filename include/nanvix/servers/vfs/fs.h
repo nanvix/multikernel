@@ -260,6 +260,15 @@
 	extern ino_t inode_get_num(const struct inode *ip);
 
 	/**
+	 * #brief Gets the device number of an inode.
+	 *
+	 * @param ip Target inode.
+	 *
+	 * @returns The device number of the target inode @p ip.
+	 */
+	extern dev_t inode_get_dev(const struct inode *ip);
+
+	/**
 	 * @brief Allocates an in-memory inode.
 	 *
 	 * @param fs   Target file system.
