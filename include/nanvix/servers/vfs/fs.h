@@ -237,6 +237,11 @@
  *============================================================================*/
 
 	/**
+	 * @brief Length of Inodes Table
+	 */
+	#define NANVIX_INODES_TABLE_LENGTH (NANVIX_NR_INODES/4)
+
+	/**
 	 * @brief Gets disk inode.
 	 *
 	 * @param ip Target inode.
@@ -253,6 +258,25 @@
 	 * @returns The number of the target inode @p ip.
 	 */
 	extern ino_t inode_get_num(const struct inode *ip);
+
+	/**
+	 * #brief Gets the device number of an inode.
+	 *
+	 * @param ip Target inode.
+	 *
+	 * @returns The device number of the target inode @p ip.
+	 */
+	extern dev_t inode_get_dev(const struct inode *ip);
+
+	/**
+	 * @brief Sets an inode as dirty.
+	 *
+	 * @param ip Target inode.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int inode_set_dirty(struct inode *ip);
 
 	/**
 	 * @brief Allocates an in-memory inode.

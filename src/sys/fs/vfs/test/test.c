@@ -26,6 +26,7 @@
 extern void test_ramdisk(void);
 extern void test_bcache(void);
 extern void test_minix(void);
+extern void test_inode();
 extern void test_vfs(void);
 
 /**
@@ -34,6 +35,7 @@ extern void test_vfs(void);
 void vfs_test(void)
 {
 	test_vfs();
+	test_inode();
 	test_minix();
 	test_bcache();
 	test_ramdisk();

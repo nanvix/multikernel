@@ -35,11 +35,6 @@
 #include <posix/errno.h>
 
 /**
- * @brief Length of Inodes Table
- */
-#define INODES_LENGTH (NANVIX_NR_INODES/4)
-
-/**
  * @brief In-Memory Inode
  */
 struct inode
@@ -56,14 +51,14 @@ struct inode
 /**
  * @brief Table of Inodes
  */
-static struct inode inodes[INODES_LENGTH];
+static struct inode inodes[NANVIX_INODES_TABLE_LENGTH];
 
 /**
  * @brief Pool of Inodes
  */
 static struct resource_pool pool = {
 	.resources = inodes,
-	.nresources = INODES_LENGTH,
+	.nresources = NANVIX_INODES_TABLE_LENGTH,
 	.resource_size = sizeof(struct inode)
 };
 
@@ -116,6 +111,63 @@ ino_t inode_get_num(const struct inode *ip)
 }
 
 /*============================================================================*
+ * inode_get_dev()                                                            *
+ *============================================================================*/
+
+/**
+ * The inode_get_dev() function gets the device number of the inode
+ * pointed to by @p ip.
+ */
+dev_t inode_get_dev(const struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NANVIX_DEV_NULL);
+	}
+
+	/* Bad inode. */
+	if (ip->count == 0)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NANVIX_DEV_NULL);
+	}
+
+	return (ip->dev);
+}
+
+/*============================================================================*
+ * inode_set_dirty()                                                          *
+ *============================================================================*/
+
+/**
+ * The inode_set_dirty() sets the inode pointed to by @p ip as dirty.
+ */
+int inode_set_dirty(struct inode *ip)
+{
+	int idx;
+
+	/* Invalid inode. */
+	if (ip == NULL)
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return (curr_proc->errcode = -EINVAL);
+
+	idx = ip - inodes;
+
+	/* Bad inode. */
+	if (!WITHIN(idx, 0, NANVIX_INODES_TABLE_LENGTH))
+		return (curr_proc->errcode = -EINVAL);
+
+	resource_set_dirty(&ip->resource);
+
+	return (0);
+}
+
+/*============================================================================*
  * inode_read()                                                               *
  *============================================================================*/
 
@@ -133,7 +185,7 @@ static struct inode *inode_read(struct filesystem *fs, ino_t num)
 	int idx;          /* inode index  */
 	struct inode *ip; /* Inode        */
 
-	/* Invalid file system */
+	/* Invalid file system. */
 	if (fs == NULL)
 		return (NULL);
 
@@ -211,7 +263,7 @@ static int inode_free(struct filesystem *fs, struct inode *ip)
 	idx = ip - inodes;
 
 	/* Bad inode. */
-	if (!WITHIN(idx, 0, INODES_LENGTH))
+	if (!WITHIN(idx, 0, NANVIX_INODES_TABLE_LENGTH))
 		return (curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
@@ -256,31 +308,31 @@ int inode_put(struct filesystem *fs, struct inode *ip)
 
 	/* Invalid file system */
 	if (fs == NULL)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Invalid inode. */
 	if (ip == NULL)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	idx = ip - inodes;
 
 	/* Bad inode. */
-	if (!WITHIN(idx, 0, INODES_LENGTH))
-		return(curr_proc->errcode = -EINVAL);
+	if (!WITHIN(idx, 0, NANVIX_INODES_TABLE_LENGTH))
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
 	if (fs->dev != ip->dev)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
 	if (ip->count == 0)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Write inode back to disk. */
 	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
-		return(curr_proc->errcode = -EAGAIN);
+		return (curr_proc->errcode = -EAGAIN);
 	}
 
 	return (inode_free(fs, ip));
@@ -297,21 +349,25 @@ int inode_write(struct filesystem *fs, struct inode *ip)
 {
 	/* Invalid file system */
 	if (fs == NULL)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Invalid inode. */
 	if (ip == NULL)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
 	if (fs->dev != ip->dev)
-		return(curr_proc->errcode = -EINVAL);
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Write disk inode. */
 	if (minix_inode_write(ip->dev, &fs->super->data, &ip->data, ip->num) < 0)
 	{
 		uprintf("[nanvix][vfs] failed to write inode %d", ip->num);
-		return(curr_proc->errcode = -EAGAIN);
+		return (curr_proc->errcode = -EAGAIN);
 	}
 
 	return (0);
@@ -327,15 +383,22 @@ int inode_write(struct filesystem *fs, struct inode *ip)
  */
 struct inode *inode_get(struct filesystem *fs, ino_t num)
 {
-	/* Invalid file system */
+	/* Invalid file system. */
 	if (fs == NULL)
 	{
 		curr_proc->errcode = -EINVAL;
 		return (NULL);
 	}
 
+	/* Invalid inode number. */
+	if (num >= NANVIX_NR_INODES)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
 	/* Search for inode in the table of inodes. */
-	for (int i = 0; i < INODES_LENGTH; i++)
+	for (int i = 0; i < NANVIX_INODES_TABLE_LENGTH; i++)
 	{
 		/* Skip invalid entries. */
 		if (!resource_is_used(&inodes[i].resource))
@@ -371,6 +434,13 @@ struct inode *inode_alloc(
 
 	/* Invalid file system */
 	if (fs == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (NULL);
+	}
+
+	/* Bad file system */
+	if (fs->root == NULL)
 	{
 		curr_proc->errcode = -EINVAL;
 		return (NULL);
@@ -453,7 +523,7 @@ struct inode *inode_name(struct filesystem *fs, const char *name)
  */
 void inode_init(void)
 {
-	for (int i = 0; i < INODES_LENGTH; i++)
+	for (int i = 0; i < NANVIX_INODES_TABLE_LENGTH; i++)
 	{
 		inodes[i].resource = RESOURCE_INITIALIZER;
 		inodes[i].dev = -1;
