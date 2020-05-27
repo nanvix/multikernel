@@ -237,6 +237,11 @@
  *============================================================================*/
 
 	/**
+	 * @brief Length of Inodes Table
+	 */
+	#define NANVIX_INODES_TABLE_LENGTH (NANVIX_NR_INODES/4)
+
+	/**
 	 * @brief Gets disk inode.
 	 *
 	 * @param ip Target inode.

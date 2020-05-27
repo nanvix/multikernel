@@ -35,11 +35,6 @@
 #include <posix/errno.h>
 
 /**
- * @brief Length of Inodes Table
- */
-#define INODES_LENGTH (NANVIX_NR_INODES/4)
-
-/**
  * @brief In-Memory Inode
  */
 struct inode
@@ -56,14 +51,14 @@ struct inode
 /**
  * @brief Table of Inodes
  */
-static struct inode inodes[INODES_LENGTH];
+static struct inode inodes[NANVIX_INODES_TABLE_LENGTH];
 
 /**
  * @brief Pool of Inodes
  */
 static struct resource_pool pool = {
 	.resources = inodes,
-	.nresources = INODES_LENGTH,
+	.nresources = NANVIX_INODES_TABLE_LENGTH,
 	.resource_size = sizeof(struct inode)
 };
 
@@ -211,7 +206,7 @@ static int inode_free(struct filesystem *fs, struct inode *ip)
 	idx = ip - inodes;
 
 	/* Bad inode. */
-	if (!WITHIN(idx, 0, INODES_LENGTH))
+	if (!WITHIN(idx, 0, NANVIX_INODES_TABLE_LENGTH))
 		return (curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
@@ -265,7 +260,7 @@ int inode_put(struct filesystem *fs, struct inode *ip)
 	idx = ip - inodes;
 
 	/* Bad inode. */
-	if (!WITHIN(idx, 0, INODES_LENGTH))
+	if (!WITHIN(idx, 0, NANVIX_INODES_TABLE_LENGTH))
 		return(curr_proc->errcode = -EINVAL);
 
 	/* Bad inode. */
@@ -335,7 +330,7 @@ struct inode *inode_get(struct filesystem *fs, ino_t num)
 	}
 
 	/* Search for inode in the table of inodes. */
-	for (int i = 0; i < INODES_LENGTH; i++)
+	for (int i = 0; i < NANVIX_INODES_TABLE_LENGTH; i++)
 	{
 		/* Skip invalid entries. */
 		if (!resource_is_used(&inodes[i].resource))
@@ -453,7 +448,7 @@ struct inode *inode_name(struct filesystem *fs, const char *name)
  */
 void inode_init(void)
 {
-	for (int i = 0; i < INODES_LENGTH; i++)
+	for (int i = 0; i < NANVIX_INODES_TABLE_LENGTH; i++)
 	{
 		inodes[i].resource = RESOURCE_INITIALIZER;
 		inodes[i].dev = -1;
