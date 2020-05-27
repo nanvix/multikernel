@@ -23,9 +23,9 @@
  */
 
 /* Must come first. */
-#include "nanvix/config.h"
 #define __VFS_SERVER
 
+#include <nanvix/config.h>
 #include <nanvix/servers/vfs.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
