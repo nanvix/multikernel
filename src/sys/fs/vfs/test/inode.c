@@ -361,7 +361,7 @@ static struct
 /**
  * @brief Runs regression tests on Virtual File System
  */
-void test_vfs(void)
+void test_inode(void)
 {
 	for (int i = 0; vfs_tests[i].func != NULL; i++)
 	{
