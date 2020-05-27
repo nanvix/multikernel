@@ -269,6 +269,16 @@
 	extern dev_t inode_get_dev(const struct inode *ip);
 
 	/**
+	 * @brief Sets an inode as dirty.
+	 *
+	 * @param ip Target inode.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int inode_set_dirty(struct inode *ip);
+
+	/**
 	 * @brief Allocates an in-memory inode.
 	 *
 	 * @param fs   Target file system.

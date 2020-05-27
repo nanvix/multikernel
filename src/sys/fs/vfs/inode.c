@@ -138,6 +138,36 @@ dev_t inode_get_dev(const struct inode *ip)
 }
 
 /*============================================================================*
+ * inode_set_dirty()                                                          *
+ *============================================================================*/
+
+/**
+ * The inode_set_dirty() sets the inode pointed to by @p ip as dirty.
+ */
+int inode_set_dirty(struct inode *ip)
+{
+	int idx;
+
+	/* Invalid inode. */
+	if (ip == NULL)
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (ip->count == 0)
+		return (curr_proc->errcode = -EINVAL);
+
+	idx = ip - inodes;
+
+	/* Bad inode. */
+	if (!WITHIN(idx, 0, NANVIX_INODES_TABLE_LENGTH))
+		return (curr_proc->errcode = -EINVAL);
+
+	resource_set_dirty(&ip->resource);
+
+	return (0);
+}
+
+/*============================================================================*
  * inode_read()                                                               *
  *============================================================================*/
 
