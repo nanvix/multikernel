@@ -26,6 +26,7 @@
 
 #include <nanvix/servers/spawn.h>
 #include <nanvix/runtime/stdikc.h>
+#include <nanvix/sys/perf.h>
 #include <nanvix/ulib.h>
 
 /**
@@ -35,6 +36,31 @@ static struct
 {
 	int syncs[2];
 } barrier;
+
+#ifndef __unix64__
+
+/**
+ * @brief Forces a platform-independent delay.
+ *
+ * @param cycles Delay in cycles.
+ *
+ * @author João Vicente Souto
+ */
+static void barrier_delay(int times, uint64_t cycles)
+{
+	uint64_t t0, t1;
+
+	for (int i = 0; i < times; ++i)
+	{
+		kclock(&t0);
+
+		do
+			kclock(&t1);
+		while ((t1 - t0) < cycles);
+	}
+}
+
+#endif /* !__unix64__ */
 
 /**
  * @brief Initializes the spawn barrier.
@@ -76,19 +102,23 @@ void spawn_barrier_setup(void)
 	else
 	{
 		uassert((
-			barrier.syncs[0] = ksync_open(
-				nodes,
-				SPAWNERS_NUM,
-				SYNC_ALL_TO_ONE)
-			) >= 0
-		);
-		uassert((
 			barrier.syncs[1] = ksync_create(
 				nodes,
 				SPAWNERS_NUM,
 				SYNC_ONE_TO_ALL)
 			) >= 0
 		);
+		uassert((
+			barrier.syncs[0] = ksync_open(
+				nodes,
+				SPAWNERS_NUM,
+				SYNC_ALL_TO_ONE)
+			) >= 0
+		);
+
+#ifndef __unix64__
+		barrier_delay(1, CLUSTER_FREQ);
+#endif /* !__unix64__ */
 	}
 }
 
