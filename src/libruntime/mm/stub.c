@@ -28,6 +28,7 @@
 
 #include <nanvix/runtime/pm.h>
 #include <nanvix/runtime/mm.h>
+#include <nanvix/sys/excp.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
