@@ -31,6 +31,8 @@
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 
+#ifdef VFS_SERVER_NODE
+
 /**
  * @brief Connection to VFSem Server.
  */
@@ -475,6 +477,8 @@ ssize_t nanvix_vfs_write(int fd, const void *buf, size_t n)
 	return ((size_t)(pend - pbase));
 }
 
+#endif
+
 /*============================================================================*
  * nanvix_vfs_shutdown()                                                      *
  *============================================================================*/
@@ -485,6 +489,8 @@ ssize_t nanvix_vfs_write(int fd, const void *buf, size_t n)
  */
 int nanvix_vfs_shutdown(void)
 {
+#ifdef VFS_SERVER_NODE
+
 	struct vfs_message msg;
 
 	/* Invalid server ID. */
@@ -502,6 +508,8 @@ int nanvix_vfs_shutdown(void)
 		) == 0
 	);
 
+#endif
+
 	return (0);
 }
 
@@ -515,6 +523,8 @@ int nanvix_vfs_shutdown(void)
  */
 int __nanvix_vfs_setup(void)
 {
+#ifdef VFS_SERVER_NODE
+
 	/* Nothing to do.  */
 	if (server.initialized)
 		return (0);
@@ -536,6 +546,8 @@ int __nanvix_vfs_setup(void)
 	server.initialized = true;
 	uprintf("[nanvix][vfs] connection with server established");
 
+#endif
+
 	return (0);
 }
 
@@ -549,6 +561,9 @@ int __nanvix_vfs_setup(void)
  */
 int __nanvix_vfs_cleanup(void)
 {
+
+#ifdef VFS_SERVER_NODE
+
 	int ret;
 
 	/* Nothing to do. */
@@ -570,6 +585,8 @@ int __nanvix_vfs_cleanup(void)
 	}
 
 	server.initialized = 0;
+
+#endif
 
 	return (0);
 }

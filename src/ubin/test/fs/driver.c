@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include "../test.h"
 
@@ -35,6 +36,7 @@ extern struct test tests_vfs_fault[];
  */
 void test_vfs(void)
 {
+#ifdef VFS_SERVER_NODE
 
 	/* Run fault tests. */
 	for (int i = 0; tests_vfs_fault[i].test_fn != NULL; i++)
@@ -49,4 +51,5 @@ void test_vfs(void)
 		uprintf("[nanvix][test][vfs][stress] %s", tests_vfs_stress[i].name);
 		tests_vfs_stress[i].test_fn();
 	}
+#endif
 }

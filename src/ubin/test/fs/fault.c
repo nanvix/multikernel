@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include <nanvix/config.h>
 #include <nanvix/fs.h>
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
@@ -29,6 +30,8 @@
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
 #include "../test.h"
+
+#ifdef VFS_SERVER_NODE
 
 /**
  * @brief Buffer for Read/Write Tests
@@ -214,3 +217,4 @@ struct test tests_vfs_fault[] = {
 	{ NULL,                                 NULL                         },
 };
 
+#endif

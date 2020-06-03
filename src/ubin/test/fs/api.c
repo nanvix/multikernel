@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include <nanvix/config.h>
 #include <nanvix/fs.h>
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
@@ -29,6 +30,8 @@
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
 #include "../test.h"
+
+#ifdef VFS_SERVER_NODE
 
 /**
  * @brief File Offset for Tests
@@ -127,3 +130,5 @@ struct test tests_vfs_api[] = {
 	{ test_api_nanvix_vfs_read_write, "[vfs][api] read/write" },
 	{ NULL,                            NULL                   },
 };
+
+#endif

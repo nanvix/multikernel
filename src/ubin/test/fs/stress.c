@@ -22,6 +22,7 @@
  * SOFTWARE.
  */
 
+#include <nanvix/config.h>
 #include <nanvix/sys/noc.h>
 #include <nanvix/fs.h>
 #include <nanvix/limits.h>
@@ -30,6 +31,8 @@
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
 #include "../test.h"
+
+#ifdef VFS_SERVER_NODE
 
 /**
  * @brief Number of Iterations
@@ -149,3 +152,4 @@ struct test tests_vfs_stress[] = {
 	{ NULL,                            NULL                   },
 };
 
+#endif
