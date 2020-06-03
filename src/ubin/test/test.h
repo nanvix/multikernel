@@ -62,9 +62,19 @@
 	extern void test_rmem_manager(void);
 
 	/**
+	 * @brief Launches regression tests on SHM Service.
+	 */
+	extern void test_shm(void);
+
+	/**
 	 * @brief Launches regression tests on POSIX manager.
 	 */
 	extern void test_posix(void);
+
+	/**
+	 * @brief Launches regression tests on VFS manager.
+	 */
+	extern void test_vfs(void);
 
 	/**
 	 * @brief Horizontal line for tests.

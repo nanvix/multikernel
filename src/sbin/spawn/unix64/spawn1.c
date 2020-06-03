@@ -22,11 +22,21 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_RUNTIME_RMEM_H_
-#define NANVIX_RUNTIME_RMEM_H_
+#define SPAWN_SERVER
 
-	#include <nanvix/runtime/mm/manager.h>
-	#include <nanvix/runtime/mm/cache.h>
-	#include <nanvix/runtime/mm/stub.h>
+#include <nanvix/servers/servers.h>
+#include <nanvix/config.h>
 
-#endif /* NANVIX_RUNTIME_RMEM_H_ */
+/**
+ * @brief Number of servers.
+ */
+#define SPAWN_SERVERS_NUM 1
+
+/**
+ * @brief Table of servers.
+ */
+const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
+	{ .ring = SPAWN_RING_1, .main = rmem_server },
+};
+
+SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_1_NAME)

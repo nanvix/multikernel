@@ -23,7 +23,7 @@
  */
 
 #include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/stdikc.h>
+#include <nanvix/pm.h>
 #include <nanvix/ulib.h>
 #include <posix/stdint.h>
 #include "test.h"
@@ -42,26 +42,28 @@ int __main2(int argc, const char *argv[])
 	((void) argc);
 	((void) argv);
 
-	__runtime_setup(0);
+	__runtime_setup(SPAWN_RING_FIRST);
 
 		/* Unblock spawners. */
 		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][test] server starting...");
 		uassert(stdsync_fence() == 0);
+		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][test] server alive");
 
-		__runtime_setup(1);
+		__runtime_setup(SPAWN_RING_LAST);
 		test_name();
-
-		__runtime_setup(4);
 		test_rmem_stub();
 		test_rmem_cache();
 		test_rmem_manager();
 #ifdef __mppa256__
 		test_posix();
 #endif
+		test_shm();
+		test_vfs();
 
 		uprintf("[nanvix][test] shutting down server");
+		uassert(stdsync_fence() == 0);
 
 	nanvix_shutdown();
 

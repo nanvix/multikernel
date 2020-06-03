@@ -24,6 +24,7 @@
 
 #include <nanvix/runtime/runtime.h>
 #include <nanvix/runtime/stdikc.h>
+#include <nanvix/pm.h>
 #include <nanvix/ulib.h>
 
 /**
@@ -34,12 +35,14 @@ int __main2(int argc, const char *argv[])
 	((void) argc);
 	((void) argv);
 
-	__runtime_setup(0);
+	__runtime_setup(SPAWN_RING_FIRST);
 
 		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][zombie] server starting...");
 		uassert(stdsync_fence() == 0);
+		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][zombie] server alive");
+		uassert(stdsync_fence() == 0);
 
 	__runtime_cleanup();
 

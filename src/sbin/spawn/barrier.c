@@ -22,38 +22,45 @@
  * SOFTWARE.
  */
 
-#include <nanvix/servers/message.h>
+#define __NEED_SPAWN_SERVER
+
 #include <nanvix/servers/spawn.h>
 #include <nanvix/runtime/stdikc.h>
-#include <nanvix/sys/fmutex.h>
-#include <nanvix/sys/mailbox.h>
-#include <nanvix/sys/noc.h>
+#include <nanvix/sys/perf.h>
 #include <nanvix/ulib.h>
-
-/**
- * @brief Name Server message.
- */
-struct spawn_message
-{
-	message_header header;
-};
-
-/**
- * @brief Port number for Spawn Server.
- */
-#define SPAWN_SERVER_PORT_NUM 1
 
 /**
  * @brief Startup barrier
  */
 static struct
 {
-	int mailboxes[SPAWNERS_NUM];
-} barrier = {
-	.mailboxes = {
-		[0 ... (SPAWNERS_NUM - 1)] = -1
+	int syncs[2];
+} barrier;
+
+#ifndef __unix64__
+
+/**
+ * @brief Forces a platform-independent delay.
+ *
+ * @param cycles Delay in cycles.
+ *
+ * @author João Vicente Souto
+ */
+static void barrier_delay(int times, uint64_t cycles)
+{
+	uint64_t t0, t1;
+
+	for (int i = 0; i < times; ++i)
+	{
+		kclock(&t0);
+
+		do
+			kclock(&t1);
+		while ((t1 - t0) < cycles);
 	}
-};
+}
+
+#endif /* !__unix64__ */
 
 /**
  * @brief Initializes the spawn barrier.
@@ -61,27 +68,57 @@ static struct
 void spawn_barrier_setup(void)
 {
 	int nodes[SPAWNERS_NUM] = {
+	#if defined(__mppa256__)
 		SPAWN_SERVER_0_NODE,
 		SPAWN_SERVER_1_NODE
+	#elif defined (__unix64__)
+		SPAWN_SERVER_0_NODE,
+		SPAWN_SERVER_1_NODE,
+		SPAWN_SERVER_2_NODE,
+		SPAWN_SERVER_3_NODE
+	#endif
 	};
 
 	/* Leader. */
-	if (cluster_get_num() == SPAWN_SERVER_0_NODE)
+	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_MASTER)
 	{
-		for (int i = 1 ; i < SPAWNERS_NUM; i++)
-		{
-			uassert((barrier.mailboxes[i] = kmailbox_open(
-				nodes[i], SPAWN_SERVER_PORT_NUM)
-			) >= 0);
-		}
+		uassert((
+			barrier.syncs[0] = ksync_create(
+				nodes,
+				SPAWNERS_NUM,
+				SYNC_ALL_TO_ONE)
+			) >= 0
+		);
+		uassert((
+			barrier.syncs[1] = ksync_open(
+				nodes,
+				SPAWNERS_NUM,
+				SYNC_ONE_TO_ALL)
+			) >= 0
+		);
 	}
 
 	/* Follower. */
 	else
 	{
-		uassert((barrier.mailboxes[0] = kmailbox_open(
-			nodes[0], SPAWN_SERVER_PORT_NUM)
-		) >= 0);
+		uassert((
+			barrier.syncs[1] = ksync_create(
+				nodes,
+				SPAWNERS_NUM,
+				SYNC_ONE_TO_ALL)
+			) >= 0
+		);
+		uassert((
+			barrier.syncs[0] = ksync_open(
+				nodes,
+				SPAWNERS_NUM,
+				SYNC_ALL_TO_ONE)
+			) >= 0
+		);
+
+#ifndef __unix64__
+		barrier_delay(1, CLUSTER_FREQ);
+#endif /* !__unix64__ */
 	}
 }
 
@@ -91,50 +128,36 @@ void spawn_barrier_setup(void)
 void spawn_barrier_cleanup(void)
 {
 	/* Leader. */
-	if (cluster_get_num() == SPAWN_SERVER_0_NODE)
+	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_MASTER)
 	{
-		for (int i = 1 ; i < SPAWNERS_NUM; i++)
-			uassert(kmailbox_close(barrier.mailboxes[i]) == 0);
+		uassert(ksync_unlink(barrier.syncs[0]) == 0);
+		uassert(ksync_close(barrier.syncs[1]) == 0);
 	}
 
 	/* Follower. */
 	else
-		uassert(kmailbox_close(barrier.mailboxes[0]) == 0);
+	{
+		uassert(ksync_close(barrier.syncs[0]) == 0);
+		uassert(ksync_unlink(barrier.syncs[1]) == 0);
+	}
 }
 
 /**
- * @brief Waits on the startup barrier
+ * @brief Waits on the startup barrier.
  */
 void spawn_barrier_wait(void)
 {
-	struct spawn_message msg;
-
 	/* Leader */
-	if (cluster_get_num() == SPAWN_SERVER_0_NODE)
+	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_MASTER)
 	{
-		for (int i = 1 ; i < SPAWNERS_NUM; i++)
-		{
-			uassert(kmailbox_read(
-				stdinbox_get(), &msg, sizeof(struct spawn_message)
-			) == sizeof(struct spawn_message));
-		}
-		for (int i = 1 ; i < SPAWNERS_NUM; i++)
-		{
-			uassert(kmailbox_write(
-				barrier.mailboxes[i], &msg, sizeof(struct spawn_message)
-			) == sizeof(struct spawn_message));
-		}
+		uassert(ksync_wait(barrier.syncs[0]) == 0);
+		uassert(ksync_signal(barrier.syncs[1]) == 0);
 	}
 
 	/* Follower. */
 	else
 	{
-		uassert(kmailbox_write(
-			barrier.mailboxes[0], &msg, sizeof(struct spawn_message)
-		) == sizeof(struct spawn_message));
-		uassert(kmailbox_read(
-			stdinbox_get(), &msg, sizeof(struct spawn_message)
-		) == sizeof(struct spawn_message));
+		uassert(ksync_signal(barrier.syncs[0]) == 0);
+		uassert(ksync_wait(barrier.syncs[1]) == 0);
 	}
-
 }

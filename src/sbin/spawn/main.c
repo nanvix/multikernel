@@ -23,12 +23,12 @@
  */
 
 #define SPAWN_SERVER
+#define __NEED_SPAWN_SERVER
 
 #include <nanvix/runtime/runtime.h>
 #include <nanvix/runtime/stdikc.h>
 #include <nanvix/servers/spawn.h>
 #include <nanvix/sys/semaphore.h>
-#include <nanvix/sys/noc.h>
 #include <nanvix/sys/thread.h>
 #include <nanvix/ulib.h>
 
@@ -96,10 +96,9 @@ int __main2(int argc, const char *argv[])
 
 		uprintf("[nanvix][%s] attached to node %d", spawner_name, knode_get_num());
 		uprintf("[nanvix][%s] listening to inbox %d", spawner_name, stdinbox_get());
-		uprintf("[nanvix][%s] syncing in sync %d", spawner_name, stdsync_get());
 
-		uassert(stdsync_fence() == 0);
 		spawn_barrier_setup();
+		uassert(stdsync_fence() == 0);
 
 		/* Spawn servers. */
 		for (int ring = SPAWN_RING_FIRST; ring <= SPAWN_RING_LAST; ring++)
@@ -118,6 +117,8 @@ int __main2(int argc, const char *argv[])
 			spawn_barrier_wait();
 		}
 
+		uassert(stdsync_fence() == 0);
+		uassert(stdsync_fence() == 0);
 		uassert(stdsync_fence() == 0);
 		uprintf("[nanvix][%s] waiting shutdown signal...", spawner_name);
 

@@ -22,17 +22,14 @@
  * SOFTWARE.
  */
 
-#define __NEED_RMEM_SERVICE
+/* Must come first. */
+#define __NEED_MM_RMEM_STUB
+#define __NEED_RMEM_SERVER
 
-#include <nanvix/servers/rmem.h>
-#include <nanvix/servers/spawn.h>
-#include <nanvix/runtime/stdikc.h>
-#include <nanvix/runtime/mailbox.h>
-#include <nanvix/runtime/portal.h>
+#include <nanvix/runtime/pm.h>
+#include <nanvix/runtime/mm.h>
 #include <nanvix/sys/excp.h>
-#include <nanvix/sys/mailbox.h>
-#include <nanvix/sys/mutex.h>
-#include <nanvix/sys/noc.h>
+#include <nanvix/config.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 #include <posix/stdbool.h>
@@ -66,7 +63,7 @@ rpage_t nanvix_rmem_alloc(void)
 
 	/* Client not initialized.  */
 	if (!server[serverid].initialized)
-		return (-EINVAL);
+		return (RMEM_NULL);
 
 	/* Build operation header. */
 	message_header_build(&msg.header, RMEM_ALLOC);

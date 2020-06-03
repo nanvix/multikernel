@@ -23,21 +23,16 @@
  */
 
 #define __NEED_RMEM_SERVICE
+#define __NEED_RMEM_SERVER
 
 #include <nanvix/servers/message.h>
 #include <nanvix/runtime/pm.h>
 #include <nanvix/servers/rmem.h>
-#include <nanvix/servers/spawn.h>
-#include <nanvix/runtime/stdikc.h>
-#include <nanvix/runtime/runtime.h>
 #include <nanvix/runtime/utils.h>
 #include <nanvix/sys/thread.h>
-#include <nanvix/sys/mailbox.h>
-#include <nanvix/sys/noc.h>
 #include <nanvix/sys/page.h>
 #include <nanvix/sys/perf.h>
 #include <nanvix/sys/semaphore.h>
-#include <nanvix/sys/portal.h>
 #include <nanvix/limits.h>
 #include <nanvix/types.h>
 #include <nanvix/ulib.h>
@@ -50,11 +45,6 @@
 #if (RMEM_NUM_BLOCKS%(BITMAP_WORD_LENGTH/8) != 0)
 #error "bad geometry for remote memory"
 #endif
-
-/**
- * @brief Port Nnumber for RMem client.
- */
-#define RMEM_SERVER_PORT_NUM 2
 
 /**
  * @brief Debug RMEM?
@@ -424,7 +414,7 @@ static inline int do_rmem_read(int remote, rpage_t blknum, int outbox, int outpo
 			outport)
 		) >= 0
 	);
-	msg.header.portal_port = outportal % KPORTAL_PORT_NR;
+	msg.header.portal_port = kcomm_get_port(outportal, COMM_TYPE_PORTAL);
 	uassert(
 		kmailbox_write(outbox,
 			&msg,
@@ -710,7 +700,6 @@ static int do_rmem_startup(struct nanvix_semaphore *lock)
 	uprintf("[nanvix][rmem] attached to node %d", knode_get_num());
 	uprintf("[nanvix][rmem] listening to mailbox %d", inbox);
 	uprintf("[nanvix][rmem] listening to portal %d", inportal);
-	uprintf("[nanvix][rmem] syncing in sync %d", stdsync_get());
 	uprintf("[nanvix][rmem] memory size %d KB", RMEM_SIZE/KB);
 
 	nanvix_semaphore_up(lock);

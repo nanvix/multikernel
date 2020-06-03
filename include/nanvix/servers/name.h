@@ -25,13 +25,15 @@
 #ifndef NANVIX_SERVERS_NAME_H_
 #define NANVIX_SERVERS_NAME_H_
 
-	#ifndef __NAME_SERVICE
+	#ifndef __NEED_NAME_SERVER
 	#error "do not include this file"
 	#endif
 
+	/* Must come first. */
+	#define __NEED_LIMITS_PM
+
 	#include <nanvix/servers/message.h>
-	#include <nanvix/limits/name.h>
-	#include <nanvix/pm.h>
+	#include <nanvix/limits/pm.h>
 	#include <nanvix/ulib.h>
 	#include <posix/stdint.h>
 	#include <posix/errno.h>
@@ -48,11 +50,6 @@
 	#define NAME_ALIVE   5 /**< Client alive.            */
 	#define NAME_FAIL    6 /**< Failure acknowledgement. */
 	/**@}*/
-
-	/**
-	 * @brief Port number for name server client.
-	 */
-	#define NAME_SERVER_PORT_NUM 2
 
 	/**
 	 * @brief Name Server message.
@@ -100,6 +97,11 @@
 			} ret;
 		} op;
 	};
+
+	/**
+	 * @see node_is_valid()
+	 */
+	#define proc_is_valid(x) node_is_valid(x)
 
 	/**
 	 * @brief Asserts if a name is valid.

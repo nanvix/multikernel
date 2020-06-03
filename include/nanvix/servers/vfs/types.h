@@ -22,27 +22,15 @@
  * SOFTWARE.
  */
 
-#define SPAWN_SERVER
+#ifndef NANVIX_SERVERS_VFS_TYPES_H_
+#define NANVIX_SERVERS_VFS_TYPES_H_
 
-#include <nanvix/servers/spawn.h>
-#include <nanvix/sys/semaphore.h>
+	#include <posix/stdint.h>
 
-/* Import definitions. */
-extern int hello_server(struct nanvix_semaphore *);
-extern int name_server(struct nanvix_semaphore *);
-extern int rmem_server(struct nanvix_semaphore *);
+	/**
+	 * @brief Block Number
+	 */
+	typedef uint32_t block_t;
 
-/**
- * @brief Number of servers.
- */
-#define SPAWN_SERVERS_NUM 2
+#endif /* NANVIX_SERVERS_VFS_TYPES_H_ */
 
-/**
- * @brief Table of servers.
- */
-const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_0, .main = name_server },
-	{ .ring = SPAWN_RING_1, .main = rmem_server },
-};
-
-SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, "spawn0")

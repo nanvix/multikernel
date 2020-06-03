@@ -20,15 +20,14 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#define __NEED_RMEM_CACHE
+#define __NEED_MM_RMEM_CACHE
 
-#include <nanvix/runtime/rmem.h>
+#include <nanvix/runtime/mm.h>
 #include <nanvix/sys/page.h>
-#include <nanvix/const.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
-#include <stddef.h>
-#include <stdint.h>
+#include <posix/stddef.h>
+#include <posix/stdint.h>
 
 /**
  * @brief Length of remote memory table.

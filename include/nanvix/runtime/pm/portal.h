@@ -25,8 +25,27 @@
 #ifndef NANVIX_RUNTIME_PORTAL_H_
 #define NANVIX_RUNTIME_PORTAL_H_
 
-	#include <nanvix/sys/portal.h>
+	#ifndef __NEED_PORTAL_SERVICE
+	#define "do not include this file"
+	#endif
+
 	#include <posix/sys/types.h>
+
+	/**
+	 * @brief Initializes the Named Portal facility.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_portal_setup(void);
+
+	/**
+	 * @brief Shuts down named Portal facility.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_portal_cleanup(void);
 
 	/**
 	 * @brief Creates a portal.

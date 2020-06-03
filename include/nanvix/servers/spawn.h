@@ -25,44 +25,12 @@
 #ifndef NANVIX_SERVERS_SPAWN_H_
 #define NANVIX_SERVERS_SPAWN_H_
 
+	#ifndef __NEED_SPAWN_SERVER
+	#error "do not include this file"
+	#endif
+
 	#include <nanvix/sys/semaphore.h>
-
-	/**
-	 * @name Number of Servers
-	 */
-	/**@{*/
-	#define SPAWNERS_NUM      2 /**< Spawn Servers */
-	#define NAME_SERVERS_NUM  1 /**< Name Servers  */
-	#define RMEM_SERVERS_NUM  2 /**< RMem Servers  */
-	/**@}*/
-
-	/**
-	 * @name Map of Spawn Servers
-	 */
-	/**@{*/
-	#if defined(__mppa256__)
-		#define SPAWN_SERVER_0_NODE 0 /**< Spawn Server 0 */
-		#define SPAWN_SERVER_1_NODE 4 /**< Spawn Server 1 */
-	#elif defined(__unix64__)
-		#define SPAWN_SERVER_0_NODE 0 /**< Spawn Server 0 */
-		#define SPAWN_SERVER_1_NODE 1 /**< Spawn Server 1 */
-	#endif
-	/**@}*/
-
-	/**
-	 * @name Map of Servers
-	 */
-	/**@{*/
-	#if defined(__mppa256__)
-		#define NAME_SERVER_NODE   0 /**< Name Server */
-		#define RMEM_SERVER_0_NODE 4 /**< RMem Server */
-		#define RMEM_SERVER_1_NODE 0 /**< RMem Server */
-	#elif defined(__unix64__)
-		#define NAME_SERVER_NODE    0 /**< Name Server  */
-		#define RMEM_SERVER_0_NODE  1 /**< RMem Server  */
-		#define RMEM_SERVER_1_NODE  0 /**< RMem Server  */
-	#endif
-	/**@}*/
+	#include <nanvix/config.h>
 
 	/**
 	 * @name Spawn rings.
@@ -73,7 +41,8 @@
 	#define SPAWN_RING_2 2
 	#define SPAWN_RING_3 3
 	#define SPAWN_RING_4 4
-	#define SPAWN_RING_X 5
+	#define SPAWN_RING_5 5
+	#define SPAWN_RING_X 6
 	/**@}*/
 
 	/**
@@ -84,7 +53,7 @@
 	/**
 	 * @brief Last spawn ring.
 	 */
-	#define SPAWN_RING_LAST SPAWN_RING_4
+	#define SPAWN_RING_LAST SPAWN_RING_5
 
 #ifdef SPAWN_SERVER
 

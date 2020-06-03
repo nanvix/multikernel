@@ -22,16 +22,15 @@
  * SOFTWARE.
  */
 
-#define __NAME_SERVICE
+/* Must come first. */
+#define __NEED_LIMITS_PM
+#define __NEED_NAME_SERVER
 
+#include <nanvix/limits/pm.h>
+#include <nanvix/runtime/stdikc.h>
 #include <nanvix/servers/message.h>
 #include <nanvix/servers/name.h>
-#include <nanvix/servers/spawn.h>
-#include <nanvix/runtime/stdikc.h>
-#include <nanvix/runtime/runtime.h>
-#include <nanvix/sys/mailbox.h>
 #include <nanvix/sys/semaphore.h>
-#include <nanvix/limits.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 #include <posix/stdint.h>
@@ -62,7 +61,7 @@ static struct {
 	int nodenum;                     /**< NoC node.                 */
 	char name[NANVIX_PROC_NAME_MAX]; /**< Process name.             */
 	uint64_t timestamp;              /**< Timestamp for heartbeats. */
-} procs[NANVIX_PROC_MAX];
+} procs[NANVIX_PNAME_MAX];
 
 /**
  * @brief Server stats.
@@ -84,7 +83,7 @@ static struct
 static void do_name_init(struct nanvix_semaphore *lock)
 {
 	/* Initialize lookup table. */
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		procs[i].nodenum = -1;
 		procs[i].timestamp = 0;
@@ -98,7 +97,6 @@ static void do_name_init(struct nanvix_semaphore *lock)
 	/* Unblock spawner. */
 	uprintf("[nanvix][name] server alive");
 	uprintf("[nanvix][name] listening to mailbox %d", inbox);
-	uprintf("[nanvix][name] syncing in sync %d", stdsync_get());
 	uprintf("[nanvix][name] attached to node %d", knode_get_num());
 
 	nanvix_semaphore_up(lock);
@@ -136,7 +134,7 @@ static int do_name_lookup(
 		return (ret);
 
 	/* Search for portal name. */
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		/* Found. */
 		if (!ustrcmp(name, procs[i].name))
@@ -183,18 +181,18 @@ static int do_name_link(const struct name_message *request)
 		return (ret);
 
 	/* No entry available. */
-	if (nr_registration >= NANVIX_PROC_MAX)
+	if (nr_registration >= NANVIX_PNAME_MAX)
 		return (-EINVAL);
 
 	/* Check that the name is not already used */
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		if (ustrcmp(procs[i].name, name) == 0)
 			return (-EINVAL);
 	}
 
 	/* Find index. */
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		/* Found. */
 		if (procs[i].nodenum == -1)
@@ -242,7 +240,7 @@ static int do_name_unlink(const struct name_message *request)
 		return (ret);
 
 	/* Search for name */
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		/* Skip invalid entries. */
 		if (procs[i].nodenum == -1)
@@ -281,14 +279,14 @@ static int do_name_heartbeat(const struct name_message *request)
 	timestamp = request->op.heartbeat.timestamp;
 	nodenum = request->header.source;
 
-	name_debug("heartbeat nodenum=%d name=%l", nodenum, timestamp);
+	name_debug("heartbeat nodenum=%d timestap=%l", nodenum, timestamp);
 
 	/* Invalid node number. */
 	if (!proc_is_valid(nodenum))
 		return (-EINVAL);
 
 	/* Record timestamp. */
-	for (int i = 0; i < NANVIX_PROC_MAX; i++)
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		if (procs[i].nodenum == nodenum)
 		{

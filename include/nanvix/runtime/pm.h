@@ -25,6 +25,31 @@
 #ifndef NANVIX_RUNTIME_PM_H_
 #define NANVIX_RUNTIME_PM_H_
 
+	/* Must come first. */
+	#define __NEED_NAME_SERVICE
+	#define __NEED_MAILBOX_SERVICE
+	#define __NEED_PORTAL_SERVICE
+
+	#include <nanvix/runtime/stdikc.h>
 	#include <nanvix/runtime/pm/name.h>
+	#include <nanvix/runtime/pm/mailbox.h>
+	#include <nanvix/runtime/pm/portal.h>
+
+	/**
+	 * @brief Gets the name of the process.
+	 *
+	 * @returns The name of the calling process.
+	 */
+	extern const char *nanvix_getpname(void);
+
+	/**
+	 * @brief Sets the name of the process.
+	 *
+	 * @param pname Process name.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int nanvix_setpname(const char *pname);
 
 #endif /* NANVIX_RUNTIME_PM_H_ */

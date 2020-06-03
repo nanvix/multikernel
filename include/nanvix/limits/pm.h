@@ -25,11 +25,47 @@
 #ifndef NANVIX_LIMITS_PM_H_
 #define NANVIX_LIMITS_PM_H_
 
-	#include <nanvix/sys/noc.h>
+	#ifndef __NEED_LIMITS_PM
+	#error "do not include this file"
+	#endif
+
+	#include <nanvix/sys/portal.h>
+	#include <nanvix/sys/mailbox.h>
 
 	/**
-	 * @brief Number of NoC nodes.
+	 * @brief Maximum number of processes.
 	 */
-	#define NANVIX_PROC_MAX PROCESSOR_NOC_NODES_NUM
+	#define NANVIX_PROC_MAX PROCESSOR_CCLUSTERS_NUM
+
+	/**
+	 * @brief Maximum number of names for processes.
+	 */
+	#define NANVIX_PNAME_MAX 256
+
+	/**
+	 * @name Limits on Naming Service
+	 */
+	/**@{*/
+	#define NANVIX_PROC_NAME_MAX 64 /**< Maximum length of a process name. */
+	/**@}*/
+
+	/**
+	 * @name Limits on Named Mailboxes
+	 */
+	/**@{*/
+	#define NANVIX_MAILBOX_MESSAGE_SIZE KMAILBOX_MESSAGE_SIZE /**< Maximum size for a mailbox message.             */
+	#define NANVIX_MAILBOX_MAX          KMAILBOX_MAX          /**< Maximum number of mailboxes that can be opened. */
+	/**@}*/
+
+	/**
+	 * @name Limits on Named Portals
+	 */
+	/**@{*/
+	#define NANVIX_PORTAL_MAX KPORTAL_MAX /**< Maximum number of portals that can be opened. */
+
+	/**
+	 * @brief Maximum number of active connections in a server.
+	 */
+	#define NANVIX_CONNECTIONS_MAX NANVIX_PROC_MAX
 
 #endif /* NANVIX_LIMITS_PM_H_ */

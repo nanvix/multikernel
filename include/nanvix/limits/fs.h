@@ -22,31 +22,26 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_LIMITS_NAME_H_
-#define NANVIX_LIMITS_NAME_H_
+#ifndef NANVIX_LIMITS_FS_H_
+#define NANVIX_LIMITS_FS_H_
 
-	#include <nanvix/sys/portal.h>
-
-	/**
-	 * @name Limits on Naming Service
-	 */
-	/**@{*/
-	#define NANVIX_PROC_NAME_MAX 64 /**< Maximum length of a process name. */
-	/**@}*/
+	#ifndef __NEED_LIMITS_FS
+	#error "do not include this file"
+	#endif
 
 	/**
-	 * @name Limits on Named Mailboxes
+	 * @brief Maximum Size for a File
 	 */
-	/**@{*/
-	#define NANVIX_MAILBOX_MESSAGE_SIZE KMAILBOX_MESSAGE_SIZE /**< Maximum size for a mailbox message.             */
-	#define NANVIX_MAILBOX_MAX          KMAILBOX_MAX          /**< Maximum number of mailboxes that can be opened. */
-	/**@}*/
+	#define NANVIX_MAX_FILE_SIZE (64*1024*1024)
 
 	/**
-	 * @name Limits on Named Portals
+	 * @brief Maximum of Opened Files for a Process
 	 */
-	/**@{*/
-	#define NANVIX_PORTAL_MAX KPORTAL_MAX /**< Maximum number of portals that can be opened. */
-	/**@}*/
+	#define NANVIX_OPEN_MAX 16
 
-#endif /* NANVIX_LIMITS_NAME_H_ */
+	/**
+	 * @brief Maximum Name for a File
+	 */
+	#define NANVIX_NAME_MAX 16
+
+#endif /* NANVIX_LIMITS_FS_H_ */

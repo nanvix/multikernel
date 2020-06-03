@@ -22,6 +22,8 @@ tags
 *.swp
 *.swo
 *.vscode/
+.clangd/
+*.json
 
 # KLib Headers
 include/nanvix/barelib.h
@@ -38,13 +40,24 @@ include/nanvix/cc.h
 include/nanvix/const.h
 include/nanvix/hal.h
 include/nanvix/hlib.h
-include/posix/
+include/posix/sys/_intsup.h
+include/posix/sys/features.h
+include/posix/sys/types.h
+include/posix/decl.h
+include/posix/errno.h
+include/posix/stdarg.h
+include/posix/stdbool.h
+include/posix/stddef.h
+include/posix/stdint.h
+
 
 # Kernel Headers
-include/dev/
+include/dev/net/
+include/dev/pci.h
 include/nanvix/kernel/
 
 # Nanvix Library
+include/nanvix/runtime/barrier.h
 include/nanvix/runtime/stdikc.h
 include/nanvix/sys/
 
@@ -52,4 +65,4 @@ include/nanvix/sys/
 include/nanvix/ulib.h
 
 # Excludes
-!img/*
+!img/*.img

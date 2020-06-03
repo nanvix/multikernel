@@ -22,12 +22,11 @@
  * SOFTWARE.
  */
 
-#define __NEED_MM_STUB
+#define __NEED_MM_RMEM_STUB
+#define __NEED_SPAWN_SERVER
 
-#include <nanvix/servers/spawn.h>
 #include <nanvix/runtime/runtime.h>
-#include <nanvix/runtime/rmem.h>
-#include <nanvix/sys/noc.h>
+#include <nanvix/servers/spawn.h>
 #include <nanvix/ulib.h>
 
 /**
@@ -39,8 +38,13 @@ int nanvix_shutdown(void)
 	/* Broadcast shutdown signal. */
 	if (kcluster_get_num() == PROCESSOR_CLUSTERNUM_LEADER)
 	{
+		uprintf("[nanvix][%d] shutting down NOW",
+			PROCESSOR_CLUSTERNUM_LEADER
+		);
 		__runtime_setup(SPAWN_RING_LAST);
 
+		uassert(nanvix_shm_shutdown() == 0);
+		uassert(nanvix_vfs_shutdown() == 0);
 		uassert(nanvix_rmem_shutdown() == 0);
 		uassert(name_shutdown() == 0);
 	}

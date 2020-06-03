@@ -28,88 +28,47 @@
 
 # Compiler Options
 ifneq ($(LIBLWIP),)
-CFLAGS += -I $(INCDIR)/posix
+export CFLAGS += -I $(INCDIR)/posix
 endif
 
 # Modules
-MODULES := $(LIBDIR)/nanvix-hello.$(OBJ_SUFFIX).a \
-           $(LIBDIR)/nanvix-rmem.$(OBJ_SUFFIX).a  \
-           $(LIBDIR)/nanvix-name.$(OBJ_SUFFIX).a
+export MODULES := $(LIBDIR)/nanvix-hello.$(OBJ_SUFFIX).a \
+                  $(LIBDIR)/nanvix-rmem.$(OBJ_SUFFIX).a  \
+                  $(LIBDIR)/nanvix-shm.$(OBJ_SUFFIX).a   \
+                  $(LIBDIR)/nanvix-name.$(OBJ_SUFFIX).a  \
+                  $(LIBDIR)/nanvix-vfs.$(OBJ_SUFFIX).a
 
 # Libraries
-LIBS := -Wl,--whole-archive
-LIBS += $(LIBDIR)/$(LIBHAL)
-LIBS += $(LIBDIR)/$(LIBKERNEL)
-LIBS += -Wl,--no-whole-archive
-LIBS += $(MODULES)
-LIBS += $(LIBDIR)/$(LIBRUNTIME)
-LIBS += $(LIBDIR)/$(LIBC)
-LIBS += $(LIBDIR)/$(LIBNANVIX)
+export LIBS := -Wl,--whole-archive
+export LIBS += $(LIBDIR)/$(LIBHAL)
+export LIBS += $(LIBDIR)/$(LIBKERNEL)
+export LIBS += -Wl,--no-whole-archive
+export LIBS += $(MODULES)
+export LIBS += $(LIBDIR)/$(LIBRUNTIME)
+export LIBS += $(LIBDIR)/$(LIBC)
+export LIBS += $(LIBDIR)/$(LIBNANVIX)
 ifneq ($(LIBLWIP),)
-LIBS += $(LIBDIR)/$(LIBLWIP)
+export LIBS += $(LIBDIR)/$(LIBLWIP)
 endif
-LIBS += $(LIBDIR)/$(BARELIB) $(THEIR_LIBS)
+export LIBS += $(LIBDIR)/$(BARELIB) $(THEIR_LIBS)
 
 #===============================================================================
-# Binaries Sources and Objects
+# Sources
 #===============================================================================
 
 # C Source Files
-SRC = $(wildcard *.c)
-
-# Object Files
-OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)
+export SRC = $(wildcard $(CURDIR)/*.c)
 
 #===============================================================================
 
-ifeq ($(TARGET),unix64)
-LINKER_SCRIPT=
-else
-LINKER_SCRIPT = -L $(LINKERDIR)/ -T link.ld
-endif
-
 # Builds All Object Files
-all: spawn0 spawn1
-
-spawn0: main.$(OBJ_SUFFIX).o barrier.$(OBJ_SUFFIX).o spawn0.$(OBJ_SUFFIX).o
-ifeq ($(VERBOSE), no)
-	@echo [CC] nanvix-$@.$(OBJ_SUFFIX)
-	@$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
-else
-	$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
-endif
-
-spawn1: main.$(OBJ_SUFFIX).o barrier.$(OBJ_SUFFIX).o spawn1.$(OBJ_SUFFIX).o
-ifeq ($(VERBOSE), no)
-	@echo [CC] nanvix-$@.$(OBJ_SUFFIX)
-	@$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
-else
-	$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
-endif
+all:
+	cd $(TARGET) && $(MAKE) all
 
 # Cleans All Object Files
 clean:
-ifeq ($(VERBOSE), no)
-	@echo [CLEAN] $(OBJ)
-	@rm -rf $(OBJ)
-else
-	rm -rf $(OBJ)
-endif
+	cd $(TARGET) && $(MAKE) clean
 
 # Cleans Everything
 distclean: clean
-ifeq ($(VERBOSE), no)
-	@echo [CLEAN] nanvix-spawn?.$(OBJ_SUFFIX)
-	@rm -rf $(BINDIR)/nanvix-spawn?.$(OBJ_SUFFIX)
-else
-	rm -rf $(BINDIR)/nanvix-spawn?.$(OBJ_SUFFIX)
-endif
-
-# Builds a C source file.
-%.$(OBJ_SUFFIX).o: %.c
-ifeq ($(VERBOSE), no)
-	@echo [CC] $@
-	@$(CC) $(CFLAGS) $< -c -o $@
-else
-	$(CC) $(CFLAGS) $< -c -o $@
-endif
+	cd $(TARGET) && $(MAKE) distclean

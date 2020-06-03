@@ -25,6 +25,10 @@
 #ifndef NANVIX_RUNTIME_PM_NAME_H_
 #define NANVIX_RUNTIME_PM_NAME_H_
 
+	#ifndef __NEED_NAME_SERVICE
+	#define "do not include this file"
+	#endif
+
 #ifdef __NAME_SERVICE
 
 	#include <nanvix/servers/name.h>
