@@ -35,7 +35,7 @@ export SRC += $(wildcard $(CURDIR)/common/*.c)
 all: all-name all-rmem all-hello all-shm all-vfs
 
 # Cleans Build Objects
-clean: clean-name clean-rmem clean-hello clean-shm clean-fs
+clean: clean-name clean-rmem clean-hello clean-shm clean-vfs
 
 # Cleans Everything
 distclean: distclean-name distclean-rmem distclean-hello distclean-shm \
