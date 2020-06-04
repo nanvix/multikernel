@@ -40,6 +40,12 @@ export RELEASE ?= no
 # Installation Prefix
 export PREFIX ?= $(HOME)
 
+# Use Docker?
+export DOCKER ?= no
+
+# Stall regression tests?
+export SUPPRESS_TESTS ?= no
+
 # Extras
 export ADDONS ?=
 
@@ -75,7 +81,7 @@ export LIBRUNTIME := libruntime-$(TARGET).a
 # Target-Specific Make Rules
 #===============================================================================
 
-include $(MAKEDIR)/makefile
+include $(MAKEDIR)/makefile.multikernel
 
 #===============================================================================
 # Toolchain Configuration
@@ -134,7 +140,7 @@ distclean: distclean-target
 # Contrib Install and Uninstall Rules
 #===============================================================================
 
-include $(BUILDDIR)/makefile.contrib
+include $(BUILDDIR)/makefile.multikernel
 
 #===============================================================================
 # Install and Uninstall Rules
