@@ -23,7 +23,6 @@
  */
 
 /* Must come first. */
-#include "nanvix/servers/vfs/const.h"
 #define __VFS_SERVER
 
 #include <nanvix/servers/connection.h>
@@ -457,7 +456,9 @@ static int do_vfs_server_loop(void)
 		uassert(kmailbox_close(outbox) == 0);
 	}
 
+#ifdef __SUPPRESS_TESTS
 	vfs_test();
+#endif
 
 	return (0);
 }
