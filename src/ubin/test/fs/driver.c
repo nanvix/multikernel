@@ -36,7 +36,7 @@ extern struct test tests_vfs_fault[];
  */
 void test_vfs(void)
 {
-#ifdef VFS_SERVER_NODE
+#ifdef __NANVIX_HAS_VFS_SERVER
 
 	/* Run fault tests. */
 	for (int i = 0; tests_vfs_fault[i].test_fn != NULL; i++)

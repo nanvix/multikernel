@@ -32,7 +32,7 @@
 #include <posix/unistd.h>
 #include "../test.h"
 
-#ifdef VFS_SERVER_NODE
+#ifdef __NANVIX_HAS_VFS_SERVER
 
 /**
  * @brief Number of Iterations

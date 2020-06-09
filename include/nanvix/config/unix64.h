@@ -26,6 +26,17 @@
 #define NANVIX_CONFIG_UNIX64_H_
 
 	/**
+	 * @brief Available Servers
+	 */
+	/**@{*/
+	#define __NANVIX_HAS_SPAWN_SERVER /**< Spawn Server */
+	#define __NANVIX_HAS_NAME_SERVER  /**< Name Server  */
+	#define __NANVIX_HAS_RMEM_SERVER  /**< RMem Server  */
+	#define __NANVIX_HAS_SHM_SERVER   /**< SHmem Server */
+	#define __NANVIX_HAS_VFS_SERVER   /**< VFS Server   */
+	/**@}*/
+
+	/**
 	 * @name Number of Servers
 	 */
 	/**@{*/

@@ -31,7 +31,7 @@
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 
-#ifdef VFS_SERVER_NODE
+#ifdef __NANVIX_HAS_VFS_SERVER
 
 /**
  * @brief Connection to VFSem Server.
@@ -489,7 +489,7 @@ ssize_t nanvix_vfs_write(int fd, const void *buf, size_t n)
  */
 int nanvix_vfs_shutdown(void)
 {
-#ifdef VFS_SERVER_NODE
+#ifdef __NANVIX_HAS_VFS_SERVER
 
 	struct vfs_message msg;
 
@@ -523,7 +523,7 @@ int nanvix_vfs_shutdown(void)
  */
 int __nanvix_vfs_setup(void)
 {
-#ifdef VFS_SERVER_NODE
+#ifdef __NANVIX_HAS_VFS_SERVER
 
 	/* Nothing to do.  */
 	if (server.initialized)
@@ -562,7 +562,7 @@ int __nanvix_vfs_setup(void)
 int __nanvix_vfs_cleanup(void)
 {
 
-#ifdef VFS_SERVER_NODE
+#ifdef __NANVIX_HAS_VFS_SERVER
 
 	int ret;
 
