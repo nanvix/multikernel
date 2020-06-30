@@ -57,6 +57,11 @@ static struct block *freep = NULL;
  * @brief Frees allocated memory.
  *
  * @param ptr Memory area to free.
+ *
+ * @bug FIXME In some targets, like MPPA-256, the TLB shootdown
+ * is not supported. So, for now, it is unsafe to effectively release
+ * underlying memory. See issue:
+ * https://github.com/nanvix/multikernel/issues/214.
  */
 void nanvix_free(void *ptr)
 {
