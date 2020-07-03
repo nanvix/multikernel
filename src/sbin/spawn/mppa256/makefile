@@ -22,59 +22,43 @@
 # SOFTWARE.
 #
 
+include $(BUILDDIR)/makefile.config
+
 #===============================================================================
 # Binaries Sources and Objects
 #===============================================================================
 
+# Binaries
+SPAWN0_EXEC = nanvix-spawn0.$(OBJ_SUFFIX)
+SPAWN1_EXEC = nanvix-spawn1.$(OBJ_SUFFIX)
+
+# Source Files
+SPAWN0_SRC = $(SRC) spawn0.c
+SPAWN1_SRC = $(SRC) spawn1.c
+
 # Object Files
-OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)
+SPAWN0_OBJ = $(SPAWN0_SRC:.c=.$(OBJ_SUFFIX).o)
+SPAWN1_OBJ = $(SPAWN1_SRC:.c=.$(OBJ_SUFFIX).o)
+
+#===============================================================================
+# Intermediate rules 
+#===============================================================================
+
+# Builds All Object Files
+all-spawn:
+	$(MAKE) all OBJ="$(SPAWN0_OBJ)" EXEC=$(SPAWN0_EXEC)
+	$(MAKE) all OBJ="$(SPAWN1_OBJ)" EXEC=$(SPAWN1_EXEC)
+
+# Cleans All Object Files
+clean-spawn:
+	$(MAKE) clean OBJ="$(SPAWN0_OBJ)" EXEC=$(SPAWN0_EXEC)
+	$(MAKE) clean OBJ="$(SPAWN1_OBJ)" EXEC=$(SPAWN1_EXEC)
+
+# Cleans Everything
+distclean-spawn:
+	$(MAKE) distclean OBJ="$(SPAWN0_OBJ)" EXEC=$(SPAWN0_EXEC)
+	$(MAKE) distclean OBJ="$(SPAWN1_OBJ)" EXEC=$(SPAWN1_EXEC)
 
 #===============================================================================
 
-LINKER_SCRIPT = -L $(LINKERDIR)/ -T link.ld
-
-# Builds All Object Files
-all: spawn0 spawn1
-
-spawn0: $(OBJ) spawn0.$(OBJ_SUFFIX).o
-ifeq ($(VERBOSE), no)
-	@echo [CC] nanvix-$@.$(OBJ_SUFFIX)
-	@$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
-else
-	$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
-endif
-
-spawn1: $(OBJ) spawn1.$(OBJ_SUFFIX).o
-ifeq ($(VERBOSE), no)
-	@echo [CC] nanvix-$@.$(OBJ_SUFFIX)
-	@$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
-else
-	$(CC) $(LDFLAGS) $(LINKER_SCRIPT) -o $(BINDIR)/nanvix-$@.$(OBJ_SUFFIX) $^ $(LIBS)
-endif
-
-# Cleans All Object Files
-clean:
-ifeq ($(VERBOSE), no)
-	@echo [CLEAN] $(OBJ)
-	@rm -rf $(OBJ)
-else
-	rm -rf $(OBJ)
-endif
-
-# Cleans Everything
-distclean: clean
-ifeq ($(VERBOSE), no)
-	@echo [CLEAN] nanvix-spawn?.$(OBJ_SUFFIX)
-	@rm -rf $(BINDIR)/nanvix-spawn?.$(OBJ_SUFFIX)
-else
-	rm -rf $(BINDIR)/nanvix-spawn?.$(OBJ_SUFFIX)
-endif
-
-# Builds a C source file.
-%.$(OBJ_SUFFIX).o: %.c
-ifeq ($(VERBOSE), no)
-	@echo [CC] $@
-	@$(CC) $(CFLAGS) $< -c -o $@
-else
-	$(CC) $(CFLAGS) $< -c -o $@
-endif
+include $(BUILDDIR)/makefile.executable

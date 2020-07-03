@@ -23,8 +23,11 @@
 #
 
 #===============================================================================
-# Sources and Objects
+# Binaries Soucers and Objects
 #===============================================================================
+
+# Binary
+ARCHIVE = $(LIBRUNTIME)
 
 # C Source Files
 SRC = $(wildcard *.c)                        \
@@ -35,46 +38,9 @@ SRC = $(wildcard *.c)                        \
       $(wildcard mm/shm/*.c)                 \
       $(wildcard utils/*.c)
 
-#===============================================================================
 # Object Files
-#===============================================================================
-
 OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)
 
 #===============================================================================
 
-# Builds all object files.
-all: $(OBJ)
-ifeq ($(VERBOSE), no)
-	@echo [AR] $(LIBRUNTIME)
-	@$(AR) $(ARFLAGS) $(LIBDIR)/$(LIBRUNTIME) $(OBJ)
-else
-	$(AR) $(ARFLAGS) $(LIBDIR)/$(LIBRUNTIME) $(OBJ)
-endif
-
-# Cleans all object files.
-clean:
-ifeq ($(VERBOSE), no)
-	@echo [CLEAN] $(OBJ)
-	@rm -rf $(OBJ)
-else
-	rm -rf $(OBJ)
-endif
-
-# Cleans everything.
-distclean: clean
-ifeq ($(VERBOSE), no)
-	@echo [CLEAN] $(LIBRUNTIME)
-	@rm -rf $(LIBDIR)/$(LIBRUNTIME)
-else
-	rm -rf $(LIBDIR)/$(LIBRUNTIME)
-endif
-
-# Builds a C source file.
-%.$(OBJ_SUFFIX).o: %.c
-ifeq ($(VERBOSE), no)
-	@echo [CC] $@
-	@$(CC) $(CFLAGS) $< -c -o $@
-else
-	$(CC) $(CFLAGS) $< -c -o $@
-endif
+include $(BUILDDIR)/makefile.archive
