@@ -22,12 +22,12 @@
 # SOFTWARE.
 #
 
-# Module Name
-MODULE = nanvix-name.$(OBJ_SUFFIX).a
+#===============================================================================
+# Binaries Soucers and Objects
+#===============================================================================
 
-#===============================================================================
-# Sources and Objects
-#===============================================================================
+# Binary
+ARCHIVE = nanvix-name.$(OBJ_SUFFIX).a
 
 # C Source Files
 SRC += $(wildcard *.c)
@@ -37,38 +37,4 @@ OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)
 
 #===============================================================================
 
-# Builds All Object Files
-all: $(OBJ)
-ifeq ($(VERBOSE), no)
-	@echo [AR] $(MODULE)
-	@$(AR) $(ARFLAGS) $(LIBDIR)/$(MODULE) $(OBJ)
-else
-	$(AR) $(ARFLAGS) $(LIBDIR)/$(MODULE) $(OBJ)
-endif
-
-# Cleans All Object Files
-clean:
-ifeq ($(VERBOSE), no)
-	@echo [CLEAN] $(OBJ)
-	@rm -rf $(OBJ)
-else
-	rm -rf $(OBJ)
-endif
-
-# Cleans Everything
-distclean: clean
-ifeq ($(VERBOSE), no)
-	@echo [CLEAN] $(MODULE)
-	@rm -rf $(LIBDIR)/$(MODULE)
-else
-	rm -rf $(LIBDIR)/$(MODULE)
-endif
-
-# Builds a C Source file
-%.$(OBJ_SUFFIX).o: %.c
-ifeq ($(VERBOSE), no)
-	@echo [CC] $@
-	@$(CC) $(CFLAGS) $< -c -o $@
-else
-	$(CC) $(CFLAGS) $< -c -o $@
-endif
+include $(BUILDDIR)/makefile.archive

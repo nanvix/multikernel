@@ -26,35 +26,12 @@
 # Toolchain Configuration
 #===============================================================================
 
-# Compiler Options
-ifneq ($(LIBLWIP),)
-export CFLAGS += -I $(INCDIR)/posix
-endif
-
-# Modules
+# Modules Libraries
 export MODULES := $(LIBDIR)/nanvix-hello.$(OBJ_SUFFIX).a \
                   $(LIBDIR)/nanvix-rmem.$(OBJ_SUFFIX).a  \
                   $(LIBDIR)/nanvix-shm.$(OBJ_SUFFIX).a   \
                   $(LIBDIR)/nanvix-name.$(OBJ_SUFFIX).a  \
                   $(LIBDIR)/nanvix-vfs.$(OBJ_SUFFIX).a
-
-# Libraries
-export LIBS := -Wl,--whole-archive
-export LIBS += $(LIBDIR)/$(LIBHAL)
-export LIBS += $(LIBDIR)/$(LIBKERNEL)
-export LIBS += -Wl,--no-whole-archive
-export LIBS += $(MODULES)
-export LIBS += $(LIBDIR)/$(LIBRUNTIME)
-export LIBS += $(LIBDIR)/$(LIBC)
-export LIBS += $(LIBDIR)/$(LIBNANVIX)
-ifneq ($(LIBLWIP),)
-export LIBS += $(LIBDIR)/$(LIBLWIP)
-endif
-export LIBS += $(LIBDIR)/$(BARELIB) $(THEIR_LIBS)
-
-#===============================================================================
-# Sources
-#===============================================================================
 
 # C Source Files
 export SRC = $(wildcard $(CURDIR)/*.c)
@@ -63,12 +40,12 @@ export SRC = $(wildcard $(CURDIR)/*.c)
 
 # Builds All Object Files
 all:
-	cd $(TARGET) && $(MAKE) all
+	cd $(TARGET) && $(MAKE) all-spawn
 
 # Cleans All Object Files
 clean:
-	cd $(TARGET) && $(MAKE) clean
+	cd $(TARGET) && $(MAKE) clean-spawn
 
 # Cleans Everything
 distclean: clean
-	cd $(TARGET) && $(MAKE) distclean
+	cd $(TARGET) && $(MAKE) distclean-spawn
