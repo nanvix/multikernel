@@ -456,7 +456,7 @@ static int do_vfs_server_loop(void)
 		uassert(kmailbox_close(outbox) == 0);
 	}
 
-#ifdef __SUPPRESS_TESTS
+#ifndef __SUPPRESS_TESTS
 	vfs_test();
 #endif
 
