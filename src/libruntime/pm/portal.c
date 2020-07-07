@@ -206,7 +206,7 @@ int nanvix_portal_create(const char *name)
 	nodenum = knode_get_num();
 
 	/* Link name. */
-	if (name_link(nodenum, name) != 0)
+	if (nanvix_name_link(nodenum, name) != 0)
 		goto error0;
 
 	/* Initialize portal. */
@@ -282,7 +282,7 @@ int nanvix_portal_open(const char *name, int port)
 		return (-EINVAL);
 
 	/* Resolve name. */
-	if ((nodenum = name_lookup(name)) < 0)
+	if ((nodenum = nanvix_name_lookup(name)) < 0)
 		return (-EAGAIN);
 
 	/* Allocate a portal. */
@@ -469,7 +469,7 @@ int nanvix_portal_unlink(int id)
 		return (-EINVAL);
 
 	/* Unlink name. */
-	if (name_unlink(portals[id].name) != 0)
+	if (nanvix_name_unlink(portals[id].name) != 0)
 		return (-EAGAIN);
 
 	/* Not the owner. */

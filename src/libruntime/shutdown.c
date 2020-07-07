@@ -46,7 +46,7 @@ int nanvix_shutdown(void)
 		uassert(nanvix_shm_shutdown() == 0);
 		uassert(nanvix_vfs_shutdown() == 0);
 		uassert(nanvix_rmem_shutdown() == 0);
-		uassert(name_shutdown() == 0);
+		uassert(nanvix_name_shutdown() == 0);
 	}
 
 	return (0);

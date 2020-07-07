@@ -130,7 +130,7 @@ static int do_name_lookup(
 	name_debug("lookup name=%s", name);
 
 	/* Invalid name. */
-	if ((ret = name_is_valid(name)) < 0)
+	if ((ret = nanvix_name_is_valid(name)) < 0)
 		return (ret);
 
 	/* Search for portal name. */
@@ -177,7 +177,7 @@ static int do_name_link(const struct name_message *request)
 		return (-EINVAL);
 
 	/* Invalid name. */
-	if ((ret = name_is_valid(name)) < 0)
+	if ((ret = nanvix_name_is_valid(name)) < 0)
 		return (ret);
 
 	/* No entry available. */
@@ -236,7 +236,7 @@ static int do_name_unlink(const struct name_message *request)
 	name_debug("unlink name=%s", name);
 
 	/* Invalid name. */
-	if ((ret = name_is_valid(name)) < 0)
+	if ((ret = nanvix_name_is_valid(name)) < 0)
 		return (ret);
 
 	/* Search for name */

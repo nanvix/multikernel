@@ -56,7 +56,7 @@ int __main2(int argc, const char *argv[])
 
 		__main3(argc, argv);
 
-		uassert(name_unlink(pname) == 0);
+		uassert(nanvix_name_unlink(pname) == 0);
 		uassert(stdsync_fence() == 0);
 
 		nanvix_shutdown();

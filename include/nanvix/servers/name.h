@@ -111,7 +111,7 @@
 	 * @returns Zero if the name pointed to by @p name is valid and a
 	 * negative error code otherwise.
 	 */
-	static inline int name_is_valid(const char *name)
+	static inline int nanvix_name_is_valid(const char *name)
 	{
 		/* Invalid name. */
 		if (name == NULL)

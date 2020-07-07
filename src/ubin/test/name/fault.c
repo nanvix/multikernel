@@ -42,8 +42,8 @@
 static void test_name_invalid_link(void)
 {
 	/* Link invalid names. */
-	TEST_ASSERT(name_link(-1, "missing_name") < 0);
-	TEST_ASSERT(name_link(1000000, "missing_name") < 0);
+	TEST_ASSERT(nanvix_name_link(-1, "missing_name") < 0);
+	TEST_ASSERT(nanvix_name_link(1000000, "missing_name") < 0);
 }
 
 /*============================================================================*
@@ -63,9 +63,9 @@ static void test_name_bad_link(void)
 	umemset(pathname, 1, NANVIX_PROC_NAME_MAX + 1);
 
 	/* Link invalid names. */
-	TEST_ASSERT(name_link(nodenum, pathname) < 0);
-	TEST_ASSERT(name_link(nodenum, NULL) < 0);
-	TEST_ASSERT(name_link(nodenum, "") < 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, pathname) < 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, NULL) < 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, "") < 0);
 }
 
 /*============================================================================*
@@ -84,9 +84,9 @@ static void test_name_double_link(void)
 
 	/* Link name. */
 	ustrcpy(pathname, "cool-name");
-	TEST_ASSERT(name_link(nodenum, pathname) == 0);
-	TEST_ASSERT(name_link(nodenum, pathname) < 0);
-	TEST_ASSERT(name_unlink(pathname) == 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, pathname) == 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, pathname) < 0);
+	TEST_ASSERT(nanvix_name_unlink(pathname) == 0);
 }
 
 /*============================================================================*
@@ -103,9 +103,9 @@ static void test_name_invalid_unlink(void)
 	umemset(pathname, 1, NANVIX_PROC_NAME_MAX + 1);
 
 	/* Unlink invalid names. */
-	TEST_ASSERT(name_unlink(pathname) < 0);
-	TEST_ASSERT(name_unlink(NULL) < 0);
-	TEST_ASSERT(name_unlink("") < 0);
+	TEST_ASSERT(nanvix_name_unlink(pathname) < 0);
+	TEST_ASSERT(nanvix_name_unlink(NULL) < 0);
+	TEST_ASSERT(nanvix_name_unlink("") < 0);
 }
 
 /*============================================================================*
@@ -122,9 +122,9 @@ static void test_name_bad_unlink(void)
 	nodenum = knode_get_num();
 
 	/* Unlink missing name. */
-	TEST_ASSERT(name_link(nodenum, "cool-name") == 0);
-	TEST_ASSERT(name_unlink("missing_name") < 0);
-	TEST_ASSERT(name_unlink("cool-name") == 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, "cool-name") == 0);
+	TEST_ASSERT(nanvix_name_unlink("missing_name") < 0);
+	TEST_ASSERT(nanvix_name_unlink("cool-name") == 0);
 }
 
 /*============================================================================*
@@ -141,9 +141,9 @@ static void test_name_double_unlink(void)
 	nodenum = knode_get_num();
 
 	/* Unlink missing name. */
-	TEST_ASSERT(name_link(nodenum, "cool-name") == 0);
-	TEST_ASSERT(name_unlink("cool-name") == 0);
-	TEST_ASSERT(name_unlink("cool-name") < 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, "cool-name") == 0);
+	TEST_ASSERT(nanvix_name_unlink("cool-name") == 0);
+	TEST_ASSERT(nanvix_name_unlink("cool-name") < 0);
 }
 
 /*============================================================================*
@@ -156,7 +156,7 @@ static void test_name_double_unlink(void)
 static void test_name_bad_lookup(void)
 {
 	/* Lookup missing name. */
-	TEST_ASSERT(name_lookup("missing_name") < 0);
+	TEST_ASSERT(nanvix_name_lookup("missing_name") < 0);
 }
 
 /*============================================================================*
@@ -173,9 +173,9 @@ static void test_name_invalid_lookup(void)
 	umemset(pathname, 1, NANVIX_PROC_NAME_MAX + 1);
 
 	/* Lookup invalid names. */
-	TEST_ASSERT(name_lookup(pathname) < 0);
-	TEST_ASSERT(name_lookup(NULL) < 0);
-	TEST_ASSERT(name_lookup("") < 0);
+	TEST_ASSERT(nanvix_name_lookup(pathname) < 0);
+	TEST_ASSERT(nanvix_name_lookup(NULL) < 0);
+	TEST_ASSERT(nanvix_name_lookup("") < 0);
 }
 
 

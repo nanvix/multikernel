@@ -71,7 +71,7 @@ int nanvix_setpname(const char *pname)
 	nodenum = knode_get_num();
 
 	/* Link process name. */
-	if ((ret = name_link(nodenum, pname)) < 0)
+	if ((ret = nanvix_name_link(nodenum, pname)) < 0)
 		return (ret);
 
 	ustrcpy(_pname, pname);
