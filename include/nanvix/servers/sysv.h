@@ -32,6 +32,7 @@
 
 #if defined(__NEED_SYSV_SERVER) || defined(__SYSV_SERVER)
 
+	#include <nanvix/servers/sysv/mqueue.h>
 	#include <nanvix/servers/message.h>
 
 	/**
@@ -59,11 +60,14 @@
 		 */
 		union
 		{
+			struct msg_message msg;
+
 			/**
 			 * @brief Return Message
 			 */
 			struct
 			{
+				int msgid;  /**< ID of Message Queue. */
 				int status; /**< Status Code          */
 			} ret;
 		} payload;

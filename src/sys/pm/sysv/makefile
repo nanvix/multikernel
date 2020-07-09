@@ -31,6 +31,7 @@ ARCHIVE = nanvix-sysv.$(OBJ_SUFFIX).a
 
 # C Source Files
 SRC += $(wildcard *.c)     \
+       $(wildcard msg/*.c)
 
 # Object Files
 OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)

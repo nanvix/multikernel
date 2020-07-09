@@ -47,6 +47,232 @@ static struct
 	-1, -1, -1, SYSV_SERVER_NAME
 };
 
+
+/* Import definitions. */
+extern void msg_test(void);
+
+/*============================================================================*
+ * do_sysv_server_get()                                                       *
+ *============================================================================*/
+
+/**
+ * @brief Handles a get request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_sysv_server_get(
+	const struct sysv_message *request,
+	struct sysv_message *response
+)
+{
+	int ret;
+	const pid_t pid = request->header.source;
+	const int connection = connect(pid);
+
+	((void) connection);
+	ret = do_msg_get(
+		request->payload.msg.op.get.key,
+		request->payload.msg.op.get.msgflg
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+	{
+		disconnect(pid);
+		return (ret);
+	}
+
+	response->payload.ret.msgid = ret;
+
+	return (ret);
+}
+
+/*============================================================================*
+ * do_sysv_server_close()                                                     *
+ *============================================================================*/
+
+/**
+ * @brief Handles a close request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_sysv_server_close(const struct sysv_message *request)
+{
+	int ret;
+	const pid_t pid = request->header.source;
+	const int connection = connect(pid);
+
+	((void) connection);
+	ret = do_msg_close(request->payload.msg.op.close.msgid);
+
+	/* Operation failed. */
+	if (ret < 0)
+	{
+		disconnect(pid);
+		return (ret);
+	}
+	return (ret);
+}
+
+/*============================================================================*
+ * do_sysv_server_send()                                                      *
+ *============================================================================*/
+
+/**
+ * @brief Handles a send request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_sysv_server_send(const struct sysv_message *request)
+{
+	int ret;
+	void *msgp;
+	const pid_t pid = request->header.source;
+	const int connection = connect(pid);
+
+	((void) connection);
+	ret = do_msg_send(
+		request->payload.msg.op.send.msgid,
+		&msgp,
+		request->payload.msg.op.send.msgsz,
+		request->payload.msg.op.send.msgflg
+	);
+
+	/**
+	 * Note that even though the operation may be failed, we guarantee
+	 * the correct protocol. In the return message we inform wether or
+	 * not the operation has succeeded.
+	 */
+
+	/* Allow remote write. */
+	uassert(
+		kportal_allow(
+			server.inportal,
+			request->header.source,
+			request->header.portal_port
+		) == 0
+	);
+
+	/* Read data in. */
+	uassert(
+		kportal_read(
+			server.inportal,
+			msgp,
+			request->payload.msg.op.send.msgsz
+		) == (ssize_t) request->payload.msg.op.send.msgsz
+	);
+
+	disconnect(pid);
+
+	return (ret);
+}
+
+/*============================================================================*
+ * do_sysv_server_receive()                                                   *
+ *============================================================================*/
+
+/**
+ * @brief Handles a receive request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_sysv_server_receive(const struct sysv_message *request)
+{
+	int ret;
+	int outportal;
+	int outbox;
+	void *msgp;
+	struct sysv_message msg;
+	const pid_t pid = request->header.source;
+	const int connection = connect(pid);
+
+	((void) connection);
+	ret = do_msg_receive(
+		request->payload.msg.op.receive.msgid,
+		&msgp,
+		request->payload.msg.op.receive.msgsz,
+		request->payload.msg.op.receive.msgtyp,
+		request->payload.msg.op.receive.msgflg
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+	{
+		disconnect(pid);
+		return (ret);
+	}
+
+	uassert((
+		outbox = kmailbox_open(
+			request->header.source,
+			request->header.mailbox_port
+		)) >= 0
+	);
+
+	/* Open portal to remote. */
+	uassert((outportal =
+		kportal_open(
+			knode_get_num(),
+			request->header.source,
+			request->header.portal_port)
+		) >= 0
+	);
+
+	/* Build operation header. */
+	message_header_build2(
+		&msg.header,
+		SYSV_ACK,
+		kcomm_get_port(outportal, COMM_TYPE_PORTAL)
+	);
+
+	/* Send acknowledge. */
+	uassert(
+		kmailbox_write(outbox,
+			&msg,
+			sizeof(struct sysv_message)
+		) == sizeof(struct sysv_message)
+	);
+
+	/* Write to remote. */
+	uassert(
+		kportal_write(
+			outportal,
+			msgp,
+			request->payload.msg.op.receive.msgsz
+		) == (ssize_t) request->payload.msg.op.receive.msgsz
+	);
+
+	/* House keeping. */
+	uassert(kportal_close(outportal) == 0);
+	uassert(kmailbox_close(outbox) == 0);
+
+	return (ret);
+}
+
 /*============================================================================*
  * sysv_loop()                                                                 *
  *============================================================================*/
@@ -88,6 +314,30 @@ static int do_sysv_server_loop(void)
 		/* Handle request. */
 		switch (request.header.opcode)
 		{
+			/* Get. */
+			case SYSV_MSG_GET:
+				ret = do_sysv_server_get(&request, &response);
+				reply = 1;
+				break;
+
+			/* Close. */
+			case SYSV_MSG_CLOSE:
+				ret = do_sysv_server_close(&request);
+				reply = 1;
+				break;
+
+			/* Send. */
+			case SYSV_MSG_SEND:
+				ret = do_sysv_server_send(&request);
+				reply = 1;
+				break;
+
+			/* Receive. */
+			case SYSV_MSG_RECEIVE:
+				ret = do_sysv_server_receive(&request);
+				reply = 1;
+				break;
+
 			/* Exit. */
 			case SYSV_EXIT:
 				shutdown = 1;
@@ -123,6 +373,11 @@ static int do_sysv_server_loop(void)
 		uassert(kmailbox_close(outbox) == 0);
 	}
 
+#ifndef __SUPPRESS_TESTS
+	uprintf("[nanvix][sysv] running self-tests...");
+	msg_test();
+#endif
+
 	return (0);
 }
 
@@ -151,6 +406,7 @@ static int do_sysv_server_startup(struct nanvix_semaphore *lock)
 		return (ret);
 
 	connections_setup();
+	do_msg_init();
 
 	uprintf("[nanvix][sysv] minix System V created");
 

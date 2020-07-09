@@ -68,4 +68,23 @@
 	 */
 	#define NANVIX_CONNECTIONS_MAX NANVIX_PROC_MAX
 
+/*============================================================================*
+ * System V Service                                                           *
+ *============================================================================*/
+
+	/**
+	 * @brief Maximum number of message queues.
+	 */
+	#define NANVIX_MSG_MAX 16
+
+	/**
+	 * @brief Maximum length for a message queue.
+	 */
+	#define NANVIX_MSG_LENGTH_MAX 16
+
+	/**
+	 * @brief Maximum size for a message.
+	 */
+	#define NANVIX_MSG_SIZE_MAX 256
+
 #endif /* NANVIX_LIMITS_PM_H_ */
