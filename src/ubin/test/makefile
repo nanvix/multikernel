@@ -37,6 +37,7 @@ SRC = $(wildcard *.c)              \
       $(wildcard fs/*.c)           \
       $(wildcard posix/*.c)        \
       $(wildcard shm/*.c)          \
+      $(wildcard sysv/*.c)         \
       $(wildcard rmem/manager/*.c) \
       $(wildcard rmem/cache/*.c)   \
       $(wildcard rmem/stub/*.c)

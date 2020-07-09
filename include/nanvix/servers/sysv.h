@@ -22,19 +22,68 @@
  * SOFTWARE.
  */
 
-#include <nanvix/config.h>
+#ifndef NANVIX_SERVERS_SYSV_H_
+#define NANVIX_SERVERS_SYSV_H_
 
-/**
- * @brief Table of RMem Servers.
- */
-struct rmem_servers_info
-{
-	int nodenum;
-	int portnum;
-	const char *name;
-} rmem_servers[RMEM_SERVERS_NUM] = {
-	{ RMEM_SERVER_0_NODE, RMEM_SERVER_0_PORT_NUM, "/rmem0" },
-#if (RMEM_SERVERS_NUM == 2)
-	{ RMEM_SERVER_1_NODE, RMEM_SERVER_1_PORT_NUM, "/rmem1" },
-#endif
-};
+	/* Must come first. */
+	#define __NEED_LIMITS_PM
+
+	#include <nanvix/limits/pm.h>
+
+#if defined(__NEED_SYSV_SERVER) || defined(__SYSV_SERVER)
+
+	#include <nanvix/servers/message.h>
+
+	/**
+	 * @name Types of Messages
+	 */
+	/**@{*/
+	#define SYSV_SUCCESS (0 << 0) /**< Success */
+	#define SYSV_ACK     (1 << 0) /**< Fail    */
+	#define SYSV_FAIL    (2 << 0) /**< Fail    */
+	#define SYSV_EXIT    (3 << 0) /**< Exit    */
+	/**@}*/
+
+	/**
+	 * @brief System V Message
+	 */
+	struct sysv_message
+	{
+		/**
+		 * @brief Header
+		 */
+		message_header header;
+
+		/**
+		 * @brief Payload
+		 */
+		union
+		{
+			/**
+			 * @brief Return Message
+			 */
+			struct
+			{
+				int status; /**< Status Code          */
+			} ret;
+		} payload;
+	};
+
+#ifdef __SYSV_SERVER
+
+	/**
+	 * @brief Debug System V Server?
+	 */
+	#define __DEBUG_SYSV 0
+
+	#if (__DEBUG_SYSV)
+	#define sysv_debug(fmt, ...) uprintf(fmt, __VA_ARGS__)
+	#else
+	#define sysv_debug(fmt, ...) { }
+	#endif
+
+#endif /* __SYSV_SERVER */
+
+#endif /* __NEED_SYSV_SERVER || __SYSV_SERVER */
+
+#endif /* NANVIX_SERVERS_SYSV_H_ */
