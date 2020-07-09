@@ -29,11 +29,13 @@
 	#define __NEED_NAME_SERVICE
 	#define __NEED_MAILBOX_SERVICE
 	#define __NEED_PORTAL_SERVICE
+	#define __NEED_SYSV_SERVICE
 
 	#include <nanvix/runtime/stdikc.h>
 	#include <nanvix/runtime/pm/name.h>
 	#include <nanvix/runtime/pm/mailbox.h>
 	#include <nanvix/runtime/pm/portal.h>
+	#include <nanvix/runtime/pm/sysv.h>
 
 	/**
 	 * @brief Gets the name of the process.
