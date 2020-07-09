@@ -72,6 +72,11 @@
 	extern void test_posix(void);
 
 	/**
+	 * @brief Launches regression tets on System V Service.
+	 */
+	extern void test_sysv(void);
+
+	/**
 	 * @brief Launches regression tests on VFS manager.
 	 */
 	extern void test_vfs(void);
