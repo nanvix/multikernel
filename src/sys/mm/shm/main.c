@@ -360,7 +360,7 @@ static int do_shm_startup(struct nanvix_semaphore *lock)
 	server.inportal = stdinportal_get();
 
 	/* Link name. */
-	if ((ret = name_link(server.nodenum, server.name)) < 0)
+	if ((ret = nanvix_name_link(server.nodenum, server.name)) < 0)
 		return (ret);
 
 	shm_init();

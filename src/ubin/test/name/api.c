@@ -47,8 +47,8 @@ static void test_name_link_unlink(void)
 	nodenum = knode_get_num();
 
 	ustrcpy(pathname, "cool-name");
-	TEST_ASSERT(name_link(nodenum, pathname) == 0);
-	TEST_ASSERT(name_unlink(pathname) == 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, pathname) == 0);
+	TEST_ASSERT(nanvix_name_unlink(pathname) == 0);
 }
 
 /*============================================================================*
@@ -66,9 +66,9 @@ static void test_name_lookup(void)
 	nodenum = knode_get_num();
 
 	ustrcpy(pathname, "cool-name");
-	TEST_ASSERT(name_link(nodenum, pathname) == 0);
-	TEST_ASSERT(name_lookup(pathname) == nodenum);
-	TEST_ASSERT(name_unlink(pathname) == 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, pathname) == 0);
+	TEST_ASSERT(nanvix_name_lookup(pathname) == nodenum);
+	TEST_ASSERT(nanvix_name_unlink(pathname) == 0);
 }
 
 /*============================================================================*
@@ -86,9 +86,9 @@ static void test_name_heartbeat(void)
 	nodenum = knode_get_num();
 
 	ustrcpy(pathname, "cool-name");
-	TEST_ASSERT(name_link(nodenum, pathname) == 0);
-	TEST_ASSERT(name_heartbeat() == 0);
-	TEST_ASSERT(name_unlink(pathname) == 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, pathname) == 0);
+	TEST_ASSERT(nanvix_name_heartbeat() == 0);
+	TEST_ASSERT(nanvix_name_unlink(pathname) == 0);
 }
 
 /*============================================================================*

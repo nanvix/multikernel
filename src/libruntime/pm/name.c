@@ -44,13 +44,13 @@ static int server;
 static bool initialized = false;
 
 /*============================================================================*
- * __name_setup()                                                             *
+ * __nanvix_name_setup()                                                      *
  *============================================================================*/
 
 /**
  * @todo TODO: provide a detailed description for this function.
  */
-int __name_setup(void)
+int __nanvix_name_setup(void)
 {
 	/* Nothing to do. */
 	if (initialized)
@@ -66,13 +66,13 @@ int __name_setup(void)
 }
 
 /*============================================================================*
- * name_finalize()                                                            *
+ * nanvix_name_cleanup()                                                      *
  *============================================================================*/
 
 /**
  * @todo TODO: provide a detailed description for this function.
  */
-int __name_cleanup(void)
+int __nanvix_name_cleanup(void)
 {
 	/* Nothing to do. */
 	if (!initialized)
@@ -88,13 +88,13 @@ int __name_cleanup(void)
 }
 
 /*============================================================================*
- * name_lookup()                                                              *
+ * nanvix_name_lookup()                                                       *
  *============================================================================*/
 
 /**
  * @todo TODO: provide a long description for this function.
  */
-int name_lookup(const char *name)
+int nanvix_name_lookup(const char *name)
 {
 	int ret;
 	struct name_message msg;
@@ -104,7 +104,7 @@ int name_lookup(const char *name)
 		return (-EAGAIN);
 
 	/* Invalid name. */
-	if ((ret = name_is_valid(name)) < 0)
+	if ((ret = nanvix_name_is_valid(name)) < 0)
 		return (ret);
 
 	/* Build operation header. */
@@ -121,13 +121,13 @@ int name_lookup(const char *name)
 }
 
 /*============================================================================*
- * name_link()                                                                *
+ * nanvix_name_link()                                                         *
  *============================================================================*/
 
 /**
  * @todo TODO: provide a detailed description for this function.
  */
-int name_link(int nodenum, const char *name)
+int nanvix_name_link(int nodenum, const char *name)
 {
 	int ret;
 	struct name_message msg;
@@ -141,7 +141,7 @@ int name_link(int nodenum, const char *name)
 		return (-EINVAL);
 
 	/* Invalid name. */
-	if ((ret = name_is_valid(name)) < 0)
+	if ((ret = nanvix_name_is_valid(name)) < 0)
 		return (ret);
 
 	/* Build operation header. */
@@ -161,13 +161,13 @@ int name_link(int nodenum, const char *name)
 }
 
 /*============================================================================*
- * name_unlink()                                                              *
+ * nanvix_name_unlink()                                                       *
  *============================================================================*/
 
 /**
  * @todo TODO: provide a detailed description for this function.
  */
-int name_unlink(const char *name)
+int nanvix_name_unlink(const char *name)
 {
 	int ret;
 	struct name_message msg;
@@ -177,7 +177,7 @@ int name_unlink(const char *name)
 		return (-EAGAIN);
 
 	/* Invalid name. */
-	if ((ret = name_is_valid(name)) < 0)
+	if ((ret = nanvix_name_is_valid(name)) < 0)
 		return (ret);
 
 	/* Build operation header. */
@@ -197,13 +197,13 @@ int name_unlink(const char *name)
 }
 
 /*============================================================================*
- * name_heartbeat()                                                           *
+ * nanvix_name_heartbeat()                                                    *
  *============================================================================*/
 
 /**
  * @todo TODO: provide a detailed description for this function.
  */
-int name_heartbeat(void)
+int nanvix_name_heartbeat(void)
 {
 	int ret;
 	struct name_message msg;
@@ -224,13 +224,13 @@ int name_heartbeat(void)
 }
 
 /*============================================================================*
- * name_shutdown()                                                            *
+ * nanvix_name_shutdown()                                                     *
  *============================================================================*/
 
 /**
  * @todo TODO: provide a detailed description for this function.
  */
-int name_shutdown(void)
+int nanvix_name_shutdown(void)
 {
 	int ret;
 	struct name_message msg;

@@ -63,7 +63,7 @@ static void *nanvix_exception_handler(void *args)
 	uassert(__stdsync_setup() == 0);
 	uassert(__stdmailbox_setup() == 0);
 	uassert(__stdportal_setup() == 0);
-	uassert(__name_setup() == 0);
+	uassert(__nanvix_name_setup() == 0);
 	uassert(__nanvix_mailbox_setup() == 0);
 	uassert(__nanvix_portal_setup() == 0);
 
@@ -111,7 +111,7 @@ int __runtime_setup(int ring)
 	if ((current_ring[tid] < SPAWN_RING_1) && (ring >= SPAWN_RING_1))
 	{
 		uprintf("[nanvix][thread %d] initalizing ring 1", tid);
-		uassert(__name_setup() == 0);
+		uassert(__nanvix_name_setup() == 0);
 	}
 
 	/* Initialize Ring 2. */
@@ -193,7 +193,7 @@ int __runtime_cleanup(void)
 	if (current_ring[tid] >= SPAWN_RING_1)
 	{
 		uprintf("[nanvix][thread %d] shutting down ring 1", tid);
-		uassert(__name_cleanup() == 0);
+		uassert(__nanvix_name_cleanup() == 0);
 	}
 
 	/* Spawn Ring 0.*/

@@ -41,7 +41,7 @@
 	 * @returns Upon successful completion, zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
-	extern int __name_setup(void);
+	extern int __nanvix_name_setup(void);
 
 	/**
 	 * @brief Shuts down the Name Service client.
@@ -49,7 +49,7 @@
 	 * @returns Upon successful completion, zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
-	extern int __name_cleanup(void);
+	extern int __nanvix_name_cleanup(void);
 
 	/**
 	 * @brief link a process name.
@@ -60,7 +60,7 @@
 	 * @returns Upon successful completion 0 is returned.
 	 * Upon failure, a negative error code is returned instead.
 	 */
-	extern int name_link(int nodenum, const char *name);
+	extern int nanvix_name_link(int nodenum, const char *name);
 
 	/**
 	 * @brief Converts a name into a NoC node ID.
@@ -71,7 +71,7 @@
 	 * name is returned. Upon failure, a negative error code is returned
 	 * instead.
 	 */
-	extern int name_lookup(const char *name);
+	extern int nanvix_name_lookup(const char *name);
 
 	/**
 	 * @brief Unlink a process name.
@@ -81,7 +81,7 @@
 	 * @returns Upon successful completion zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
-	extern int name_unlink(const char *name);
+	extern int nanvix_name_unlink(const char *name);
 
 	/**
 	 * @brief Updates the timestamp of a process.
@@ -89,7 +89,7 @@
 	 * @returns Upons successful completion, zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
-	extern int name_heartbeat(void);
+	extern int nanvix_name_heartbeat(void);
 
 	/**
 	 * @brief Shutdowns the name server.
@@ -97,6 +97,6 @@
 	 * @returns Upon successful completion 0 is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
-	extern int name_shutdown(void);
+	extern int nanvix_name_shutdown(void);
 
 #endif /* NANVIX_RUNTIME_PM_NAME_H_ */

@@ -692,7 +692,7 @@ static int do_rmem_startup(struct nanvix_semaphore *lock)
 
 	/* Link name. */
 	servername = rmem_server_get_name();
-	if ((ret = name_link(nodenum, servername)) < 0)
+	if ((ret = nanvix_name_link(nodenum, servername)) < 0)
 		return (ret);
 
 	/* Unblock spawner. */
