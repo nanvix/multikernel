@@ -55,6 +55,28 @@
 	extern int connect(pid_t remote);
 
 	/**
+	 * @brief Gets port of remote connection.
+	 *
+	 * @param connection Target connection.
+	 *
+	 * @returns Upon sucessful completion, the port number of the remote
+	 * connection is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern int connection_get_port(int connection);
+
+	/**
+	 * @brief Sets port for remote connection.
+	 *
+	 * @param connection Target connection.
+	 * @param port       Port number of the remote.
+	 *
+	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
+	 * negative error code is returned instead.
+	 */
+	extern int connection_set_port(int connection, int port);
+
+	/**
 	 * @brief Unlinks a connection
 	 *
 	 * @param pid PID of the remote.
