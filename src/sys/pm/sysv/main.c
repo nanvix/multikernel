@@ -52,11 +52,11 @@ static struct
 extern void msg_test(void);
 
 /*============================================================================*
- * do_sysv_server_get()                                                       *
+ * do_sysv_msg_get()                                                          *
  *============================================================================*/
 
 /**
- * @brief Handles a get request.
+ * @brief Handles a message queue get request.
  *
  * @param request  Target request.
  * @param response Response.
@@ -66,7 +66,7 @@ extern void msg_test(void);
  *
  * @author Pedro Henrique Penna
  */
-static int do_sysv_server_get(
+static int do_sysv_msg_get(
 	const struct sysv_message *request,
 	struct sysv_message *response
 )
@@ -94,11 +94,11 @@ static int do_sysv_server_get(
 }
 
 /*============================================================================*
- * do_sysv_server_close()                                                     *
+ * do_sysv_msg_close()                                                        *
  *============================================================================*/
 
 /**
- * @brief Handles a close request.
+ * @brief Handles a message queue close request.
  *
  * @param request  Target request.
  * @param response Response.
@@ -108,30 +108,28 @@ static int do_sysv_server_get(
  *
  * @author Pedro Henrique Penna
  */
-static int do_sysv_server_close(const struct sysv_message *request)
+static int do_sysv_msg_close(const struct sysv_message *request)
 {
 	int ret;
 	const pid_t pid = request->header.source;
-	const int connection = connect(pid);
 
-	((void) connection);
 	ret = do_msg_close(request->payload.msg.op.close.msgid);
 
 	/* Operation failed. */
 	if (ret < 0)
-	{
-		disconnect(pid);
 		return (ret);
-	}
+
+	disconnect(pid);
+
 	return (ret);
 }
 
 /*============================================================================*
- * do_sysv_server_send()                                                      *
+ * do_sysv_msg_send()                                                         *
  *============================================================================*/
 
 /**
- * @brief Handles a send request.
+ * @brief Handles a message queue send request.
  *
  * @param request  Target request.
  * @param response Response.
@@ -141,14 +139,11 @@ static int do_sysv_server_close(const struct sysv_message *request)
  *
  * @author Pedro Henrique Penna
  */
-static int do_sysv_server_send(const struct sysv_message *request)
+static int do_sysv_msg_send(const struct sysv_message *request)
 {
 	int ret;
 	void *msgp;
-	const pid_t pid = request->header.source;
-	const int connection = connect(pid);
 
-	((void) connection);
 	ret = do_msg_send(
 		request->payload.msg.op.send.msgid,
 		&msgp,
@@ -180,17 +175,15 @@ static int do_sysv_server_send(const struct sysv_message *request)
 		) == (ssize_t) request->payload.msg.op.send.msgsz
 	);
 
-	disconnect(pid);
-
 	return (ret);
 }
 
 /*============================================================================*
- * do_sysv_server_receive()                                                   *
+ * do_sysv_msg_receive()                                                      *
  *============================================================================*/
 
 /**
- * @brief Handles a receive request.
+ * @brief Handles a message queue receive request.
  *
  * @param request  Target request.
  * @param response Response.
@@ -200,17 +193,14 @@ static int do_sysv_server_send(const struct sysv_message *request)
  *
  * @author Pedro Henrique Penna
  */
-static int do_sysv_server_receive(const struct sysv_message *request)
+static int do_sysv_msg_receive(const struct sysv_message *request)
 {
 	int ret;
 	int outportal;
 	int outbox;
 	void *msgp;
 	struct sysv_message msg;
-	const pid_t pid = request->header.source;
-	const int connection = connect(pid);
 
-	((void) connection);
 	ret = do_msg_receive(
 		request->payload.msg.op.receive.msgid,
 		&msgp,
@@ -221,10 +211,7 @@ static int do_sysv_server_receive(const struct sysv_message *request)
 
 	/* Operation failed. */
 	if (ret < 0)
-	{
-		disconnect(pid);
 		return (ret);
-	}
 
 	uassert((
 		outbox = kmailbox_open(
@@ -314,27 +301,27 @@ static int do_sysv_server_loop(void)
 		/* Handle request. */
 		switch (request.header.opcode)
 		{
-			/* Get. */
+			/* Get message queue. */
 			case SYSV_MSG_GET:
-				ret = do_sysv_server_get(&request, &response);
+				ret = do_sysv_msg_get(&request, &response);
 				reply = 1;
 				break;
 
-			/* Close. */
+			/* Close message queue. */
 			case SYSV_MSG_CLOSE:
-				ret = do_sysv_server_close(&request);
+				ret = do_sysv_msg_close(&request);
 				reply = 1;
 				break;
 
-			/* Send. */
+			/* Send message. */
 			case SYSV_MSG_SEND:
-				ret = do_sysv_server_send(&request);
+				ret = do_sysv_msg_send(&request);
 				reply = 1;
 				break;
 
-			/* Receive. */
+			/* Receive message. */
 			case SYSV_MSG_RECEIVE:
-				ret = do_sysv_server_receive(&request);
+				ret = do_sysv_msg_receive(&request);
 				reply = 1;
 				break;
 

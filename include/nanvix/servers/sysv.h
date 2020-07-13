@@ -60,6 +60,9 @@
 		 */
 		union
 		{
+			/**
+			 * @brief Message Queue
+			 */
 			struct msg_message msg;
 
 			/**
