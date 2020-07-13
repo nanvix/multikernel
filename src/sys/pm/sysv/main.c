@@ -50,6 +50,7 @@ static struct
 
 /* Import definitions. */
 extern void msg_test(void);
+extern void sem_test(void);
 
 /*============================================================================*
  * do_sysv_msg_get()                                                          *
@@ -72,7 +73,7 @@ static int do_sysv_msg_get(
 )
 {
 	int ret;
-	const pid_t pid = request->header.source;
+	const nanvix_pid_t pid = request->header.source;
 	const int connection = connect(pid);
 
 	((void) connection);
@@ -111,7 +112,7 @@ static int do_sysv_msg_get(
 static int do_sysv_msg_close(const struct sysv_message *request)
 {
 	int ret;
-	const pid_t pid = request->header.source;
+	const nanvix_pid_t pid = request->header.source;
 
 	ret = do_msg_close(request->payload.msg.op.close.msgid);
 
@@ -261,7 +262,147 @@ static int do_sysv_msg_receive(const struct sysv_message *request)
 }
 
 /*============================================================================*
- * sysv_loop()                                                                 *
+ * do_sysv_msg_get()                                                          *
+ *============================================================================*/
+
+/**
+ * @brief Handles a semaphore get request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_sysv_sem_get(
+	const struct sysv_message *request,
+	struct sysv_message *response
+)
+{
+	int ret;
+	const nanvix_pid_t pid = request->header.source;
+	const int connection = connect(pid);
+
+	connection_set_port(connection, request->header.mailbox_port);
+
+	ret = do_sem_get(
+		request->payload.sem.op.get.key,
+		request->payload.sem.op.get.semflg
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+	{
+		disconnect(pid);
+		return (ret);
+	}
+
+	response->payload.ret.msgid = ret;
+
+	return (ret);
+}
+
+/*============================================================================*
+ * do_sysv_sem_close()                                                        *
+ *============================================================================*/
+
+/**
+ * @brief Handles a semaphore close request.
+ *
+ * @param request Target request.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_sysv_sem_close(const struct sysv_message *request)
+{
+	int ret;
+	const nanvix_pid_t pid = request->header.source;
+
+	ret = do_sem_close(request->payload.sem.op.close.semid);
+
+	/* Operation failed. */
+	if (ret < 0)
+	{
+		disconnect(pid);
+		return (ret);
+	}
+
+	return (ret);
+}
+
+/*============================================================================*
+ * do_sysv_sem_operate()                                                      *
+ *============================================================================*/
+
+/**
+ * @brief Handles a semaphore operate request.
+ *
+ * @param request Target request.
+ *
+ * @returns Upon successful completion, either zero or one is returned.
+ * Zero is returned when the process has completed the semaphore
+ * operation, whereas one is returned when the process should block on
+ * the semaphore.  Upon failure, a negative error code is returned
+ * instead.
+ *
+ * @author Pedro Henrique Penna
+ */
+static int do_sysv_sem_operate(const struct sysv_message *request)
+{
+	nanvix_pid_t ret;
+	int outbox;
+	struct sysv_message response;
+	const nanvix_pid_t pid = request->header.source;
+
+	ret = do_sem_operate(
+		pid,
+		request->payload.sem.op.operate.semid,
+		&request->payload.sem.op.operate.sembuf
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+		return (ret);
+
+	/* Block. */
+	if (ret == pid)
+		return (1);
+
+	/*  Operation completed. */
+	if (ret == 0)
+		return (0);
+
+	/* Unblock remote. */
+	response.payload.ret.status = ret;
+	message_header_build(
+		&response.header,
+		SYSV_SUCCESS
+	);
+	uassert((
+		outbox = kmailbox_open(
+			ret,
+			connection_get_port(ret)
+		)) >= 0
+	);
+	uassert(
+		kmailbox_write(
+			outbox,
+			&response,
+			sizeof(struct sysv_message
+		)) == sizeof(struct sysv_message)
+	);
+	uassert(kmailbox_close(outbox) == 0);
+
+	return (0);
+}
+
+/*============================================================================*
+ * sysv_server_loop()                                                         *
  *============================================================================*/
 
 /**
@@ -325,6 +466,25 @@ static int do_sysv_server_loop(void)
 				reply = 1;
 				break;
 
+			/* Get semaphore. */
+			case SYSV_SEM_GET:
+				ret = do_sysv_sem_get(&request, &response);
+				reply = 1;
+				break;
+
+			/* Close semaphore. */
+			case SYSV_SEM_CLOSE:
+				ret = do_sysv_sem_close(&request);
+				reply = 1;
+				break;
+
+			/* Operate semaphore. */
+			case SYSV_SEM_OPERATE:
+				ret = do_sysv_sem_operate(&request);
+				if (ret <= 0)
+					reply = 1;
+				break;
+
 			/* Exit. */
 			case SYSV_EXIT:
 				shutdown = 1;
@@ -363,6 +523,7 @@ static int do_sysv_server_loop(void)
 #ifndef __SUPPRESS_TESTS
 	uprintf("[nanvix][sysv] running self-tests...");
 	msg_test();
+	sem_test();
 #endif
 
 	return (0);
@@ -394,6 +555,7 @@ static int do_sysv_server_startup(struct nanvix_semaphore *lock)
 
 	connections_setup();
 	do_msg_init();
+	do_sem_init();
 
 	uprintf("[nanvix][sysv] minix System V created");
 

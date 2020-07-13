@@ -87,4 +87,9 @@
 	 */
 	#define NANVIX_MSG_SIZE_MAX 256
 
+	/**
+	 * @brief Maximum number of semaphores.
+	 */
+	#define NANVIX_SEM_MAX 64
+
 #endif /* NANVIX_LIMITS_PM_H_ */
