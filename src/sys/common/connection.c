@@ -33,6 +33,7 @@
 static struct
 {
 	pid_t remote;  /**< PID.                  */
+	int port;      /**< Port Number.          */
 	int count;     /**< Number of Connections */
 } connections[NANVIX_CONNECTIONS_MAX];
 
@@ -161,6 +162,44 @@ int get_connections(pid_t *buf)
 }
 
 /*============================================================================*
+ * connection_set_port()                                                      *
+ *============================================================================*/
+
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+int connection_set_port(int connection, int port)
+{
+	/* Invalid Connection. */
+	if ((connection < 0) || (connection >= NANVIX_CONNECTIONS_MAX))
+		return (-EINVAL);
+
+	/* Invalid port. */
+	if (port < 0)
+		return (-EINVAL);
+
+	connections[connection].port = port;
+
+	return (0);
+}
+
+/*============================================================================*
+ * connection_get_port()                                                      *
+ *============================================================================*/
+
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+int connection_get_port(int connection)
+{
+	/* Invalid PID. */
+	if ((connection < 0) || (connection >= NANVIX_CONNECTIONS_MAX))
+		return (-EINVAL);
+
+	return (connections[connection].port);
+}
+
+/*============================================================================*
  * connections_setup()                                                        *
  *============================================================================*/
 
@@ -173,5 +212,6 @@ void connections_setup(void)
 	{
 		connections[i].remote = -1;
 		connections[i].count = 0;
+		connections[i].port = -1;
 	}
 }
