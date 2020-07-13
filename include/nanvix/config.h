@@ -77,8 +77,9 @@
 	 * @name Name of Servers
 	 */
 	/**@{*/
-	#define SHM_SERVER_NAME "/shm" /**< Shared Memory Region */
-	#define VFS_SERVER_NAME "/vfs" /**< Virtual File System  */
+	#define SHM_SERVER_NAME  "/shm"  /**< Shared Memory Region */
+	#define VFS_SERVER_NAME  "/vfs"  /**< Virtual File System  */
+	#define SYSV_SERVER_NAME "/sysv" /**< System V Server      */
 	/**@}*/
 
 	/**

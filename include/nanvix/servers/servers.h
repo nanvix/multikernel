@@ -50,4 +50,11 @@
 	 */
 	extern int vfs_server(struct nanvix_semaphore *lock);
 
+	/**
+	 * @brief Handles System V requestes.
+	 *
+	 * @returns Always returns zero.
+	 */
+	extern int sysv_server(struct nanvix_semaphore *lock);
+
 #endif /* NANVIX_SERVERS_SERVERS_H_*/

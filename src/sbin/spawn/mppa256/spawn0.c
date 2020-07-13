@@ -37,7 +37,7 @@
  */
 const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
 	{ .ring = SPAWN_RING_0, .main = name_server },
-	{ .ring = SPAWN_RING_1, .main = rmem_server },
+	{ .ring = SPAWN_RING_1, .main = sysv_server },
 };
 
 SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_0_NAME)

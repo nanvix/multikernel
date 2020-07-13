@@ -34,5 +34,7 @@ struct rmem_servers_info
 	const char *name;
 } rmem_servers[RMEM_SERVERS_NUM] = {
 	{ RMEM_SERVER_0_NODE, RMEM_SERVER_0_PORT_NUM, "/rmem0" },
+#if (RMEM_SERVERS_NUM == 2)
 	{ RMEM_SERVER_1_NODE, RMEM_SERVER_1_PORT_NUM, "/rmem1" },
+#endif
 };

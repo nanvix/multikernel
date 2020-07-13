@@ -1,7 +1,7 @@
 #
 # MIT License
 #
-# Copyright(c) 2018 Pedro Henrique Penna <pedrohenriquepenna@gmail.com>
+# Copyright(c) 2011-2020 The Maintainers of Nanvix
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy
 # of this software and associated documentation files (the "Software"), to deal
@@ -27,17 +27,11 @@
 #===============================================================================
 
 # Binary
-ARCHIVE = $(LIBRUNTIME)
+ARCHIVE = nanvix-sysv.$(OBJ_SUFFIX).a
 
 # C Source Files
-SRC = $(wildcard *.c)                        \
-      $(wildcard posix/libc/stdlib/malloc.c) \
-      $(wildcard fs/*.c)                     \
-      $(wildcard pm/sysv/*.c)                \
-      $(wildcard pm/*.c)                     \
-      $(wildcard mm/*.c)                     \
-      $(wildcard mm/shm/*.c)                 \
-      $(wildcard utils/*.c)
+SRC += $(wildcard *.c)     \
+       $(wildcard msg/*.c)
 
 # Object Files
 OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)
@@ -45,3 +39,4 @@ OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)
 #===============================================================================
 
 include $(BUILDDIR)/makefile.archive
+
