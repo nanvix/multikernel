@@ -33,7 +33,7 @@
 
 #if defined(__NEED_SYSV_SERVER) || defined(__SYSV_SERVER)
 
-	#include <nanvix/servers/sysv/mqueue.h>
+	#include <nanvix/servers/sysv/msg.h>
 	#include <nanvix/servers/message.h>
 
 	/**
