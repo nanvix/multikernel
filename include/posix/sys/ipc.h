@@ -22,71 +22,42 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_TYPES_PM_H_
-#define NANVIX_TYPES_PM_H_
+#ifndef POSIX_SYS_IPC_H_
+#define POSIX_SYS_IPC_H_
 
-	#ifndef __NEED_TYPES_PM
-	#error "do not include this file"
-	#endif
-
-	#include <posix/sys/types.h>
-	#include <posix/sys/ipc.h>
+	/**
+	 * @group IPC Mode Bits
+	 */
+	/**@{*/
+	#define IPC_CREAT   (1 << 0) /**< Create entry if key does not exist. */
+	#define IPC_EXCL    (1 << 1) /**< Fail if key exists.                 */
+	#define IPC_NOWAIT  (1 << 2) /**< Error if request must wait.         */
+	/**@}*/
 
 	/**
 	 * @brief IPC Key
 	 */
-	typedef key_t nanvix_key_t;
+	/**@{*/
+	#define IPC_PRIVATE (1 << 3) /**< Private Key */
+	/**@}*/
 
 	/**
-	 * @brief File Attributes
+	 * @brief IPC Control Commands
 	 */
-	typedef mode_t nanvix_mode_t;
-
-	/**
-	 * @brief Process's ID
-	 */
-	typedef pid_t nanvix_pid_t;
-
-	/**
-	 * @brief User's ID
-	 */
-	typedef uid_t nanvix_uid_t;
-
-	/**
-	 * @brief Group's ID
-	 */
-	typedef gid_t nanvix_gid_t;
+	/**@{*/
+	#define IPC_RMID (1 << 4) /**< Remove Identifier */
+	#define IPC_SET  (1 << 5) /**< Set Options       */
+	#define IPC_STAT (1 << 6) /**< Get Options       */
+	/**@}*/
 
 	/**
 	 * @brief Creator's ID
 	 */
-	typedef cid_t nanvix_cid_t;
+	typedef int cid_t;
 
 	/**
 	 * @brief Creator's Group ID
 	 */
-	typedef cgid_t nanvix_cgid_t;
+	typedef int cgid_t;
 
-	/**
-	 * @brief Semaphore Buffer
-	 */
-	struct nanvix_sembuf
-	{
-		unsigned short sem_num; /**< Semaphore Number    */
-		short sem_op;           /**< Semaphore Operation */
-		short sem_flg;          /**< Operation Flags     */
-	};
-
-	/**
-	 * @brief IPC Permissions
-	 */
-	struct nanvix_ipc_perm
-	{
-		nanvix_uid_t uid;   /**< Owner's User ID       */
-		nanvix_gid_t gid;   /**< Owner's Group ID      */
-		nanvix_uid_t cuid;  /**< Creator's User ID     */
-		nanvix_gid_t cgid;  /**< Creator's Group ID    */
-		nanvix_mode_t mode; /**< Read/Write Permission */
-	};
-
-#endif /* NANVIX_TYPES_PM_H_ */
+#endif /* POSIX_SYS_IPC_H_ */
