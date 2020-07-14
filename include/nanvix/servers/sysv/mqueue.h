@@ -100,6 +100,8 @@
 	 */
 	#define msgid_is_valid(x) (((x) >= 0) && ((x) < NANVIX_MSG_MAX))
 
+#ifdef __SYSV_SERVER
+
 	/**
 	 * @brief Opaque pointer to message buffer.
 	 */
@@ -212,5 +214,7 @@
 		long msgtyp,
 		int msgflg
 	);
+
+#endif /* __SYSV_SERVER */
 
 #endif /* NANVIX_SERVERS_SYSV_MSG_H_ */

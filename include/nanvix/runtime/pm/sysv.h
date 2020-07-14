@@ -80,12 +80,62 @@
 	 */
 	extern int nanvix_sysv_shutdown(void);
 
+/*============================================================================*
+ * Message Queues                                                             *
+ *============================================================================*/
+
+	/**
+	 * @brief Gets a message queue.
+	 *
+	 * @param key    Key for message queue.
+	 * @param msgflg Flags.
+	 *
+	 * @returns Upon successful completion, the ID of the target message
+	 * queue is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
 	extern int __nanvix_msg_get(key_t key, int msgflg);
 
+	/**
+	 * @brief Closes a message queue.
+	 *
+	 * @param msgid ID of the target message queue.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
 	extern int __nanvix_msg_close(int msgid);
 
-	extern int __nanvix_msg_send(int msgid, const void *msgp, size_t msgsz, int msgflg);
+	/**
+	 * @brief Puts a message in a message queue.
+	 *
+	 * @param msgid  ID of the target message queue.
+	 * @param msgp   Pointer to the targe message.
+	 * @param msgsz  Size of the message.
+	 * @param msgflg Flags.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_msg_send(
+		int msgid,
+		const void *msgp,
+		size_t msgsz,
+		int msgflg
+	);
 
+	/**
+	 * @brief Retrives a message from a message queue.
+	 *
+	 * @param msgid  ID of the target message queue.
+	 * @param msgp   Pointer to the targe message.
+	 * @param msgsz  Size of the message.
+	 * @param msgtyp Type of the message.
+	 * @param msgflg Flags.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
 	extern int __nanvix_msg_receive(
 		int msgid,
 		void *msgp,

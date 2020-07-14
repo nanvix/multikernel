@@ -62,8 +62,17 @@ static struct resource_pool pool = {
 	mqueues, NANVIX_MSG_MAX , sizeof(struct msg)
 };
 
+/*============================================================================*
+ * do_msg_get()                                                               *
+ *============================================================================*/
+
 /**
- * @todo TODO: provide a detailed description for this function.
+ * The do_msg_get() function gets a message key that matches the @p key
+ * parameter. The @p mspflg parameter specifies additional actions to
+ * take during this operation. Upon successful completion, zero is
+ * returned.
+ *
+ * @author Pedro Henrique Penna
  */
 int do_msg_get(key_t key, int msgflg)
 {
@@ -97,8 +106,15 @@ found:
 	return (msgid);
 }
 
+/*============================================================================*
+ * do_msg_close()                                                             *
+ *============================================================================*/
+
 /**
- * @todo TODO: provide a detailed description for this function.
+ * The do_msg_close() function closes the message queue that is
+ * identified by @p msgid. Upon successful completion, zero is returned.
+ *
+ * @author Pedro Henrique Penna
  */
 int do_msg_close(int msgid)
 {
@@ -121,8 +137,18 @@ int do_msg_close(int msgid)
 	return (0);
 }
 
+/*============================================================================*
+ * do_msg_send()                                                              *
+ *============================================================================*/
+
 /**
- * @todo TODO: provide a detailed description for this function.
+ * The do_msg_send() function allocates a message slot in the message
+ * queue that is identified by @p msgid. The @p msgp is set to point to
+ * the allocated slot. Furthermore,the @p msgsz parameter gives the size
+ * in bytes of the message and @p msgflg provides extra actions to take
+ * during the operation. Upon sussceful completion, zero is returned.
+ *
+ * @author Pedro Henrique Penna
  */
 int do_msg_send(int msgid, void **msgp, size_t msgsz, int msgflg)
 {
@@ -157,8 +183,19 @@ error:
 	return (-EINVAL);
 }
 
+/*============================================================================*
+ * do_msg_receive()                                                           *
+ *============================================================================*/
+
 /**
- * @todo TODO: provide a detailed description for this function.
+ * The do_msg_receive() function retrives a message, from the message
+ * queue @p msgid, that matches the specified type @p msgtyp.  The @p
+ * msgp parameter is set to point to this message. The @p msgsz
+ * parameter gives the size in bytes of the message and @p msgflg
+ * provides extra actions to take during the operation. Upon sussceful
+ * completion, zero is returned.
+ *
+ * @author Pedro Henrique Penna
  */
 int do_msg_receive(int msgid, void **msgp, size_t msgsz, long msgtyp, int msgflg)
 {
@@ -191,8 +228,16 @@ int do_msg_receive(int msgid, void **msgp, size_t msgsz, long msgtyp, int msgflg
 	return (msgbuf_get (mqueues[msgid].buf, msgp));
 }
 
+/*============================================================================*
+ * do_msg_init()                                                              *
+ *============================================================================*/
+
 /**
- * @todo TODO: provide a detailed description for this function.
+ * The do_msg_init() function initializes the message queue service. It
+ * initializes the underlying message buffers and next traverses the
+ * table of message queues and intiializes all entries in this table.
+ *
+ * @author Pedro Henrique Penna
  */
 void do_msg_init(void)
 {
