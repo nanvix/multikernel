@@ -74,7 +74,10 @@ static int __do_nanvix_msg_get(key_t key, int msgflg)
 		) == sizeof(struct sysv_message)
 	);
 
-	return (msg.payload.ret.status);
+	if (msg.payload.ret.status < 0)
+		return (msg.payload.ret.status);
+
+	return (msg.payload.ret.ipcid);
 }
 
 /**

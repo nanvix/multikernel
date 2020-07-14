@@ -89,7 +89,7 @@ static int do_sysv_msg_get(
 		return (ret);
 	}
 
-	response->payload.ret.msgid = ret;
+	response->payload.ret.ipcid = ret;
 
 	return (ret);
 }
@@ -299,7 +299,7 @@ static int do_sysv_sem_get(
 		return (ret);
 	}
 
-	response->payload.ret.msgid = ret;
+	response->payload.ret.ipcid = ret;
 
 	return (ret);
 }

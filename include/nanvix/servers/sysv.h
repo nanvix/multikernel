@@ -76,7 +76,7 @@
 			 */
 			struct
 			{
-				int msgid;  /**< ID of Message Queue. */
+				int ipcid;   /**< ID of IPC Structure */
 				int status; /**< Status Code          */
 			} ret;
 		} payload;

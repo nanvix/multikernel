@@ -72,7 +72,10 @@ static int __do_nanvix_semget(key_t key, int semflg)
 		) == sizeof(struct sysv_message)
 	);
 
-	return (sem.payload.ret.status);
+	if (sem.payload.ret.status < 0)
+		return (sem.payload.ret.status);
+
+	return (sem.payload.ret.ipcid);
 }
 
 /**
