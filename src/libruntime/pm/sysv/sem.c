@@ -51,8 +51,8 @@ static int __do_nanvix_semget(key_t key, int semflg)
 
 	/* Build message. */
 	message_header_build(&sem.header, SYSV_SEM_GET);
-	sem.payload.sem.op.get.key = key;
-	sem.payload.sem.op.get.semflg = semflg;
+	sem.payload.sem.get.key = key;
+	sem.payload.sem.get.semflg = semflg;
 
 	/* Send operation header. */
 	uassert(
@@ -103,7 +103,7 @@ int __do_nanvix_sem_close(int semid)
 
 	/* Build message. */
 	message_header_build(&sem.header, SYSV_SEM_CLOSE);
-	sem.payload.sem.op.close.semid = semid;
+	sem.payload.sem.close.semid = semid;
 
 	/* Send operation header. */
 	uassert(
@@ -165,8 +165,8 @@ int __do_nanvix_semop(int semid, const struct nanvix_sembuf *sops, size_t nsops)
 
 	/* Build message. */
 	message_header_build(&sem.header, SYSV_SEM_OPERATE);
-	sem.payload.sem.op.operate.semid = semid;
-	umemcpy(&sem.payload.sem.op.operate.sembuf, sops, sizeof(struct nanvix_sembuf));
+	sem.payload.sem.operate.semid = semid;
+	umemcpy(&sem.payload.sem.operate.sembuf, sops, sizeof(struct nanvix_sembuf));
 
 	/* Send operation header. */
 	uassert(

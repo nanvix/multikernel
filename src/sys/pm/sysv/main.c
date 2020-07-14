@@ -288,8 +288,8 @@ static int do_sysv_sem_get(
 	connection_set_port(connection, request->header.mailbox_port);
 
 	ret = do_sem_get(
-		request->payload.sem.op.get.key,
-		request->payload.sem.op.get.semflg
+		request->payload.sem.get.key,
+		request->payload.sem.get.semflg
 	);
 
 	/* Operation failed. */
@@ -323,7 +323,7 @@ static int do_sysv_sem_close(const struct sysv_message *request)
 	int ret;
 	const nanvix_pid_t pid = request->header.source;
 
-	ret = do_sem_close(request->payload.sem.op.close.semid);
+	ret = do_sem_close(request->payload.sem.close.semid);
 
 	/* Operation failed. */
 	if (ret < 0)
@@ -361,8 +361,8 @@ static int do_sysv_sem_operate(const struct sysv_message *request)
 
 	ret = do_sem_operate(
 		pid,
-		request->payload.sem.op.operate.semid,
-		&request->payload.sem.op.operate.sembuf
+		request->payload.sem.operate.semid,
+		&request->payload.sem.operate.sembuf
 	);
 
 	/* Operation failed. */

@@ -69,7 +69,7 @@
 			/**
 			 * @brief Semaphore
 			 */
-			struct sem_message sem;
+			union sem_payload sem;
 
 			/**
 			 * @brief Return Message
