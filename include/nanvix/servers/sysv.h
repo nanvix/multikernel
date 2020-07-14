@@ -29,6 +29,7 @@
 	#define __NEED_LIMITS_PM
 
 	#include <nanvix/limits/pm.h>
+	#include <nanvix/servers/sysv/sem.h>
 
 #if defined(__NEED_SYSV_SERVER) || defined(__SYSV_SERVER)
 
@@ -64,6 +65,11 @@
 			 * @brief Message Queue
 			 */
 			struct msg_message msg;
+
+			/**
+			 * @brief Semaphore
+			 */
+			struct sem_message sem;
 
 			/**
 			 * @brief Return Message

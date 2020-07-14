@@ -30,5 +30,15 @@
 	 */
 	typedef int nanvix_pid_t;
 
+	/**
+	 * @brief Semaphore Buffer
+	 */
+	struct nanvix_sembuf
+	{
+		unsigned short sem_num; /**< Semaphore Number    */
+		short sem_op;           /**< Semaphore Operation */
+		short sem_flg;          /**< Operation Flags     */
+	};
+
 #endif /* NANVIX_TYPES_PM_H_ */
 

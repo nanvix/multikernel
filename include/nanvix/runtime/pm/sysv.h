@@ -25,6 +25,9 @@
 #ifndef NANVIX_RUNTIME_PM_SYSV_H_
 #define NANVIX_RUNTIME_PM_SYSV_H_
 
+	#include <posix/sys/types.h>
+	#include <nanvix/types/pm.h>
+
 #ifdef __SYSV_SERVICE
 
 	#include <nanvix/servers/sysv.h>
@@ -89,6 +92,48 @@
 		size_t msgsz,
 		long msgtyp,
 		int msgflg
+	);
+
+/*============================================================================*
+ * Semaphores                                                                 *
+ *============================================================================*/
+
+	/**
+	 * @brief Gets a semaphore.
+	 *
+	 * @param key    Key for semaphore.
+	 * @param semflg Flags.
+	 *
+	 * @returns Upon successful completion, the ID of the target
+	 * semaphore is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern int __nanvix_semget(key_t key, int semflg);
+
+	/**
+	 * @brief Closes a semaphore.
+	 *
+	 * @param semid ID of the target semaphore.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_sem_close(int semid);
+
+	/**
+	 * @brief Operates on a semaphore.
+	 *
+	 * @param semid ID of the target semaphore.
+	 * @param sops  Semaphore operations.
+	 * @param nsops Number of semaphore operations.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_semop(
+		int semid,
+		const struct nanvix_sembuf *sops,
+		size_t nsops
 	);
 
 #endif /* NANVIX_RUNTIME_PM_SYSV_H_ */
