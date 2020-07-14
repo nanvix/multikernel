@@ -26,7 +26,7 @@
 #define SERVERS_CONNECTION_H_
 
 	#include <nanvix/limits.h>
-	#include <posix/sys/types.h>
+	#include <nanvix/types.h>
 
 	/**
 	 * @brief Initializes the table of connections.
@@ -42,7 +42,7 @@
 	 * connections is returned. Otherwise a negative number is returned
 	 * instead.
 	 */
-	extern int lookup(pid_t remote);
+	extern int lookup(nanvix_pid_t remote);
 
 	/**
 	 * @brief Establishes a connection
@@ -52,7 +52,7 @@
 	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
 	 * negative error code is returned instead.
 	 */
-	extern int connect(pid_t remote);
+	extern int connect(nanvix_pid_t remote);
 
 	/**
 	 * @brief Gets port of remote connection.
@@ -84,7 +84,7 @@
 	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
 	 * negative error code is returned instead.
 	 */
-	extern int disconnect(pid_t remote);
+	extern int disconnect(nanvix_pid_t remote);
 
 	/**
 	 * @brief Gets active connections.
@@ -95,6 +95,6 @@
 	 * placed in @p buf is returned. Upon failure, a negative error code
 	 * is returned instead.
 	 */
-	extern int get_connections(pid_t *buf);
+	extern int get_connections(nanvix_pid_t *buf);
 
 #endif /* SERVERS_CONNECTION_H_ */

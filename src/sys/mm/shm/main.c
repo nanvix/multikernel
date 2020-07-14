@@ -33,6 +33,7 @@
 #include <nanvix/sys/noc.h>
 #include <nanvix/config.h>
 #include <nanvix/pm.h>
+#include <nanvix/types.h>
 #include <nanvix/ulib.h>
 
 /**
@@ -184,7 +185,7 @@ static int do_inval(struct shm_message *request, struct shm_message *response)
 	int nremotes;
 	int shmid;
 	rpage_t page;
-	pid_t remotes[NANVIX_PROC_MAX];
+	nanvix_pid_t remotes[NANVIX_PROC_MAX];
 
 	shmid = request->op.inval.shmid;
 	page = request->op.inval.page;

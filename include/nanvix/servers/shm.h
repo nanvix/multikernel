@@ -34,6 +34,7 @@
 	#include <nanvix/limits/shm.h>
 	#include <nanvix/types/mm/rmem.h>
 	#include <posix/sys/types.h>
+	#include <nanvix/types.h>
 	#include <nanvix/ulib.h>
 	#include <posix/errno.h>
 	#include <posix/stddef.h>
@@ -162,7 +163,7 @@
 	 */
 	extern int __do_shm_create(
 			rpage_t *page,
-			pid_t proc,
+			nanvix_pid_t proc,
 			const char *name,
 			int oflags,
 			mode_t mode
@@ -181,7 +182,7 @@
 	 */
 	extern int __do_shm_open(
 		rpage_t *page,
-		pid_t proc,
+		nanvix_pid_t proc,
 		const char *name,
 		int oflags
 	);
@@ -195,7 +196,7 @@
 	 * @returns Upon successful completion, zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
-	extern int __do_shm_close(pid_t proc, int shmid);
+	extern int __do_shm_close(nanvix_pid_t proc, int shmid);
 
 	/**
 	 * @brief Unlink a shared memory region
@@ -206,7 +207,7 @@
 	 * @returns Upon successful completion, oshmid is returned.
 	 * Upon failure, a negative error code is returned instead.
 	 */
-	extern int __do_shm_unlink(pid_t proc, const char *name);
+	extern int __do_shm_unlink(nanvix_pid_t proc, const char *name);
 
 	/**
 	 * @brief Truncates a shared memory region to a size.
@@ -221,7 +222,7 @@
 	 */
 	extern int __do_shm_ftruncate(
 		rpage_t *page,
-		pid_t proc,
+		nanvix_pid_t proc,
 		int shmid,
 		off_t size
 	);

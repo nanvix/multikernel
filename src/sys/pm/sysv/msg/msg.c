@@ -26,9 +26,10 @@
 #define __NEED_RESOURCE
 #define __SYSV_SERVER
 
-#include <nanvix/ulib.h>
 #include <nanvix/hal/resource.h>
 #include <nanvix/servers/sysv.h>
+#include <nanvix/types.h>
+#include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
 
@@ -47,7 +48,7 @@ static struct msg
 	 */
 	struct resource resource; /**< Generic resource information.  */
 
-	pid_t owner;              /**< ID of owner process.  */
+	nanvix_pid_t owner;       /**< ID of owner process.  */
 	key_t key;                /**< Key.                  */
 	int refcount;             /**< Number of references. */
 	mode_t mode;              /**< Access permissions.   */
