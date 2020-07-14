@@ -44,38 +44,35 @@
 	/**@}*/
 
 	/**
-	 * @brief Semaphore Message
+	 * @brief Payload for Semaphore Message
 	 */
-	struct sem_message
+	union sem_payload
 	{
-		union
-			{
-				/**
-				 * @brief Get Semaphore
-				 */
-				struct
-				{
-					key_t key;  /**< Key  */
-					int semflg; /**< Flag */
-				} get;
+		/**
+		 * @brief Get Semaphore
+		 */
+		struct
+		{
+			key_t key;  /**< Key  */
+			int semflg; /**< Flag */
+		} get;
 
-				/**
-				 * @brief Close Semaphore
-				 */
-				struct
-				{
-					int semid; /**< ID */
-				} close;
+		/**
+		 * @brief Close Semaphore
+		 */
+		struct
+		{
+			int semid; /**< ID */
+		} close;
 
-				/**
-				 * @brief Operate Semaphore
-				 */
-				struct
-				{
-					int semid;                    /**< ID            */
-					struct nanvix_sembuf sembuf; /* Operation Buffer */
-				} operate;
-			} op;
+		/**
+		 * @brief Operate Semaphore
+		 */
+		struct
+		{
+			int semid;                   /**< ID               */
+			struct nanvix_sembuf sembuf; /**< Operation Buffer */
+		} operate;
 	};
 
 	/**

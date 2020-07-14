@@ -42,52 +42,47 @@
 	/**@}*/
 
 	/**
-	 * @brief Message queue.
+	 * @brief Payload for Message Queue Service
 	 */
-	struct msg_message
+	union msg_payload
 	{
-
-		/* Operation-specific fields. */
-		union
+		/**
+		 * @brief Get Message
+		 */
+		struct
 		{
-			/**
-			 * @brief Get Message
-			 */
-			struct
-			{
-				key_t key;  /**< Key  */
-				int msgflg; /**< Flag */
-			} get;
+			key_t key;  /**< Key  */
+			int msgflg; /**< Flag */
+		} get;
 
-			/**
-			 * @brief Close Message
-			 */
-			struct
-			{
-				int msgid; /**< ID */
-			} close;
+		/**
+		 * @brief Close Message
+		 */
+		struct
+		{
+			int msgid; /**< ID */
+		} close;
 
-			/**
-			 * @brief Send Message
-			 */
-			struct
-			{
-				int msgid;    /**< ID   */
-				size_t msgsz; /**< Size */
-				int msgflg;   /**< Flag */
-			} send;
+		/**
+		 * @brief Send Message
+		 */
+		struct
+		{
+			int msgid;    /**< ID   */
+			size_t msgsz; /**< Size */
+			int msgflg;   /**< Flag */
+		} send;
 
-			/**
-			 * @brief Receive Message
-			 */
-			struct
-			{
-				int msgid;    /**< ID   */
-				size_t msgsz; /**< Size */
-				long msgtyp;  /**< TYpe */
-				int msgflg;   /**< Flag */
-			} receive;
-		} op;
+		/**
+		 * @brief Receive Message
+		 */
+		struct
+		{
+			int msgid;    /**< ID   */
+			size_t msgsz; /**< Size */
+			long msgtyp;  /**< TYpe */
+			int msgflg;   /**< Flag */
+		} receive;
 	};
 
 	/**

@@ -33,7 +33,7 @@
 
 #if defined(__NEED_SYSV_SERVER) || defined(__SYSV_SERVER)
 
-	#include <nanvix/servers/sysv/mqueue.h>
+	#include <nanvix/servers/sysv/msg.h>
 	#include <nanvix/servers/message.h>
 
 	/**
@@ -64,19 +64,19 @@
 			/**
 			 * @brief Message Queue
 			 */
-			struct msg_message msg;
+			union msg_payload msg;
 
 			/**
 			 * @brief Semaphore
 			 */
-			struct sem_message sem;
+			union sem_payload sem;
 
 			/**
 			 * @brief Return Message
 			 */
 			struct
 			{
-				int msgid;  /**< ID of Message Queue. */
+				int ipcid;   /**< ID of IPC Structure */
 				int status; /**< Status Code          */
 			} ret;
 		} payload;
