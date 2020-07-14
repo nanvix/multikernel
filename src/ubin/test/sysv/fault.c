@@ -27,6 +27,10 @@
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 
+/*============================================================================*
+ * Message Queue                                                              *
+ *============================================================================*/
+
 /**
  * Used for tests.
  */
@@ -114,6 +118,69 @@ static void test_fault_msg_receive_bad(void)
 }
 
 /*============================================================================*
+ * Semaphores                                                                 *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Invalid Get
+ */
+static void test_fault_sem_get_invalid(void)
+{
+	/* TODO: implement. */
+}
+
+/**
+ * @brief Fault Injection Test: Bad Get
+ */
+static void test_fault_sem_get_bad(void)
+{
+	/* TODO: implement. */
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Close
+ */
+static void test_fault_sem_close_invalid(void)
+{
+	uassert(__nanvix_sem_close(-1) == -EINVAL);
+	uassert(__nanvix_sem_close(NANVIX_SEM_MAX) == -EINVAL);
+}
+
+/**
+ * @brief Fault Injection Test: Bad Close
+ */
+static void test_fault_sem_close_bad(void)
+{
+	uassert(__nanvix_sem_close(0) == -EINVAL);
+}
+
+/**
+ * @brief Fault Injection Test: Invalid Operate
+ */
+static void test_fault_sem_operate_invalid(void)
+{
+	int semid;
+	struct nanvix_sembuf sembuf;
+
+	uassert(__nanvix_semop(-1, &sembuf, 1) == -EINVAL);
+
+	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert(__nanvix_semop(semid, NULL, 1) == -EINVAL);
+	uassert(__nanvix_semop(semid, &sembuf, 0) == -EINVAL);
+	uassert(__nanvix_sem_close(semid) == 0);
+}
+
+/**
+ * @brief Fault Injection Test: Bad Operate
+ */
+static void test_fault_sem_operate_bad(void)
+{
+	struct nanvix_sembuf sembuf;
+
+	uassert(__nanvix_semop(0, &sembuf, 1) == -EINVAL);
+}
+
+/*============================================================================*
  * Test Driver                                                                *
  *============================================================================*/
 
@@ -125,13 +192,19 @@ struct
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
 } tests_sysv_api[] = {
-	{ test_fault_msg_get_invalid,     "[fault] invalid get    " },
-	{ test_fault_msg_get_bad,         "[fault] bad get        " },
-	{ test_fault_msg_close_invalid,   "[fault] invalid close  " },
-	{ test_fault_msg_close_bad,       "[fault] bad close      " },
-	{ test_fault_msg_send_invalid,    "[fault] invalid send   " },
-	{ test_fault_msg_send_bad,        "[fault] bad send       " },
-	{ test_fault_msg_receive_invalid, "[fault] invalid receive" },
-	{ test_fault_msg_receive_bad,     "[fault] bad receive    " },
-	{ NULL,                           NULL                      },
+	{ test_fault_msg_get_invalid,     "[msg][fault] invalid get     " },
+	{ test_fault_msg_get_bad,         "[msg][fault] bad get         " },
+	{ test_fault_msg_close_invalid,   "[msg][fault] invalid close   " },
+	{ test_fault_msg_close_bad,       "[msg][fault] bad close       " },
+	{ test_fault_msg_send_invalid,    "[msg][fault] invalid send    " },
+	{ test_fault_msg_send_bad,        "[msg][fault] bad send        " },
+	{ test_fault_msg_receive_invalid, "[msg][fault] invalid receive " },
+	{ test_fault_msg_receive_bad,     "[msg][fault] bad receive     " },
+	{ test_fault_sem_get_invalid,     "[sem][fault] invalid get     " },
+	{ test_fault_sem_get_bad,         "[sem][fault] bad get         " },
+	{ test_fault_sem_close_invalid,   "[sem][fault] invalid close   " },
+	{ test_fault_sem_close_bad,       "[sem][fault] bad close       " },
+	{ test_fault_sem_operate_invalid, "[sem][fault] invalid operate " },
+	{ test_fault_sem_operate_bad,     "[sem][fault] bad operate     " },
+	{ NULL,                           NULL                            },
 };

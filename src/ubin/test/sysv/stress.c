@@ -27,14 +27,14 @@
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 
+/*============================================================================*
+ * Message Queue                                                              *
+ *============================================================================*/
+
 /**
  * Used for tests.
  */
 char msgp[NANVIX_MSG_SIZE_MAX];
-
-/*============================================================================*
- * Stress Tests                                                               *
- *============================================================================*/
 
 /**
  * @brief Stress Test: Get / Close 1
@@ -118,6 +118,85 @@ static void test_stress_msg_send_receive2(void)
 }
 
 /*============================================================================*
+ * Semaphores                                                                 *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Get / Close 1
+ */
+static void test_stress_sem_get_close1(void)
+{
+	int semid;
+
+	for (int i = 0; i < NANVIX_SEM_MAX; i++)
+	{
+		uassert((semid = __nanvix_semget(100, 0)) >= 0);
+		uassert(__nanvix_sem_close(semid) == 0);
+	}
+}
+
+/**
+ * @brief Stress Test: Get / Close 2
+ */
+static void test_stress_sem_get_close2(void)
+{
+	int semids[NANVIX_SEM_MAX];
+
+	for (int i = 0; i < NANVIX_SEM_MAX; i++)
+		uassert((semids[i] = __nanvix_semget(100 + i, 0)) >= 0);
+
+	for (int i = 0; i < NANVIX_SEM_MAX; i++)
+		uassert(__nanvix_sem_close(semids[i]) == 0);
+}
+
+/**
+ * @brief Stress Test: Up / Down 1
+ */
+static void test_stress_sem_up_down1(void)
+{
+	int semid;
+	struct nanvix_sembuf sembuf;
+
+	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+
+		for (int i = 0; i < NANVIX_SEM_MAX; i++)
+		{
+			sembuf.sem_op = 1;
+			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+			sembuf.sem_op = -1;
+			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+		}
+
+	uassert(__nanvix_sem_close(semid) == 0);
+}
+
+/**
+ * @brief Stress Test: Up / Down 2
+ */
+static void test_stress_sem_up_down2(void)
+{
+	int semid;
+	struct nanvix_sembuf sembuf;
+
+	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+
+		for (int i = 0; i < NANVIX_SEM_MAX; i++)
+		{
+			sembuf.sem_op = 1;
+			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+		}
+
+		for (int i = 0; i < NANVIX_SEM_MAX; i++)
+		{
+			sembuf.sem_op = -1;
+			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+		}
+
+	uassert(__nanvix_sem_close(semid) == 0);
+}
+
+/*============================================================================*
  * Test Driver                                                                *
  *============================================================================*/
 
@@ -129,9 +208,13 @@ struct
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
 } tests_sysv_stress[] = {
-	{ test_stress_msg_get_close1,     "[stress] get close 1   " },
-	{ test_stress_msg_get_close2,     "[stress] get close 2   " },
-	{ test_stress_msg_send_receive1,  "[stress] send receive 1" },
-	{ test_stress_msg_send_receive2,  "[stress] send receive 2" },
-	{ NULL,                           NULL                      },
+	{ test_stress_msg_get_close1,     "[msg][stress] get close 1    " },
+	{ test_stress_msg_get_close2,     "[msg][stress] get close 2    " },
+	{ test_stress_msg_send_receive1,  "[msg][stress] send receive 1 " },
+	{ test_stress_msg_send_receive2,  "[msg][stress] send receive 2 " },
+	{ test_stress_sem_get_close1,     "[sem][stress] get close 1    " },
+	{ test_stress_sem_get_close2,     "[sem][stress] get close 2    " },
+	{ test_stress_sem_up_down1,       "[sem][stress] up down 1      " },
+	{ test_stress_sem_up_down2,       "[sem][stress] up down 2      " },
+	{ NULL,                           NULL                            },
 };

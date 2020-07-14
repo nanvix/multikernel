@@ -27,14 +27,14 @@
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 
+/*============================================================================*
+ * Message Queue                                                              *
+ *============================================================================*/
+
 /**
  * Used for tests.
  */
 static char msgp[NANVIX_MSG_SIZE_MAX];
-
-/*============================================================================*
- * API Tests                                                                  *
- *============================================================================*/
 
 /**
  * @brief API Test: Get / Close
@@ -74,6 +74,45 @@ static void test_api_msg_send_receive(void)
 }
 
 /*============================================================================*
+ * Semaphores                                                                 *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Get / Close
+ */
+static void test_api_sem_get_close(void)
+{
+	int semid;
+
+	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert(__nanvix_sem_close(semid) == 0);
+
+	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert(__nanvix_semget(100, 0) == semid);
+	uassert(__nanvix_sem_close(semid) == 0);
+	uassert(__nanvix_sem_close(semid) == 0);
+}
+
+/**
+ * @brief API Test: Send / Receive
+ */
+static void test_api_sem_up_down(void)
+{
+	int semid;
+	struct nanvix_sembuf sembuf;
+
+	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+
+		sembuf.sem_op = 1;
+		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+		sembuf.sem_op = -1;
+		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+	uassert(__nanvix_sem_close(semid) == 0);
+}
+
+/*============================================================================*
  * Test Driver                                                                *
  *============================================================================*/
 
@@ -85,7 +124,9 @@ struct
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
 } tests_sysv_fault[] = {
-	{ test_api_msg_get_close,         "[api] get close        " },
-	{ test_api_msg_send_receive,      "[api] send receive     " },
-	{ NULL,                           NULL                      },
+	{ test_api_msg_get_close,     "[msg][api] get close    " },
+	{ test_api_msg_send_receive,  "[msg][api] send receive " },
+	{ test_api_sem_get_close,     "[sem][api] get close    " },
+	{ test_api_sem_up_down,       "[sem][api] up down      " },
+	{ NULL,                        NULL                      },
 };
