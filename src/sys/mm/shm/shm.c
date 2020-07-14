@@ -30,6 +30,7 @@
 #include <nanvix/runtime/mm.h>
 #include <nanvix/servers/shm.h>
 #include <nanvix/sys/noc.h>
+#include <nanvix/types.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/stat.h>
 #include <posix/errno.h>
@@ -46,7 +47,7 @@ static struct region
 	struct resource resource;        /**< Generic resource information.  */
 
 	char name[NANVIX_SHM_NAME_MAX];  /**< Shared memory region name.     */
-	pid_t owner;                     /**< ID of owner process.           */
+	nanvix_pid_t owner;              /**< ID of owner process.           */
 	int refcount;                    /**< Number of references.          */
 	mode_t mode;                     /**< Access permissions.            */
 	size_t size;                     /**< Size (in bytes).               */
@@ -90,7 +91,7 @@ static inline int shm_is_remove(int shmid)
  * @returns Non-zero if the target shared memory region is owned by
  * the target process, and zero otherwise.
  */
-static inline int shm_is_owner(int shmid, pid_t proc)
+static inline int shm_is_owner(int shmid, nanvix_pid_t proc)
 {
 	return (regions[shmid].owner == proc);
 }
@@ -186,7 +187,7 @@ static inline void shm_set_remove(int shmid)
  * @param shmid ID of the target shared memory region.
  * @param owner ID of the onwer process.
  */
-static inline void shm_set_owner(int shmid, pid_t owner)
+static inline void shm_set_owner(int shmid, nanvix_pid_t owner)
 {
 	regions[shmid].owner = owner;
 }
@@ -357,7 +358,7 @@ static int shm_put(int shmid)
  */
 int __do_shm_ftruncate(
 	rpage_t *page,
-	pid_t proc,
+	nanvix_pid_t proc,
 	int shmid,
 	off_t size
 )
@@ -409,7 +410,7 @@ int __do_shm_ftruncate(
  */
 int __do_shm_open(
 	rpage_t *page,
-	pid_t proc,
+	nanvix_pid_t proc,
 	const char *name,
 	int oflags
 )
@@ -480,7 +481,7 @@ int __do_shm_open(
  */
 int __do_shm_create(
 	rpage_t *page,
-	pid_t proc,
+	nanvix_pid_t proc,
 	const char *name,
 	int oflags,
 	mode_t mode
@@ -565,7 +566,7 @@ out:
 /**
  * @todo TODO: provide a detailed description for this function.
  */
-int __do_shm_close(pid_t proc, int shmid)
+int __do_shm_close(nanvix_pid_t proc, int shmid)
 {
 	shm_debug("close proc=%d shmid=%d", proc, shmid);
 
@@ -592,7 +593,7 @@ int __do_shm_close(pid_t proc, int shmid)
 /**
  * @todo TODO: provide a detailed description for this function.
  */
-int __do_shm_unlink(pid_t proc, const char *name)
+int __do_shm_unlink(nanvix_pid_t proc, const char *name)
 {
 	int shmid;
 

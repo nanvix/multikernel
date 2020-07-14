@@ -33,6 +33,7 @@
 #include <nanvix/config.h>
 #include <nanvix/dev.h>
 #include <nanvix/fs.h>
+#include <nanvix/types.h>
 #include <nanvix/ulib.h>
 
 /* Import definitions. */
@@ -77,7 +78,7 @@ static int do_vfs_server_open(
 )
 {
 	int ret;
-	const pid_t pid = request->header.source;
+	const nanvix_pid_t pid = request->header.source;
 	const int connection = connect(pid);
 
 	/* XXX: forward parameter checking to lower level function. */
@@ -118,7 +119,7 @@ static int do_vfs_server_open(
 static int do_vfs_server_close(const struct vfs_message *request)
 {
 	int ret;
-	const pid_t pid = request->header.source;
+	const nanvix_pid_t pid = request->header.source;
 	const int connection = lookup(pid);
 
 	/* XXX: forwarding parameter checking to lower level function. */
@@ -158,7 +159,7 @@ static int do_vfs_server_seek(
 )
 {
 	off_t ret;
-	const pid_t pid = request->header.source;
+	const nanvix_pid_t pid = request->header.source;
 	const int connection = lookup(pid);
 
 	/* XXX: forward parameter checking to lower level function. */
@@ -200,7 +201,7 @@ static int do_vfs_server_write(
 )
 {
 	ssize_t ret;
-	const pid_t pid = request->header.source;
+	const nanvix_pid_t pid = request->header.source;
 	const int connection = lookup(pid);
 
 	/* Invalid write size. */
@@ -267,7 +268,7 @@ static int do_vfs_server_read(
 	int outportal;
 	int outbox;
 	struct vfs_message msg;
-	const pid_t pid = request->header.source;
+	const nanvix_pid_t pid = request->header.source;
 	const int connection = lookup(pid);
 
 	/* Invalid read size. */

@@ -23,8 +23,8 @@
  */
 
 #include <nanvix/limits.h>
+#include <nanvix/types.h>
 #include <nanvix/ulib.h>
-#include <posix/sys/types.h>
 #include <posix/errno.h>
 
 /**
@@ -32,9 +32,9 @@
  */
 static struct
 {
-	pid_t remote;  /**< PID.                  */
-	int port;      /**< Port Number.          */
-	int count;     /**< Number of Connections */
+	nanvix_pid_t remote; /**< PID.                  */
+	int port;            /**< Port Number.          */
+	int count;           /**< Number of Connections */
 } connections[NANVIX_CONNECTIONS_MAX];
 
 /*============================================================================*
@@ -45,7 +45,7 @@ static struct
  * The lookup() function searches in the table of active connnections
  * for the connection in which the process @p remote is hooked up.
  */
-int lookup(pid_t remote)
+int lookup(nanvix_pid_t remote)
 {
 	/* Invalid PID. */
 	if (remote < 0)
@@ -70,7 +70,7 @@ int lookup(pid_t remote)
  * The connect() function connects the remote client @p remote to the
  * running server.
  */
-int connect(pid_t remote)
+int connect(nanvix_pid_t remote)
 {
 	int i;
 
@@ -111,7 +111,7 @@ out:
  * The disconnect() function disconnects the remote client @p remote to
  * the running server.
  */
-int disconnect(pid_t remote)
+int disconnect(nanvix_pid_t remote)
 {
 	int i;
 
@@ -139,7 +139,7 @@ int disconnect(pid_t remote)
  * with the running server. Connections are place in the buffer pointed
  * to by @p buf.
  */
-int get_connections(pid_t *buf)
+int get_connections(nanvix_pid_t *buf)
 {
 	int count;
 
