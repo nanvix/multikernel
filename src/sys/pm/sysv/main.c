@@ -78,8 +78,8 @@ static int do_sysv_msg_get(
 
 	((void) connection);
 	ret = do_msg_get(
-		request->payload.msg.op.get.key,
-		request->payload.msg.op.get.msgflg
+		request->payload.msg.get.key,
+		request->payload.msg.get.msgflg
 	);
 
 	/* Operation failed. */
@@ -114,7 +114,7 @@ static int do_sysv_msg_close(const struct sysv_message *request)
 	int ret;
 	const nanvix_pid_t pid = request->header.source;
 
-	ret = do_msg_close(request->payload.msg.op.close.msgid);
+	ret = do_msg_close(request->payload.msg.close.msgid);
 
 	/* Operation failed. */
 	if (ret < 0)
@@ -146,10 +146,10 @@ static int do_sysv_msg_send(const struct sysv_message *request)
 	void *msgp;
 
 	ret = do_msg_send(
-		request->payload.msg.op.send.msgid,
+		request->payload.msg.send.msgid,
 		&msgp,
-		request->payload.msg.op.send.msgsz,
-		request->payload.msg.op.send.msgflg
+		request->payload.msg.send.msgsz,
+		request->payload.msg.send.msgflg
 	);
 
 	/**
@@ -172,8 +172,8 @@ static int do_sysv_msg_send(const struct sysv_message *request)
 		kportal_read(
 			server.inportal,
 			msgp,
-			request->payload.msg.op.send.msgsz
-		) == (ssize_t) request->payload.msg.op.send.msgsz
+			request->payload.msg.send.msgsz
+		) == (ssize_t) request->payload.msg.send.msgsz
 	);
 
 	return (ret);
@@ -203,11 +203,11 @@ static int do_sysv_msg_receive(const struct sysv_message *request)
 	struct sysv_message msg;
 
 	ret = do_msg_receive(
-		request->payload.msg.op.receive.msgid,
+		request->payload.msg.receive.msgid,
 		&msgp,
-		request->payload.msg.op.receive.msgsz,
-		request->payload.msg.op.receive.msgtyp,
-		request->payload.msg.op.receive.msgflg
+		request->payload.msg.receive.msgsz,
+		request->payload.msg.receive.msgtyp,
+		request->payload.msg.receive.msgflg
 	);
 
 	/* Operation failed. */
@@ -250,8 +250,8 @@ static int do_sysv_msg_receive(const struct sysv_message *request)
 		kportal_write(
 			outportal,
 			msgp,
-			request->payload.msg.op.receive.msgsz
-		) == (ssize_t) request->payload.msg.op.receive.msgsz
+			request->payload.msg.receive.msgsz
+		) == (ssize_t) request->payload.msg.receive.msgsz
 	);
 
 	/* House keeping. */

@@ -64,7 +64,7 @@
 			/**
 			 * @brief Message Queue
 			 */
-			struct msg_message msg;
+			union msg_payload msg;
 
 			/**
 			 * @brief Semaphore

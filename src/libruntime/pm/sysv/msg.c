@@ -53,8 +53,8 @@ static int __do_nanvix_msg_get(key_t key, int msgflg)
 
 	/* Build message. */
 	message_header_build(&msg.header, SYSV_MSG_GET);
-	msg.payload.msg.op.get.key = key;
-	msg.payload.msg.op.get.msgflg = msgflg;
+	msg.payload.msg.get.key = key;
+	msg.payload.msg.get.msgflg = msgflg;
 
 	/* Send operation header. */
 	uassert(
@@ -107,7 +107,7 @@ int __do_nanvix_msg_close(int msgid)
 
 	/* Build message. */
 	message_header_build(&msg.header, SYSV_MSG_CLOSE);
-	msg.payload.msg.op.close.msgid = msgid;
+	msg.payload.msg.close.msgid = msgid;
 
 	/* Send operation header. */
 	uassert(
@@ -174,9 +174,9 @@ int __do_nanvix_msg_send(
 		SYSV_MSG_SEND,
 		__nanvix_sysv_outportal()
 	);
-	msg.payload.msg.op.send.msgid = msgid;
-	msg.payload.msg.op.send.msgsz = msgsz;
-	msg.payload.msg.op.send.msgflg = msgflg;
+	msg.payload.msg.send.msgid = msgid;
+	msg.payload.msg.send.msgsz = msgsz;
+	msg.payload.msg.send.msgflg = msgflg;
 
 	/* Send operation header. */
 	uassert(
@@ -260,10 +260,10 @@ int __do_nanvix_msg_receive(
 
 	/* Build message. */
 	message_header_build(&msg.header, SYSV_MSG_RECEIVE);
-	msg.payload.msg.op.receive.msgid = msgid;
-	msg.payload.msg.op.receive.msgsz = msgsz;
-	msg.payload.msg.op.receive.msgtyp = msgtyp;
-	msg.payload.msg.op.receive.msgflg = msgflg;
+	msg.payload.msg.receive.msgid = msgid;
+	msg.payload.msg.receive.msgsz = msgsz;
+	msg.payload.msg.receive.msgtyp = msgtyp;
+	msg.payload.msg.receive.msgflg = msgflg;
 
 	/* Send operation header. */
 	uassert(
