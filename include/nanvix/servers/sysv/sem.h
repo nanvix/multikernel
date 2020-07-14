@@ -29,6 +29,7 @@
 
 	/* Must come first. */
 	#define __NEED_LIMITS_PM
+	#define __NEED_TYPES_PM
 
 	#include <nanvix/limits/pm.h>
 	#include <nanvix/types/pm.h>

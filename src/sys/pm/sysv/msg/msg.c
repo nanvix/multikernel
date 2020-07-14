@@ -26,7 +26,6 @@
 #define __NEED_RESOURCE
 #define __SYSV_SERVER
 
-#include <nanvix/hal/resource.h>
 #include <nanvix/servers/sysv.h>
 #include <nanvix/types.h>
 #include <nanvix/ulib.h>

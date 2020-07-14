@@ -27,6 +27,7 @@
 #define __SYSV_SERVER
 
 #include <nanvix/servers/sysv.h>
+#include <nanvix/types.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>

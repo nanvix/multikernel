@@ -26,8 +26,10 @@
 #define NANVIX_PM_H_
 
 	#define __NEED_LIMITS_PM
+	#define __NEED_TYPES_PM
 	#define __NEED_SPAWN_SERVER
 
+	#include <nanvix/types/pm.h>
 	#include <nanvix/limits/pm.h>
 	#include <nanvix/runtime/pm.h>
 	#include <nanvix/servers/spawn.h>

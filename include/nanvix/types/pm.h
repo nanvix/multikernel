@@ -25,6 +25,10 @@
 #ifndef NANVIX_TYPES_PM_H_
 #define NANVIX_TYPES_PM_H_
 
+	#ifndef __NEED_TYPES_PM
+	#error "do not include this file"
+	#endif
+
 	/**
 	 * @brief Process ID.
 	 */
