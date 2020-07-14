@@ -45,6 +45,11 @@
 	/**@}*/
 
 	/**
+	 * @brief Sets up adjust on exit entry.
+	 */
+	#define SEM_UNDO (1 << 8)
+
+	/**
 	 * @brief Payload for Semaphore Message
 	 */
 	union sem_payload
