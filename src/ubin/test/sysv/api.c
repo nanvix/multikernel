@@ -123,7 +123,7 @@ struct
 {
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
-} tests_sysv_fault[] = {
+} tests_sysv_api[] = {
 	{ test_api_msg_get_close,     "[msg][api] get close    " },
 	{ test_api_msg_send_receive,  "[msg][api] send receive " },
 	{ test_api_sem_get_close,     "[sem][api] get close    " },

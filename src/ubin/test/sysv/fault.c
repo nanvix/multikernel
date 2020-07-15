@@ -191,7 +191,7 @@ struct
 {
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
-} tests_sysv_api[] = {
+} tests_sysv_fault[] = {
 	{ test_fault_msg_get_invalid,     "[msg][fault] invalid get     " },
 	{ test_fault_msg_get_bad,         "[msg][fault] bad get         " },
 	{ test_fault_msg_close_invalid,   "[msg][fault] invalid close   " },

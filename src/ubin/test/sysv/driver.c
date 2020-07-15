@@ -38,21 +38,21 @@ void test_sysv(void)
 	/* Run API tests. */
 	for (int i = 0; tests_sysv_api[i].test_fn != NULL; i++)
 	{
-		uprintf("[nanvix][test][sysv][api] %s", tests_sysv_api[i].name);
+		uprintf("[nanvix][test][sysv]%s", tests_sysv_api[i].name);
 		tests_sysv_api[i].test_fn();
 	}
 
 	/* Run fault injection tests. */
 	for (int i = 0; tests_sysv_fault[i].test_fn != NULL; i++)
 	{
-		uprintf("[nanvix][test][sysv][fault] %s", tests_sysv_fault[i].name);
+		uprintf("[nanvix][test][sysv]%s", tests_sysv_fault[i].name);
 		tests_sysv_fault[i].test_fn();
 	}
 
 	/* Run stress injection tests. */
 	for (int i = 0; tests_sysv_stress[i].test_fn != NULL; i++)
 	{
-		uprintf("[nanvix][test][sysv][stress] %s", tests_sysv_stress[i].name);
+		uprintf("[nanvix][test][sysv]%s", tests_sysv_stress[i].name);
 		tests_sysv_stress[i].test_fn();
 	}
 }
