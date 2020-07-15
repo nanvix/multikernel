@@ -327,10 +327,9 @@ static int do_sysv_sem_close(const struct sysv_message *request)
 
 	/* Operation failed. */
 	if (ret < 0)
-	{
-		disconnect(pid);
 		return (ret);
-	}
+
+	disconnect(pid);
 
 	return (ret);
 }
