@@ -162,9 +162,11 @@ static void test_stress_sem_up_down1(void)
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
 			sembuf.sem_op = 1;
+			sembuf.sem_flg = 0;
 			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 			sembuf.sem_op = -1;
+			sembuf.sem_flg = 0;
 			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 		}
 
@@ -184,12 +186,14 @@ static void test_stress_sem_up_down2(void)
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
 			sembuf.sem_op = 1;
+			sembuf.sem_flg = 0;
 			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 		}
 
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
 			sembuf.sem_op = -1;
+			sembuf.sem_flg = 0;
 			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 		}
 

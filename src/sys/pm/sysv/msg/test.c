@@ -40,10 +40,10 @@ static void test_api_msg_get_close(void)
 {
 	int msgid;
 
-	uassert((msgid = do_msg_get(100, 0)) >= 0);
+	uassert((msgid = do_msg_get(100, IPC_CREAT)) >= 0);
 	uassert(do_msg_close(msgid) == 0);
 
-	uassert((msgid = do_msg_get(100, 0)) >= 0);
+	uassert((msgid = do_msg_get(100, IPC_CREAT)) >= 0);
 	uassert(do_msg_get(100, 0) == msgid);
 	uassert(do_msg_close(msgid) == 0);
 	uassert(do_msg_close(msgid) == 0);
@@ -57,11 +57,11 @@ static void test_api_msg_send_receive(void)
 	int msgid;
 	void *msgp;
 
-	uassert((msgid = do_msg_get(100, 0)) >= 0);
+	uassert((msgid = do_msg_get(100, IPC_CREAT)) >= 0);
 
-	uassert(do_msg_send(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0) == 0);
+	uassert(do_msg_send(msgid, &msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == 0);
 	umemset(msgp, 1, NANVIX_MSG_SIZE_MAX);
-	uassert(do_msg_receive(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == 0);
+	uassert(do_msg_receive(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == 0);
 
 	/* Check sum. */
 	for (int i = 0; i < NANVIX_MSG_SIZE_MAX; i++)
@@ -115,12 +115,12 @@ static void test_fault_msg_send_invalid(void)
 	int msgid;
 	void *msgp;
 
-	uassert(do_msg_send(-1, &msgp, NANVIX_MSG_SIZE_MAX, 0) == -EINVAL);
-	uassert(do_msg_send(NANVIX_MSG_MAX, &msgp, NANVIX_MSG_SIZE_MAX, 0) == -EINVAL);
+	uassert(do_msg_send(-1, &msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == -EINVAL);
+	uassert(do_msg_send(NANVIX_MSG_MAX, &msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == -EINVAL);
 
-	uassert((msgid = do_msg_get(100, 0)) >= 0);
-	uassert(do_msg_send(msgid, NULL, NANVIX_MSG_SIZE_MAX, 0) == -EINVAL);
-	uassert(do_msg_send(msgid, &msgp, 1, 0) == -EINVAL);
+	uassert((msgid = do_msg_get(100, IPC_CREAT)) >= 0);
+	uassert(do_msg_send(msgid, NULL, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == -EINVAL);
+	uassert(do_msg_send(msgid, &msgp, 1, IPC_NOWAIT) == -EINVAL);
 	uassert(do_msg_close(msgid) == 0);
 }
 
@@ -130,7 +130,7 @@ static void test_fault_msg_send_invalid(void)
 static void test_fault_msg_send_bad(void)
 {
 	void *msgp;
-	uassert(do_msg_send(0, &msgp, NANVIX_MSG_SIZE_MAX, 0) == -EINVAL);
+	uassert(do_msg_send(0, &msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == -EINVAL);
 }
 
 /**
@@ -141,12 +141,12 @@ static void test_fault_msg_receive_invalid(void)
 	int msgid;
 	void *msgp;
 
-	uassert(do_msg_receive(-1, &msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == -EINVAL);
-	uassert(do_msg_receive(NANVIX_MSG_MAX, &msgp, NANVIX_MSG_SIZE_MAX, 0, 9) == -EINVAL);
+	uassert(do_msg_receive(-1, &msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == -EINVAL);
+	uassert(do_msg_receive(NANVIX_MSG_MAX, &msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == -EINVAL);
 
-	uassert((msgid = do_msg_get(100, 0)) >= 0);
-	uassert(do_msg_receive(msgid, NULL, NANVIX_MSG_SIZE_MAX, 0, 0) == -EINVAL);
-	uassert(do_msg_receive(msgid, &msgp, 1, 0, 0) == -EINVAL);
+	uassert((msgid = do_msg_get(100, IPC_CREAT)) >= 0);
+	uassert(do_msg_receive(msgid, NULL, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == -EINVAL);
+	uassert(do_msg_receive(msgid, &msgp, 1, 0, IPC_NOWAIT) == -EINVAL);
 	uassert(do_msg_close(msgid) == 0);
 }
 
@@ -156,7 +156,7 @@ static void test_fault_msg_receive_invalid(void)
 static void test_fault_msg_receive_bad(void)
 {
 	void *msgp;
-	uassert(do_msg_receive(0, &msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == -EINVAL);
+	uassert(do_msg_receive(0, &msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == -EINVAL);
 }
 
 /*============================================================================*
@@ -172,7 +172,7 @@ static void test_stress_msg_get_close1(void)
 
 	for (int i = 0; i < NANVIX_MSG_MAX; i++)
 	{
-		uassert((msgid = do_msg_get(100, 0)) >= 0);
+		uassert((msgid = do_msg_get(100 + i, IPC_CREAT)) >= 0);
 		uassert(do_msg_close(msgid) == 0);
 	}
 }
@@ -185,7 +185,7 @@ static void test_stress_msg_get_close2(void)
 	int msgids[NANVIX_MSG_MAX];
 
 	for (int i = 0; i < NANVIX_MSG_MAX; i++)
-		uassert((msgids[i] = do_msg_get(100 + i, 0)) >= 0);
+		uassert((msgids[i] = do_msg_get(100 + i, IPC_CREAT)) >= 0);
 
 	for (int i = 0; i < NANVIX_MSG_MAX; i++)
 		uassert(do_msg_close(msgids[i]) == 0);
@@ -199,14 +199,14 @@ static void test_stress_msg_send_receive1(void)
 	int msgid;
 	void *msgp;
 
-	uassert((msgid = do_msg_get(100, 0)) >= 0);
+	uassert((msgid = do_msg_get(100, IPC_CREAT)) >= 0);
 
 		for (int i = 0; i < 2*NANVIX_MSG_LENGTH_MAX; i++)
 		{
-			uassert(do_msg_send(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0) == 0);
+			uassert(do_msg_send(msgid, &msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == 0);
 			umemset(msgp, i, NANVIX_MSG_SIZE_MAX);
 
-			uassert(do_msg_receive(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == 0);
+			uassert(do_msg_receive(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == 0);
 
 			/* Check sum. */
 			for (int j = 0; j < NANVIX_MSG_SIZE_MAX; j++)
@@ -224,17 +224,17 @@ static void test_stress_msg_send_receive2(void)
 	int msgid;
 	void *msgp;
 
-	uassert((msgid = do_msg_get(100, 0)) >= 0);
+	uassert((msgid = do_msg_get(100, IPC_CREAT)) >= 0);
 
 		for (int i = 0; i < NANVIX_MSG_LENGTH_MAX; i++)
 		{
-			uassert(do_msg_send(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0) == 0);
+			uassert(do_msg_send(msgid, &msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == 0);
 			umemset(msgp, i, NANVIX_MSG_SIZE_MAX);
 		}
 
 		for (int i = 0; i < NANVIX_MSG_LENGTH_MAX; i++)
 		{
-			uassert(do_msg_receive(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == 0);
+			uassert(do_msg_receive(msgid, &msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == 0);
 
 			/* Check sum. */
 			for (int j = 0; j < NANVIX_MSG_SIZE_MAX; j++)

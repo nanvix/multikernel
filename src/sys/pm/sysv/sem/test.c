@@ -42,11 +42,11 @@ static void test_api_sem_get_close(void)
 {
 	int semid;
 
-	uassert((semid = do_sem_get(100, 0)) >= 0);
+	uassert((semid = do_sem_get(100, IPC_CREAT)) >= 0);
 	uassert(do_sem_close(semid) == 0);
 
-	uassert((semid = do_sem_get(100, 0)) >= 0);
-	uassert(do_sem_get(100, 0) == semid);
+	uassert((semid = do_sem_get(100, IPC_CREAT)) >= 0);
+	uassert(do_sem_get(100, IPC_CREAT) == semid);
 	uassert(do_sem_close(semid) == 0);
 	uassert(do_sem_close(semid) == 0);
 }
@@ -62,7 +62,7 @@ static void test_api_sem_up_down(void)
 
 	pid = kcluster_get_num();
 
-	uassert((semid = do_sem_get(100, 0)) >= 0);
+	uassert((semid = do_sem_get(100, IPC_CREAT)) >= 0);
 
 	sembuf.sem_op = 1;
 	uassert(do_sem_operate(pid, semid, &sembuf) == 0);
@@ -122,7 +122,7 @@ static void test_fault_sem_operate_invalid(void)
 
 	uassert(do_sem_operate(pid, -1, &sembuf) == -EINVAL);
 
-	uassert((semid = do_sem_get(100, 0)) >= 0);
+	uassert((semid = do_sem_get(100, IPC_CREAT)) >= 0);
 	uassert(do_sem_operate(-1, semid, &sembuf) == -EINVAL);
 	uassert(do_sem_operate(pid, semid, NULL) == -EINVAL);
 	uassert(do_sem_close(semid) == 0);
@@ -154,7 +154,7 @@ static void test_stress_sem_get_close1(void)
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
 	{
-		uassert((semid = do_sem_get(100, 0)) >= 0);
+		uassert((semid = do_sem_get(100 + i, IPC_CREAT)) >= 0);
 		uassert(do_sem_close(semid) == 0);
 	}
 }
@@ -167,7 +167,7 @@ static void test_stress_sem_get_close2(void)
 	int semids[NANVIX_SEM_MAX];
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
-		uassert((semids[i] = do_sem_get(100 + i, 0)) >= 0);
+		uassert((semids[i] = do_sem_get(100 + i, IPC_CREAT)) >= 0);
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		uassert(do_sem_close(semids[i]) == 0);
@@ -184,7 +184,7 @@ static void test_stress_sem_up_down1(void)
 
 	pid = kcluster_get_num();
 
-	uassert((semid = do_sem_get(100, 0)) >= 0);
+	uassert((semid = do_sem_get(100, IPC_CREAT)) >= 0);
 
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
@@ -209,7 +209,7 @@ static void test_stress_sem_up_down2(void)
 
 	pid = kcluster_get_num();
 
-	uassert((semid = do_sem_get(100, 0)) >= 0);
+	uassert((semid = do_sem_get(100, IPC_CREAT)) >= 0);
 
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
