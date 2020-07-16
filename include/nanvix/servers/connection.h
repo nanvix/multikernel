@@ -29,6 +29,16 @@
 	#include <nanvix/types.h>
 
 	/**
+	 * @brief Connection
+	 */
+	struct connection
+	{
+		nanvix_pid_t remote; /**< PID             */
+		int port;            /**< Port Number     */
+		int count;           /**< Reference Count */
+	};
+
+	/**
 	 * @brief Initializes the table of connections.
 	 */
 	extern void connections_setup(void);
@@ -36,23 +46,25 @@
 	/**
 	 * @brief Searches for a registered connection.
 	 *
-	 * @param pid PID of the remote.
+	 * @param pid  PID of the remote.
+	 * @param port Remote port number.
 	 *
 	 * @returns If the target remote is found, its index in the table of
 	 * connections is returned. Otherwise a negative number is returned
 	 * instead.
 	 */
-	extern int lookup(nanvix_pid_t remote);
+	extern int lookup(nanvix_pid_t remote, int port);
 
 	/**
 	 * @brief Establishes a connection
 	 *
-	 * @param pid PID of the remote.
+	 * @param pid  PID of the remote.
+	 * @param port Remote port number.
 	 *
 	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
 	 * negative error code is returned instead.
 	 */
-	extern int connect(nanvix_pid_t remote);
+	extern int connect(nanvix_pid_t remote, int port);
 
 	/**
 	 * @brief Gets port of remote connection.
@@ -66,25 +78,15 @@
 	extern int connection_get_port(int connection);
 
 	/**
-	 * @brief Sets port for remote connection.
-	 *
-	 * @param connection Target connection.
-	 * @param port       Port number of the remote.
-	 *
-	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
-	 * negative error code is returned instead.
-	 */
-	extern int connection_set_port(int connection, int port);
-
-	/**
 	 * @brief Unlinks a connection
 	 *
-	 * @param pid PID of the remote.
+	 * @param pid  PID of the remote.
+	 * @param port Remote port number.
 	 *
 	 * @returns Upon sucessful completion, zero is returned. Upon failure, a
 	 * negative error code is returned instead.
 	 */
-	extern int disconnect(nanvix_pid_t remote);
+	extern int disconnect(nanvix_pid_t remote, int port);
 
 	/**
 	 * @brief Gets active connections.
@@ -95,6 +97,6 @@
 	 * placed in @p buf is returned. Upon failure, a negative error code
 	 * is returned instead.
 	 */
-	extern int get_connections(nanvix_pid_t *buf);
+	extern int get_connections(struct connection *buf);
 
 #endif /* SERVERS_CONNECTION_H_ */
