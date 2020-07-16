@@ -30,7 +30,7 @@
 /**
  * @brief Connections
  */
-static struct
+static struct connection
 {
 	nanvix_pid_t remote; /**< PID.                  */
 	int port;            /**< Port Number.          */
@@ -45,17 +45,21 @@ static struct
  * The lookup() function searches in the table of active connnections
  * for the connection in which the process @p remote is hooked up.
  */
-int lookup(nanvix_pid_t remote)
+int lookup(nanvix_pid_t remote, int port)
 {
 	/* Invalid PID. */
 	if (remote < 0)
+		return (-EINVAL);
+
+	/* Invalid Remote. */
+	if (port < 0)
 		return (-EINVAL);
 
 	/* Lookup connection. */
 	for (int i = 0; i < NANVIX_CONNECTIONS_MAX; i++)
 	{
 		/* Found. */
-		if (connections[i].remote == remote)
+		if ((connections[i].remote == remote) && (connections[i].port == port))
 			return (i);
 	}
 	
@@ -70,7 +74,7 @@ int lookup(nanvix_pid_t remote)
  * The connect() function connects the remote client @p remote to the
  * running server.
  */
-int connect(nanvix_pid_t remote)
+int connect(nanvix_pid_t remote, int port)
 {
 	int i;
 
@@ -78,8 +82,12 @@ int connect(nanvix_pid_t remote)
 	if (remote < 0)
 		return (-EINVAL);
 
+	/* Invalid Remote. */
+	if (port < 0)
+		return (-EINVAL);
+
 	/* Registered remote? */
-	if ((i = lookup(remote)) < 0)
+	if ((i = lookup(remote, port)) < 0)
 	{
 		/* Looks for an empty slot in the table of connections. */
 		for (i = 0; i < NANVIX_CONNECTIONS_MAX; i++)
@@ -88,6 +96,7 @@ int connect(nanvix_pid_t remote)
 			if (connections[i].remote < 0)
 			{
 				connections[i].remote = remote;
+				connections[i].port = port;
 				connections[i].count = 0;
 				goto out;
 			}
@@ -111,7 +120,7 @@ out:
  * The disconnect() function disconnects the remote client @p remote to
  * the running server.
  */
-int disconnect(nanvix_pid_t remote)
+int disconnect(nanvix_pid_t remote, int port)
 {
 	int i;
 
@@ -119,8 +128,12 @@ int disconnect(nanvix_pid_t remote)
 	if (remote < 0)
 		return (-EINVAL);
 
+	/* Invalid Remote. */
+	if (port < 0)
+		return (-EINVAL);
+
 	/* Registered remote? */
-	if ((i = lookup(remote)) < 0)
+	if ((i = lookup(remote, port)) < 0)
 		return (-ENOENT);
 
 	/* Unlink remote. */
@@ -139,7 +152,7 @@ int disconnect(nanvix_pid_t remote)
  * with the running server. Connections are place in the buffer pointed
  * to by @p buf.
  */
-int get_connections(nanvix_pid_t *buf)
+int get_connections(struct connection *buf)
 {
 	int count;
 
@@ -155,32 +168,10 @@ int get_connections(nanvix_pid_t *buf)
 		if (connections[i].remote < 0)
 			continue;
 
-		buf[count++] = connections[i].remote;
+		umemcpy(&buf[count++], &connections[i], sizeof(struct connection));
 	}
 	
 	return (count);
-}
-
-/*============================================================================*
- * connection_set_port()                                                      *
- *============================================================================*/
-
-/**
- * @todo TODO: provide a detailed description for this function.
- */
-int connection_set_port(int connection, int port)
-{
-	/* Invalid Connection. */
-	if ((connection < 0) || (connection >= NANVIX_CONNECTIONS_MAX))
-		return (-EINVAL);
-
-	/* Invalid port. */
-	if (port < 0)
-		return (-EINVAL);
-
-	connections[connection].port = port;
-
-	return (0);
 }
 
 /*============================================================================*

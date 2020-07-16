@@ -71,7 +71,7 @@ static int do_open(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.shmid = ret;
-	uassert(connect(request->header.source) == 0);
+	uassert(connect(request->header.source, request->header.mailbox_port) == 0);
 
 	return (0);
 }
@@ -93,7 +93,10 @@ static int do_close(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.status = ret;
-	uassert(disconnect(request->header.source) == 0);
+	uassert(disconnect(
+		request->header.source,
+		request->header.mailbox_port
+	) == 0);
 
 	return (0);
 }
@@ -121,7 +124,7 @@ static int do_create(struct shm_message *request, struct shm_message *response)
 		return (ret);
 
 	response->op.ret.shmid = ret;
-	uassert(connect(request->header.source) == 0);
+	uassert(connect(request->header.source, request->header.mailbox_port) == 0);
 
 	return (0);
 }
@@ -185,7 +188,7 @@ static int do_inval(struct shm_message *request, struct shm_message *response)
 	int nremotes;
 	int shmid;
 	rpage_t page;
-	nanvix_pid_t remotes[NANVIX_PROC_MAX];
+	struct connection remotes[NANVIX_PROC_MAX];
 
 	shmid = request->op.inval.shmid;
 	page = request->op.inval.page;
@@ -213,7 +216,7 @@ static int do_inval(struct shm_message *request, struct shm_message *response)
 
 		uassert((
 			outbox = kmailbox_open(
-				remotes[i],
+				remotes[i].remote,
 				NANVIX_SHM_SNOOPER_PORT_NUM	
 			)) >= 0
 		);

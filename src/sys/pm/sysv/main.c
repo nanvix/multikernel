@@ -73,10 +73,12 @@ static int do_sysv_msg_get(
 )
 {
 	int ret;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
-	const int connection = connect(pid);
+	const int connection = connect(pid, port);
 
 	((void) connection);
+
 	ret = do_msg_get(
 		request->payload.msg.get.key,
 		request->payload.msg.get.msgflg
@@ -85,7 +87,7 @@ static int do_sysv_msg_get(
 	/* Operation failed. */
 	if (ret < 0)
 	{
-		disconnect(pid);
+		disconnect(pid, port);
 		return (ret);
 	}
 
@@ -112,6 +114,7 @@ static int do_sysv_msg_get(
 static int do_sysv_msg_close(const struct sysv_message *request)
 {
 	int ret;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
 
 	ret = do_msg_close(request->payload.msg.close.msgid);
@@ -120,7 +123,7 @@ static int do_sysv_msg_close(const struct sysv_message *request)
 	if (ret < 0)
 		return (ret);
 
-	disconnect(pid);
+	disconnect(pid, port);
 
 	return (ret);
 }
@@ -282,10 +285,11 @@ static int do_sysv_sem_get(
 )
 {
 	int ret;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
-	const int connection = connect(pid);
+	const int connection = connect(pid, port);
 
-	connection_set_port(connection, request->header.mailbox_port);
+	((void) connection);
 
 	ret = do_sem_get(
 		request->payload.sem.get.key,
@@ -295,7 +299,7 @@ static int do_sysv_sem_get(
 	/* Operation failed. */
 	if (ret < 0)
 	{
-		disconnect(pid);
+		disconnect(pid, port);
 		return (ret);
 	}
 
@@ -321,6 +325,7 @@ static int do_sysv_sem_get(
 static int do_sysv_sem_close(const struct sysv_message *request)
 {
 	int ret;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
 
 	ret = do_sem_close(request->payload.sem.close.semid);
@@ -329,7 +334,7 @@ static int do_sysv_sem_close(const struct sysv_message *request)
 	if (ret < 0)
 		return (ret);
 
-	disconnect(pid);
+	disconnect(pid, port);
 
 	return (ret);
 }
