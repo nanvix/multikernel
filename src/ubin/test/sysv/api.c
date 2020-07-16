@@ -44,10 +44,17 @@ static void test_api_msg_get_close(void)
 {
 	int msgid;
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	/* Create. */
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT)) >= 0);
 	uassert(__nanvix_msg_close(msgid) == 0);
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	/* Create exclusive. */
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT)) >= 0);
+	uassert(__nanvix_msg_get(100, IPC_CREAT | IPC_EXCL) == -EEXIST);
+	uassert(__nanvix_msg_close(msgid) == 0);
+
+	/* Open. */
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT)) >= 0);
 	uassert(__nanvix_msg_get(100, 0) == msgid);
 	uassert(__nanvix_msg_close(msgid) == 0);
 	uassert(__nanvix_msg_close(msgid) == 0);
@@ -60,12 +67,12 @@ static void test_api_msg_send_receive(void)
 {
 	int msgid;
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 	umemset(msgp, 1, NANVIX_MSG_SIZE_MAX);
-	uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0) == 0);
+	uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == 0);
 	umemset(msgp, 0, NANVIX_MSG_SIZE_MAX);
-	uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == 0);
+	uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == 0);
 
 	/* Check sum. */
 	for (int i = 0; i < NANVIX_MSG_SIZE_MAX; i++)

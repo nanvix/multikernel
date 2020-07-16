@@ -41,7 +41,8 @@ char msgp[NANVIX_MSG_SIZE_MAX];
  */
 static void test_fault_msg_get_invalid(void)
 {
-	/* TODO: implement. */
+	uassert(__nanvix_msg_get(IPC_PRIVATE, IPC_CREAT | IPC_EXCL) == -ENOTSUP);
+	uassert(__nanvix_msg_get(100, IPC_EXCL) == -EINVAL);
 }
 
 /**
@@ -49,7 +50,7 @@ static void test_fault_msg_get_invalid(void)
  */
 static void test_fault_msg_get_bad(void)
 {
-	/* TODO: implement. */
+	uassert(__nanvix_msg_get(100, 0) == -ENOENT);
 }
 
 /**
@@ -76,11 +77,11 @@ static void test_fault_msg_send_invalid(void)
 {
 	int msgid;
 
-	uassert(__nanvix_msg_send(-1, msgp, NANVIX_MSG_SIZE_MAX, 0) == -EINVAL);
-	uassert(__nanvix_msg_send(NANVIX_MSG_MAX, msgp, NANVIX_MSG_SIZE_MAX, 0) == -EINVAL);
+	uassert(__nanvix_msg_send(-1, msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == -EINVAL);
+	uassert(__nanvix_msg_send(NANVIX_MSG_MAX, msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == -EINVAL);
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
-	uassert(__nanvix_msg_send(msgid, NULL, NANVIX_MSG_SIZE_MAX, 0) == -EINVAL);
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT | IPC_EXCL)) >= 0);
+	uassert(__nanvix_msg_send(msgid, NULL, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == -EINVAL);
 	uassert(__nanvix_msg_send(msgid, msgp, 1, 0) == -EINVAL);
 	uassert(__nanvix_msg_close(msgid) == 0);
 }
@@ -90,7 +91,13 @@ static void test_fault_msg_send_invalid(void)
  */
 static void test_fault_msg_send_bad(void)
 {
-	uassert(__nanvix_msg_send(0, msgp, NANVIX_MSG_SIZE_MAX, 0) == -EINVAL);
+	int msgid;
+
+	uassert(__nanvix_msg_send(0, msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == -EINVAL);
+
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT | IPC_EXCL)) >= 0);
+	uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0) == -ENOTSUP);
+	uassert(__nanvix_msg_close(msgid) == 0);
 }
 
 /**
@@ -103,7 +110,7 @@ static void test_fault_msg_receive_invalid(void)
 	uassert(__nanvix_msg_receive(-1, msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == -EINVAL);
 	uassert(__nanvix_msg_receive(NANVIX_MSG_MAX, msgp, NANVIX_MSG_SIZE_MAX, 0, 9) == -EINVAL);
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT | IPC_EXCL)) >= 0);
 	uassert(__nanvix_msg_receive(msgid, NULL, NANVIX_MSG_SIZE_MAX, 0, 0) == -EINVAL);
 	uassert(__nanvix_msg_receive(msgid, msgp, 1, 0, 0) == -EINVAL);
 	uassert(__nanvix_msg_close(msgid) == 0);
@@ -114,7 +121,13 @@ static void test_fault_msg_receive_invalid(void)
  */
 static void test_fault_msg_receive_bad(void)
 {
-	uassert(__nanvix_msg_receive(0, msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == -EINVAL);
+	int msgid;
+
+	uassert(__nanvix_msg_receive(0, msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == -EINVAL);
+
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT | IPC_EXCL)) >= 0);
+	uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == -ENOTSUP);
+	uassert(__nanvix_msg_close(msgid) == 0);
 }
 
 /*============================================================================*
