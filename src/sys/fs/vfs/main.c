@@ -78,8 +78,9 @@ static int do_vfs_server_open(
 )
 {
 	int ret;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
-	const int connection = connect(pid);
+	const int connection = connect(pid, port);
 
 	/* XXX: forward parameter checking to lower level function. */
 
@@ -93,7 +94,7 @@ static int do_vfs_server_open(
 	/* Operation failed. */
 	if (ret < 0)
 	{
-		disconnect(pid);
+		disconnect(pid, port);
 		return (ret);
 	}
 
@@ -119,8 +120,9 @@ static int do_vfs_server_open(
 static int do_vfs_server_close(const struct vfs_message *request)
 {
 	int ret;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
-	const int connection = lookup(pid);
+	const int connection = lookup(pid, port);
 
 	/* XXX: forwarding parameter checking to lower level function. */
 
@@ -133,7 +135,7 @@ static int do_vfs_server_close(const struct vfs_message *request)
 	if (ret < 0)
 		return (ret);
 
-	disconnect(pid);
+	disconnect(pid, port);
 
 	return (0);
 }
@@ -159,8 +161,9 @@ static int do_vfs_server_seek(
 )
 {
 	off_t ret;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
-	const int connection = lookup(pid);
+	const int connection = lookup(pid, port);
 
 	/* XXX: forward parameter checking to lower level function. */
 
@@ -201,8 +204,9 @@ static int do_vfs_server_write(
 )
 {
 	ssize_t ret;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
-	const int connection = lookup(pid);
+	const int connection = lookup(pid, port);
 
 	/* Invalid write size. */
 	if ((request->op.write.n == 0) || (request->op.write.n > NANVIX_FS_BLOCK_SIZE))
@@ -268,8 +272,9 @@ static int do_vfs_server_read(
 	int outportal;
 	int outbox;
 	struct vfs_message msg;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
-	const int connection = lookup(pid);
+	const int connection = lookup(pid, port);
 
 	/* Invalid read size. */
 	if ((request->op.read.n == 0) || (request->op.read.n > NANVIX_FS_BLOCK_SIZE))
