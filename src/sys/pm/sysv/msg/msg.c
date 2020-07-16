@@ -79,7 +79,13 @@ int do_msg_get(key_t key, int msgflg)
 
 	sysv_debug("do_msg_get() key=%d, msgflg=%x", key, msgflg);
 
-	((void) msgflg);
+	/* Not supported. */
+	if (key == IPC_PRIVATE)
+		return (-ENOTSUP);
+
+	/* Invalid flags. */
+	if (!(msgflg & IPC_CREAT) && (msgflg & IPC_EXCL))
+		return (-EINVAL);
 
 	/* Search for key. */
 	for (int i = 0; i < NANVIX_MSG_MAX; i++)
@@ -90,8 +96,18 @@ int do_msg_get(key_t key, int msgflg)
 
 		/* Found. */
 		if (mqueues[i].key == key)
+		{
+			/* Message queue exists. */
+			if ((msgflg & IPC_CREAT) && (msgflg & IPC_EXCL))
+				return (-EEXIST);
+
 			goto found;
+		}
 	}
+
+	/* Do not create message queue. */
+	if (!(msgflg & IPC_CREAT))
+		return (-ENOENT);
 
 	/* Allocate  message queue. */
 	if ((msgid = resource_alloc(&pool)) < 0)
@@ -151,11 +167,20 @@ int do_msg_close(int msgid)
  */
 int do_msg_send(int msgid, void **msgp, size_t msgsz, int msgflg)
 {
+	int ret = -EINVAL;
+
 	sysv_debug("do_msg_send() msgid=%d, msgsz=%d, msgflg=%x",
 		msgid,
 		msgsz,
 		msgflg
 	);
+
+	/* Not supported. */
+	if (!(msgflg & IPC_NOWAIT))
+	{
+		ret = -ENOTSUP;
+		goto error;
+	}
 
 	/* Invalid ID for message queue. */
 	if (!msgid_is_valid(msgid))
@@ -173,13 +198,18 @@ int do_msg_send(int msgid, void **msgp, size_t msgsz, int msgflg)
 	if (msgsz != NANVIX_MSG_SIZE_MAX)
 		goto error;
 
-	((void) msgflg);
+	/* Get a buffer. */
+	if ((ret = msgbuf_put(mqueues[msgid].buf, msgp)) < 0)
+	{
+		ret = -EAGAIN;
+		goto error;
+	}
 
-	return (msgbuf_put(mqueues[msgid].buf, msgp));
+	return (ret);
 
 error:
 	*msgp = msgnull;
-	return (-EINVAL);
+	return (ret);
 }
 
 /*============================================================================*
@@ -198,12 +228,18 @@ error:
  */
 int do_msg_receive(int msgid, void **msgp, size_t msgsz, long msgtyp, int msgflg)
 {
+	int ret;
+
 	sysv_debug("do_msg_receive() msgid=%d, msgsz=%d, msgtyp=%d, msgflg=%x",
 		msgid,
 		msgsz,
 		msgtyp,
 		msgflg
 	);
+
+	/* Not supported. */
+	if (!(msgflg & IPC_NOWAIT))
+		return (-ENOTSUP);
 
 	/* Invalid ID for message queue. */
 	if (!msgid_is_valid(msgid))
@@ -222,9 +258,12 @@ int do_msg_receive(int msgid, void **msgp, size_t msgsz, long msgtyp, int msgflg
 		return (-EINVAL);
 
 	((void) msgtyp);
-	((void) msgflg);
 
-	return (msgbuf_get (mqueues[msgid].buf, msgp));
+	/* Get a buffer. */
+	if ((ret = msgbuf_get(mqueues[msgid].buf, msgp)) < 0)
+		return (-EAGAIN);
+
+	return (ret);
 }
 
 /*============================================================================*
