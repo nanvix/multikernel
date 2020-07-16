@@ -22,16 +22,42 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_PM_H_
-#define NANVIX_PM_H_
+#ifndef POSIX_SYS_IPC_H_
+#define POSIX_SYS_IPC_H_
 
-	#define __NEED_LIMITS_PM
-	#define __NEED_TYPES_PM
-	#define __NEED_SPAWN_SERVER
+	/**
+	 * @group IPC Mode Bits
+	 */
+	/**@{*/
+	#define IPC_CREAT   (1 << 0) /**< Create entry if key does not exist. */
+	#define IPC_EXCL    (1 << 1) /**< Fail if key exists.                 */
+	#define IPC_NOWAIT  (1 << 2) /**< Error if request must wait.         */
+	/**@}*/
 
-	#include <nanvix/types/pm.h>
-	#include <nanvix/limits/pm.h>
-	#include <nanvix/runtime/pm.h>
-	#include <nanvix/servers/spawn.h>
+	/**
+	 * @brief IPC Key
+	 */
+	/**@{*/
+	#define IPC_PRIVATE (1 << 3) /**< Private Key */
+	/**@}*/
 
-#endif /* NANVIXPM_H_ */
+	/**
+	 * @brief IPC Control Commands
+	 */
+	/**@{*/
+	#define IPC_RMID (1 << 4) /**< Remove Identifier */
+	#define IPC_SET  (1 << 5) /**< Set Options       */
+	#define IPC_STAT (1 << 6) /**< Get Options       */
+	/**@}*/
+
+	/**
+	 * @brief Creator's ID
+	 */
+	typedef int cid_t;
+
+	/**
+	 * @brief Creator's Group ID
+	 */
+	typedef int cgid_t;
+
+#endif /* POSIX_SYS_IPC_H_ */

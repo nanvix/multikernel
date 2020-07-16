@@ -27,6 +27,7 @@
 #define __SYSV_SERVER
 
 #include <nanvix/servers/sysv.h>
+#include <nanvix/types.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
@@ -83,7 +84,13 @@ int do_sem_get(key_t key, int semflg)
 
 	sysv_debug("do_sem_get() key=%d, nsems=%d, semflg=%x", key, semflg);
 
-	((void) semflg);
+	/* Not supported. */
+	if (key == IPC_PRIVATE)
+		return (-ENOTSUP);
+
+	/* Invalid flags. */
+	if (!(semflg & IPC_CREAT) && (semflg & IPC_EXCL))
+		return (-EINVAL);
 
 	/* Search for key. */
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
@@ -94,12 +101,22 @@ int do_sem_get(key_t key, int semflg)
 
 		/* Found. */
 		if (semaphores[i].key == key)
+		{
+			/* Semaphore exists. */
+			if ((semflg & IPC_CREAT) && (semflg & IPC_EXCL))
+				return (-EEXIST);
+
 			goto found;
+		}
 	}
+
+	/* Do not create semaphore. */
+	if (!(semflg & IPC_CREAT))
+		return (-ENOENT);
 
 	/* Allocate semaphore. */
 	if ((semid = resource_alloc(&pool)) < 0)
-		return (-ENOMEM);
+		return (-ENOSPC);
 
 	semaphores[semid].key = key;
 	semaphores[semid].val = 0;
@@ -238,6 +255,10 @@ nanvix_pid_t do_sem_operate(
 	if (sops == NULL)
 		return (-EINVAL);
 
+	/* Not supported. */
+	if (sops->sem_flg & SEM_UNDO)
+		return (-ENOTSUP);
+
 	/* Increment semaphore. */
 	if (sops->sem_op > 0)
 	{
@@ -253,6 +274,10 @@ nanvix_pid_t do_sem_operate(
 	{
 		if ((semaphores[semid].val + sops->sem_op) < 0)
 		{
+			/* Do not block. */
+			if (sops->sem_flg & IPC_NOWAIT)
+				return (0);
+
 			do_sleep(pid, semid, sops->sem_op);
 			return (pid);
 		}
@@ -265,6 +290,10 @@ nanvix_pid_t do_sem_operate(
 	{
 		if (semaphores[semid].val > 0)
 		{
+			/* Do not block. */
+			if (sops->sem_flg & IPC_NOWAIT)
+				return (0);
+
 			do_sleep(pid, semid, 0);
 			return (pid);
 		}

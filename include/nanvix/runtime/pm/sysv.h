@@ -25,6 +25,8 @@
 #ifndef NANVIX_RUNTIME_PM_SYSV_H_
 #define NANVIX_RUNTIME_PM_SYSV_H_
 
+	#define __NEED_TYPES_PM
+
 	#include <posix/sys/types.h>
 	#include <nanvix/types/pm.h>
 

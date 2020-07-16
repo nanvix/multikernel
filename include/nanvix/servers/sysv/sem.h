@@ -29,6 +29,7 @@
 
 	/* Must come first. */
 	#define __NEED_LIMITS_PM
+	#define __NEED_TYPES_PM
 
 	#include <nanvix/limits/pm.h>
 	#include <nanvix/types/pm.h>
@@ -42,6 +43,11 @@
 	#define SYSV_SEM_CLOSE    (2 << 5) /**< Close Semaphore   */
 	#define SYSV_SEM_OPERATE  (3 << 5) /**< Operate Semaphore */
 	/**@}*/
+
+	/**
+	 * @brief Sets up adjust on exit entry.
+	 */
+	#define SEM_UNDO (1 << 8)
 
 	/**
 	 * @brief Payload for Semaphore Message

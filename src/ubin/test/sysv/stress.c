@@ -45,7 +45,7 @@ static void test_stress_msg_get_close1(void)
 
 	for (int i = 0; i < NANVIX_MSG_MAX; i++)
 	{
-		uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+		uassert((msgid = __nanvix_msg_get(100 + i, IPC_CREAT | IPC_EXCL)) >= 0);
 		uassert(__nanvix_msg_close(msgid) == 0);
 	}
 }
@@ -58,7 +58,7 @@ static void test_stress_msg_get_close2(void)
 	int msgids[NANVIX_MSG_MAX];
 
 	for (int i = 0; i < NANVIX_MSG_MAX; i++)
-		uassert((msgids[i] = __nanvix_msg_get(100 + i, 0)) >= 0);
+		uassert((msgids[i] = __nanvix_msg_get(100 + i, IPC_CREAT | IPC_EXCL)) >= 0);
 
 	for (int i = 0; i < NANVIX_MSG_MAX; i++)
 		uassert(__nanvix_msg_close(msgids[i]) == 0);
@@ -71,15 +71,15 @@ static void test_stress_msg_send_receive1(void)
 {
 	int msgid;
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		for (int i = 0; i < 2*NANVIX_MSG_LENGTH_MAX; i++)
 		{
 			umemset(msgp, i, NANVIX_MSG_SIZE_MAX);
-			uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0) == 0);
+			uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == 0);
 
 			umemset(msgp, 0, NANVIX_MSG_SIZE_MAX);
-			uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == 0);
+			uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == 0);
 
 			/* Check sum. */
 			for (int j = 0; j < NANVIX_MSG_SIZE_MAX; j++)
@@ -96,18 +96,18 @@ static void test_stress_msg_send_receive2(void)
 {
 	int msgid;
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		for (int i = 0; i < NANVIX_MSG_LENGTH_MAX; i++)
 		{
 			umemset(msgp, i, NANVIX_MSG_SIZE_MAX);
-			uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0) == 0);
+			uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == 0);
 		}
 
 		for (int i = 0; i < NANVIX_MSG_LENGTH_MAX; i++)
 		{
 			umemset(msgp, 0, NANVIX_MSG_SIZE_MAX);
-			uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == 0);
+			uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == 0);
 
 			/* Check sum. */
 			for (int j = 0; j < NANVIX_MSG_SIZE_MAX; j++)
@@ -130,7 +130,7 @@ static void test_stress_sem_get_close1(void)
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
 	{
-		uassert((semid = __nanvix_semget(100, 0)) >= 0);
+		uassert((semid = __nanvix_semget(100 + i, IPC_CREAT | IPC_EXCL)) >= 0);
 		uassert(__nanvix_sem_close(semid) == 0);
 	}
 }
@@ -143,7 +143,7 @@ static void test_stress_sem_get_close2(void)
 	int semids[NANVIX_SEM_MAX];
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
-		uassert((semids[i] = __nanvix_semget(100 + i, 0)) >= 0);
+		uassert((semids[i] = __nanvix_semget(100 + i, IPC_CREAT | IPC_EXCL)) >= 0);
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		uassert(__nanvix_sem_close(semids[i]) == 0);
@@ -157,14 +157,16 @@ static void test_stress_sem_up_down1(void)
 	int semid;
 	struct nanvix_sembuf sembuf;
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert((semid = __nanvix_semget(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
 			sembuf.sem_op = 1;
+			sembuf.sem_flg = 0;
 			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 			sembuf.sem_op = -1;
+			sembuf.sem_flg = 0;
 			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 		}
 
@@ -179,17 +181,19 @@ static void test_stress_sem_up_down2(void)
 	int semid;
 	struct nanvix_sembuf sembuf;
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert((semid = __nanvix_semget(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
 			sembuf.sem_op = 1;
+			sembuf.sem_flg = 0;
 			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 		}
 
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
 			sembuf.sem_op = -1;
+			sembuf.sem_flg = 0;
 			uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 		}
 

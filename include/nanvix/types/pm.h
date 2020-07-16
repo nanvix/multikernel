@@ -25,10 +25,47 @@
 #ifndef NANVIX_TYPES_PM_H_
 #define NANVIX_TYPES_PM_H_
 
+	#ifndef __NEED_TYPES_PM
+	#error "do not include this file"
+	#endif
+
+	#include <posix/sys/types.h>
+	#include <posix/sys/ipc.h>
+
 	/**
-	 * @brief Process ID.
+	 * @brief IPC Key
 	 */
-	typedef int nanvix_pid_t;
+	typedef key_t nanvix_key_t;
+
+	/**
+	 * @brief File Attributes
+	 */
+	typedef mode_t nanvix_mode_t;
+
+	/**
+	 * @brief Process's ID
+	 */
+	typedef pid_t nanvix_pid_t;
+
+	/**
+	 * @brief User's ID
+	 */
+	typedef uid_t nanvix_uid_t;
+
+	/**
+	 * @brief Group's ID
+	 */
+	typedef gid_t nanvix_gid_t;
+
+	/**
+	 * @brief Creator's ID
+	 */
+	typedef cid_t nanvix_cid_t;
+
+	/**
+	 * @brief Creator's Group ID
+	 */
+	typedef cgid_t nanvix_cgid_t;
 
 	/**
 	 * @brief Semaphore Buffer
@@ -40,5 +77,16 @@
 		short sem_flg;          /**< Operation Flags     */
 	};
 
-#endif /* NANVIX_TYPES_PM_H_ */
+	/**
+	 * @brief IPC Permissions
+	 */
+	struct nanvix_ipc_perm
+	{
+		nanvix_uid_t uid;   /**< Owner's User ID       */
+		nanvix_gid_t gid;   /**< Owner's Group ID      */
+		nanvix_uid_t cuid;  /**< Creator's User ID     */
+		nanvix_gid_t cgid;  /**< Creator's Group ID    */
+		nanvix_mode_t mode; /**< Read/Write Permission */
+	};
 
+#endif /* NANVIX_TYPES_PM_H_ */

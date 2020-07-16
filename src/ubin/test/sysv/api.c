@@ -26,6 +26,7 @@
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
+#include <posix/sys/ipc.h>
 
 /*============================================================================*
  * Message Queue                                                              *
@@ -43,10 +44,17 @@ static void test_api_msg_get_close(void)
 {
 	int msgid;
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	/* Create. */
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT)) >= 0);
 	uassert(__nanvix_msg_close(msgid) == 0);
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	/* Create exclusive. */
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT)) >= 0);
+	uassert(__nanvix_msg_get(100, IPC_CREAT | IPC_EXCL) == -EEXIST);
+	uassert(__nanvix_msg_close(msgid) == 0);
+
+	/* Open. */
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT)) >= 0);
 	uassert(__nanvix_msg_get(100, 0) == msgid);
 	uassert(__nanvix_msg_close(msgid) == 0);
 	uassert(__nanvix_msg_close(msgid) == 0);
@@ -59,12 +67,12 @@ static void test_api_msg_send_receive(void)
 {
 	int msgid;
 
-	uassert((msgid = __nanvix_msg_get(100, 0)) >= 0);
+	uassert((msgid = __nanvix_msg_get(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 	umemset(msgp, 1, NANVIX_MSG_SIZE_MAX);
-	uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0) == 0);
+	uassert(__nanvix_msg_send(msgid, msgp, NANVIX_MSG_SIZE_MAX, IPC_NOWAIT) == 0);
 	umemset(msgp, 0, NANVIX_MSG_SIZE_MAX);
-	uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, 0) == 0);
+	uassert(__nanvix_msg_receive(msgid, msgp, NANVIX_MSG_SIZE_MAX, 0, IPC_NOWAIT) == 0);
 
 	/* Check sum. */
 	for (int i = 0; i < NANVIX_MSG_SIZE_MAX; i++)
@@ -84,10 +92,17 @@ static void test_api_sem_get_close(void)
 {
 	int semid;
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	/* Create. */
+	uassert((semid = __nanvix_semget(100, IPC_CREAT)) >= 0);
 	uassert(__nanvix_sem_close(semid) == 0);
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	/* Create exclusive. */
+	uassert((semid = __nanvix_semget(100, IPC_CREAT)) >= 0);
+	uassert(__nanvix_semget(100, IPC_CREAT | IPC_EXCL) == -EEXIST);
+	uassert(__nanvix_sem_close(semid) == 0);
+
+	/* Open. */
+	uassert((semid = __nanvix_semget(100, IPC_CREAT)) >= 0);
 	uassert(__nanvix_semget(100, 0) == semid);
 	uassert(__nanvix_sem_close(semid) == 0);
 	uassert(__nanvix_sem_close(semid) == 0);
@@ -101,12 +116,23 @@ static void test_api_sem_up_down(void)
 	int semid;
 	struct nanvix_sembuf sembuf;
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert((semid = __nanvix_semget(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		sembuf.sem_op = 1;
 		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 		sembuf.sem_op = -1;
+		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+		sembuf.sem_op = 0;
+		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+		sembuf.sem_op = -1;
+		sembuf.sem_flg = IPC_NOWAIT;
+		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+		sembuf.sem_op = 0;
+		sembuf.sem_flg = IPC_NOWAIT;
 		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 	uassert(__nanvix_sem_close(semid) == 0);
@@ -123,7 +149,7 @@ struct
 {
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
-} tests_sysv_fault[] = {
+} tests_sysv_api[] = {
 	{ test_api_msg_get_close,     "[msg][api] get close    " },
 	{ test_api_msg_send_receive,  "[msg][api] send receive " },
 	{ test_api_sem_get_close,     "[sem][api] get close    " },

@@ -25,6 +25,8 @@
 #ifndef NANVIX_TYPES_H_
 #define NANVIX_TYPES_H_
 
+	#define __NEED_TYPES_PM
+
 	#include <nanvix/types/pm.h>
 	#include <nanvix/types/mm.h>
 
