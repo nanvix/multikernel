@@ -126,7 +126,8 @@ static void test_fault_msg_receive_bad(void)
  */
 static void test_fault_sem_get_invalid(void)
 {
-	/* TODO: implement. */
+	uassert(__nanvix_semget(IPC_PRIVATE, IPC_CREAT | IPC_EXCL) == -ENOTSUP);
+	uassert(__nanvix_semget(100, IPC_EXCL) == -EINVAL);
 }
 
 /**
@@ -134,7 +135,7 @@ static void test_fault_sem_get_invalid(void)
  */
 static void test_fault_sem_get_bad(void)
 {
-	/* TODO: implement. */
+	uassert(__nanvix_semget(100, 0) == -ENOENT);
 }
 
 /**
@@ -164,7 +165,7 @@ static void test_fault_sem_operate_invalid(void)
 
 	uassert(__nanvix_semop(-1, &sembuf, 1) == -EINVAL);
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert((semid = __nanvix_semget(100, IPC_CREAT | IPC_EXCL)) >= 0);
 	uassert(__nanvix_semop(semid, NULL, 1) == -EINVAL);
 	uassert(__nanvix_semop(semid, &sembuf, 0) == -EINVAL);
 	uassert(__nanvix_sem_close(semid) == 0);

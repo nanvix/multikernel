@@ -130,7 +130,7 @@ static void test_stress_sem_get_close1(void)
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
 	{
-		uassert((semid = __nanvix_semget(100, 0)) >= 0);
+		uassert((semid = __nanvix_semget(100 + i, IPC_CREAT | IPC_EXCL)) >= 0);
 		uassert(__nanvix_sem_close(semid) == 0);
 	}
 }
@@ -143,7 +143,7 @@ static void test_stress_sem_get_close2(void)
 	int semids[NANVIX_SEM_MAX];
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
-		uassert((semids[i] = __nanvix_semget(100 + i, 0)) >= 0);
+		uassert((semids[i] = __nanvix_semget(100 + i, IPC_CREAT | IPC_EXCL)) >= 0);
 
 	for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		uassert(__nanvix_sem_close(semids[i]) == 0);
@@ -157,7 +157,7 @@ static void test_stress_sem_up_down1(void)
 	int semid;
 	struct nanvix_sembuf sembuf;
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert((semid = __nanvix_semget(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{
@@ -179,7 +179,7 @@ static void test_stress_sem_up_down2(void)
 	int semid;
 	struct nanvix_sembuf sembuf;
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert((semid = __nanvix_semget(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		for (int i = 0; i < NANVIX_SEM_MAX; i++)
 		{

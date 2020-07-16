@@ -26,6 +26,7 @@
 #include <nanvix/limits.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
+#include <posix/sys/ipc.h>
 
 /*============================================================================*
  * Message Queue                                                              *
@@ -84,10 +85,17 @@ static void test_api_sem_get_close(void)
 {
 	int semid;
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	/* Create. */
+	uassert((semid = __nanvix_semget(100, IPC_CREAT)) >= 0);
 	uassert(__nanvix_sem_close(semid) == 0);
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	/* Create exclusive. */
+	uassert((semid = __nanvix_semget(100, IPC_CREAT)) >= 0);
+	uassert(__nanvix_semget(100, IPC_CREAT | IPC_EXCL) == -EEXIST);
+	uassert(__nanvix_sem_close(semid) == 0);
+
+	/* Open. */
+	uassert((semid = __nanvix_semget(100, IPC_CREAT)) >= 0);
 	uassert(__nanvix_semget(100, 0) == semid);
 	uassert(__nanvix_sem_close(semid) == 0);
 	uassert(__nanvix_sem_close(semid) == 0);
@@ -101,12 +109,23 @@ static void test_api_sem_up_down(void)
 	int semid;
 	struct nanvix_sembuf sembuf;
 
-	uassert((semid = __nanvix_semget(100, 0)) >= 0);
+	uassert((semid = __nanvix_semget(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		sembuf.sem_op = 1;
 		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 		sembuf.sem_op = -1;
+		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+		sembuf.sem_op = 0;
+		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+		sembuf.sem_op = -1;
+		sembuf.sem_flg = IPC_NOWAIT;
+		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
+
+		sembuf.sem_op = 0;
+		sembuf.sem_flg = IPC_NOWAIT;
 		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 	uassert(__nanvix_sem_close(semid) == 0);
