@@ -437,7 +437,7 @@ static int do_sysv_server_loop(void)
 
 		sysv_debug("sysv request source=%d port=%d opcode=%d",
 			request.header.source,
-			request.header.portal_port,
+			request.header.mailbox_port,
 			request.header.opcode
 		);
 
