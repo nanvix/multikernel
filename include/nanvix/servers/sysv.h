@@ -40,10 +40,10 @@
 	 * @name Types of Messages
 	 */
 	/**@{*/
-	#define SYSV_SUCCESS (0 << 0) /**< Success */
-	#define SYSV_ACK     (1 << 0) /**< Fail    */
-	#define SYSV_FAIL    (2 << 0) /**< Fail    */
-	#define SYSV_EXIT    (3 << 0) /**< Exit    */
+	#define SYSV_SUCCESS 0 /**< Success */
+	#define SYSV_ACK     1 /**< Fail    */
+	#define SYSV_FAIL    2 /**< Fail    */
+	#define SYSV_EXIT    3 /**< Exit    */
 	/**@}*/
 
 	/**

@@ -35,10 +35,10 @@
 	 * @name Types of Messages
 	 */
 	/**@{*/
-	#define SYSV_MSG_GET      (1 << 2) /**< Get Message Queue       */
-	#define SYSV_MSG_CLOSE    (2 << 2) /**< Close Message Queue     */
-	#define SYSV_MSG_SEND     (3 << 2) /**< Send a Message          */
-	#define SYSV_MSG_RECEIVE  (4 << 2) /**< Receive a Message       */
+	#define SYSV_MSG_GET      4 /**< Get Message Queue   */
+	#define SYSV_MSG_CLOSE    5 /**< Close Message Queue */
+	#define SYSV_MSG_SEND     6 /**< Send a Message      */
+	#define SYSV_MSG_RECEIVE  7 /**< Receive a Message   */
 	/**@}*/
 
 	/**
