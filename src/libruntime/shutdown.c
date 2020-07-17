@@ -43,9 +43,9 @@ int nanvix_shutdown(void)
 		);
 		__runtime_setup(SPAWN_RING_LAST);
 
+		uassert(nanvix_sysv_shutdown() == 0);
 		uassert(nanvix_vfs_shutdown() == 0);
 		uassert(nanvix_rmem_shutdown() == 0);
-		uassert(nanvix_sysv_shutdown() == 0);
 		uassert(nanvix_name_shutdown() == 0);
 	}
 

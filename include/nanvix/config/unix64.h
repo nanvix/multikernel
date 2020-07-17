@@ -65,7 +65,7 @@
 	#define RMEM_SERVER_0_NODE  1 /**< RMem Server */
 	#define RMEM_SERVER_1_NODE  2 /**< RMem Server */
 	#define VFS_SERVER_NODE     0 /**< VFS Server  */
-	#define SYSV_SERVER_NODE    1 /**< SYSV Server */
+	#define SYSV_SERVER_NODE    3 /**< SYSV Server */
 	/**@}*/
 
 	/**
@@ -76,7 +76,7 @@
 	#define RMEM_SERVER_0_PORT_NUM 2 /**< RMem Server 0 */
 	#define RMEM_SERVER_1_PORT_NUM 2 /**< RMem Server 1 */
 	#define VFS_SERVER_PORT_NUM    3 /**< VFS Server    */
-	#define SYSV_SERVER_PORT_NUM   3 /**< SYSV Server   */
+	#define SYSV_SERVER_PORT_NUM   2 /**< SYSV Server   */
 	/**@}*/
 
 	/**
