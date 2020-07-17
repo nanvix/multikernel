@@ -152,6 +152,8 @@ int __nanvix_sysv_setup(void)
 	server.initialized = true;
 	uprintf("[nanvix][sysv] connection with server established");
 
+	__nanvix_shm_setup();
+
 #endif
 
 	return (0);
@@ -174,6 +176,8 @@ int __nanvix_sysv_cleanup(void)
 	/* Nothing to do. */
 	if (!server.initialized)
 		return (0);
+
+	__nanvix_shm_cleanup();
 
 	/* Close output mailbox. */
 	if ((ret = nanvix_mailbox_close(server.outbox)) < 0)

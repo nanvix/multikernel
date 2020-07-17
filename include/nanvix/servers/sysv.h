@@ -34,6 +34,7 @@
 #if defined(__NEED_SYSV_SERVER) || defined(__SYSV_SERVER)
 
 	#include <nanvix/servers/sysv/msg.h>
+	#include <nanvix/servers/sysv/shm.h>
 	#include <nanvix/servers/message.h>
 
 	/**
@@ -72,12 +73,18 @@
 			union sem_payload sem;
 
 			/**
+			 * @brief Shared Memory Region
+			 */
+			union shm_payload shm;
+
+			/**
 			 * @brief Return Message
 			 */
 			struct
 			{
-				int ipcid;   /**< ID of IPC Structure */
-				int status; /**< Status Code          */
+				int ipcid;     /**< ID of IPC Structure */
+				int status;   /**< Status Code          */
+				rpage_t page; /**< Base Address         */
 			} ret;
 		} payload;
 	};
