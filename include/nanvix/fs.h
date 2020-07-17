@@ -27,6 +27,7 @@
 
 	#include <nanvix/runtime/fs.h>
 	#include <nanvix/servers/vfs.h>
+	#include <posix/fcntl.h>
 	#include <posix/unistd.h>
 
 	/**

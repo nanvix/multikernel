@@ -136,7 +136,6 @@ int __runtime_setup(int ring)
 	if ((current_ring[tid] < SPAWN_RING_4) && (ring >= SPAWN_RING_4))
 	{
 		uprintf("[nanvix][thread %d] initalizing ring 4", tid);
-		uassert(__nanvix_shm_setup() == 0);
 	}
 
 	/* Initialize Ring 5. */
@@ -171,7 +170,6 @@ int __runtime_cleanup(void)
 	if (current_ring[tid] >= SPAWN_RING_4)
 	{
 		uprintf("[nanvix][thread %d] shutting down ring 4", tid);
-		uassert(__nanvix_shm_cleanup() == 0);
 	}
 
 	/* Initialize Ring 3. */

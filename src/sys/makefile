@@ -32,14 +32,14 @@ export SRC += $(wildcard $(CURDIR)/common/*.c)
 #===============================================================================
 
 # Builds Everything
-all: all-name all-rmem all-hello all-shm all-vfs all-sysv
+all: all-name all-rmem all-hello all-vfs all-sysv
 
 # Cleans Build Objects
-clean: clean-name clean-rmem clean-hello clean-shm clean-vfs clean-sysv
+clean: clean-name clean-rmem clean-hello clean-vfs clean-sysv
 
 # Cleans Everything
-distclean: distclean-name distclean-rmem distclean-hello distclean-shm \
-	distclean-vfs distclean-sysv
+distclean: distclean-name distclean-rmem distclean-hello distclean-vfs \
+	distclean-sysv
 
 #===============================================================================
 # Name Server
@@ -72,22 +72,6 @@ clean-rmem:
 # Cleans RMem Server build.
 distclean-rmem:
 	$(MAKE) -C mm/rmem distclean
-
-#===============================================================================
-# SHM Server
-#===============================================================================
-
-# Builds SHM Server.
-all-shm:
-	$(MAKE) -C mm/shm all
-
-# Cleans SHM Server Build objects.
-clean-shm:
-	$(MAKE) -C mm/shm clean
-
-# Cleans SHM Server build.
-distclean-shm:
-	$(MAKE) -C mm/shm distclean
 
 #===============================================================================
 # SYSV Server

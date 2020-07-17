@@ -59,7 +59,6 @@ int __main2(int argc, const char *argv[])
 #ifdef __mppa256__
 		test_posix();
 #endif
-		test_shm();
 		test_sysv();
 		test_vfs();
 

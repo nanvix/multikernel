@@ -30,13 +30,12 @@
 /**
  * @brief Number of servers.
  */
-#define SPAWN_SERVERS_NUM 1
+#define SPAWN_SERVERS_NUM 0
 
 /**
  * @brief Table of servers.
  */
 const struct serverinfo spawn_servers[SPAWN_SERVERS_NUM] = {
-	{ .ring = SPAWN_RING_3, .main = shm_server  },
 };
 
 SPAWN_SERVERS(SPAWN_SERVERS_NUM, spawn_servers, SPAWN_SERVER_3_NAME)
