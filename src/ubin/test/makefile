@@ -40,7 +40,8 @@ SRC = $(wildcard *.c)              \
       $(wildcard sysv/*.c)         \
       $(wildcard rmem/manager/*.c) \
       $(wildcard rmem/cache/*.c)   \
-      $(wildcard rmem/stub/*.c)
+      $(wildcard rmem/stub/*.c)    \
+      $(wildcard bugs/*.c)
 
 # Object Files
 OBJ = $(SRC:.c=.$(OBJ_SUFFIX).o)

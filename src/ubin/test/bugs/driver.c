@@ -22,54 +22,23 @@
  * SOFTWARE.
  */
 
-#include <nanvix/runtime/runtime.h>
-#include <nanvix/pm.h>
+/* Must come first. */
 #include <nanvix/ulib.h>
-#include <posix/stdint.h>
-#include "test.h"
+#include "../test.h"
+
+/* Import definitions. */
+extern struct test tests_bugs[];
 
 /**
- * Horizontal line for tests.
+ * @todo TODO: provide a detailed description for this function.
  */
-const char *HLINE =
-	"------------------------------------------------------------------------";
-
-/**
- * @brief Test Server
- */
-int __main2(int argc, const char *argv[])
+void test_bug(void)
 {
-	((void) argc);
-	((void) argv);
-
-	__runtime_setup(SPAWN_RING_FIRST);
-
-		/* Unblock spawners. */
-		uassert(stdsync_fence() == 0);
-		uprintf("[nanvix][test] server starting...");
-		uassert(stdsync_fence() == 0);
-		uassert(stdsync_fence() == 0);
-		uprintf("[nanvix][test] server alive");
-
-		__runtime_setup(SPAWN_RING_LAST);
-		test_bug();
-		test_name();
-		test_rmem_stub();
-		test_rmem_cache();
-		test_rmem_manager();
-#ifdef __mppa256__
-		test_posix();
-#endif
-		test_sysv();
-		test_shm();
-		test_vfs();
-
-		uprintf("[nanvix][test] shutting down server");
-		uassert(stdsync_fence() == 0);
-
-	nanvix_shutdown();
-
-	__runtime_cleanup();
-
-	return (0);
+	/* Run API tests. */
+	for (int i = 0; tests_bugs[i].test_fn != NULL; i++)
+	{
+		uprintf("[nanvix][test][bug] %s", tests_bugs[i].name);
+		tests_bugs[i].test_fn();
+	}
 }
+

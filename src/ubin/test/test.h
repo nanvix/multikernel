@@ -82,6 +82,11 @@
 	extern void test_vfs(void);
 
 	/**
+	 * @brief Launches regression tests on known bug.
+	 */
+	extern void test_bug(void);
+
+	/**
 	 * @brief Horizontal line for tests.
 	 */
 	extern const char *HLINE;
