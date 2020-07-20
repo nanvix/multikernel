@@ -26,7 +26,7 @@
 #include <nanvix/ulib.h>
 #include <posix/sys/stat.h>
 #include <posix/errno.h>
-#include "../test.h"
+#include "../../test.h"
 
 /**
  * @brief Local buffer for read/write.

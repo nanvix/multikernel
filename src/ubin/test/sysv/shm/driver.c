@@ -23,7 +23,7 @@
  */
 
 #include <nanvix/ulib.h>
-#include "../test.h"
+#include "../../test.h"
 
 /* Import definitions. */
 extern struct test tests_shm_api[];

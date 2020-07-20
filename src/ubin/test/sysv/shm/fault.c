@@ -27,7 +27,7 @@
 #include <posix/sys/stat.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
-#include "../test.h"
+#include "../../test.h"
 
 /**
  * @brief Length of a long name for a shared memory region.
