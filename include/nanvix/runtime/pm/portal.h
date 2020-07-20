@@ -58,6 +58,21 @@
 	extern int nanvix_portal_create(const char *name);
 
 	/**
+	 * @brief Creates a portal specifying the input port.
+	 *
+	 * @param name Portal name.
+	 * @param port Local port.
+	 *
+	 * @returns Upon successful completion, the ID of the new portal is
+	 * returned. Upon failure, a negative error code is returned instead.
+	 *
+	 * @note This function should be called only for creating portals with
+	 * ports specified in the special range that is not related with the
+	 * standard ones.
+	 */
+	extern int nanvix_portal_create2(const char *name, int port);
+
+	/**
 	 * @brief Opens a portal.
 	 *
 	 * @param name Portal name.
@@ -79,6 +94,20 @@
 	 * @note This function is NOT thread-safe.
 	 */
 	extern int nanvix_portal_allow(int id, int nodenum);
+
+	/**
+	 * @brief Enables read operations on a portal specifying remote port.
+	 *
+	 * @param id	   ID of the target portal.
+	 * @param nodenum  Target node.
+	 * @param port     Remote port.
+	 *
+	 * @returns Upons successful completion zero is returned. Upon failure,
+	 * a negative error code is returned instead.
+	 *
+	 * @note This function is NOT thread-safe.
+	 */
+	extern int nanvix_portal_allow2(int id, int nodenum, int port);
 
 	/**
 	 * @brief Closes a portal.
