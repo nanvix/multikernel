@@ -63,6 +63,21 @@
 	extern int nanvix_mailbox_create(const char *name);
 
 	/**
+	 * @brief Creates a mailbox specifying the input port.
+	 *
+	 * @param name Mailbox name.
+	 * @param port Local port.
+	 *
+	 * @returns Upon successful completion, the ID of the new mailbox is
+	 * returned. Upon failure, a negative error code is returned instead.
+	 *
+	 * @note This function should be called only for creating mailboxes with
+	 * ports specified in the special range that is not related with the
+	 * standard ones.
+	 */
+	extern int nanvix_mailbox_create2(const char *name, int port);
+
+	/**
 	 * @brief Opens a mailbox.
 	 *
 	 * @param name Mailbox name.
@@ -84,6 +99,18 @@
 	 * a negative error code is returned instead.
 	 */
 	extern int nanvix_mailbox_read(int mbxid, void *buf, size_t n);
+
+	/**
+	 * @brief Specifies the mailbox remote for a single read.
+	 *
+	 * @param mbxid  ID of the target mailbox.
+	 * @param remote Remote nodenum.
+	 * @param port   Remote port number.
+	 *
+	 * @returns Upon successful completion zero is returned. Upon failure,
+	 * a negative error code is returned instead.
+	 */
+	extern int nanvix_mailbox_set_remote(int mbxid, int remote, int port);
 
 	/**
 	 * @brief Writes data to a mailbox.
