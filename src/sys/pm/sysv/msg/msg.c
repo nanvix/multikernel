@@ -101,6 +101,7 @@ int do_msg_get(key_t key, int msgflg)
 			if ((msgflg & IPC_CREAT) && (msgflg & IPC_EXCL))
 				return (-EEXIST);
 
+			msgid = i;
 			goto found;
 		}
 	}
