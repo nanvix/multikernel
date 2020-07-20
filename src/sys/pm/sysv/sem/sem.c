@@ -106,6 +106,7 @@ int do_sem_get(key_t key, int semflg)
 			if ((semflg & IPC_CREAT) && (semflg & IPC_EXCL))
 				return (-EEXIST);
 
+			semid = i;
 			goto found;
 		}
 	}
