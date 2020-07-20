@@ -175,7 +175,7 @@ int __do_nanvix_msg_send(
 	message_header_build2(
 		&msg.header,
 		SYSV_MSG_SEND,
-		__nanvix_sysv_outportal()
+		kcomm_get_port(__nanvix_sysv_outportal(), COMM_TYPE_PORTAL)
 	);
 	msg.payload.msg.send.msgid = msgid;
 	msg.payload.msg.send.msgsz = msgsz;

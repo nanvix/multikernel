@@ -22,12 +22,12 @@
  * SOFTWARE.
  */
 
-#include <nanvix/runtime/mm.h>
+#include <nanvix/runtime/runtime.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/stat.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
-#include "../test.h"
+#include "../../test.h"
 
 /**
  * @brief Number of iterations for stress tests.

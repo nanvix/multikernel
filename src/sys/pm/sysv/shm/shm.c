@@ -23,12 +23,12 @@
  */
 
 /* Must come first. */
-#define __SHM_SERVER
+#define __SYSV_SERVER
 #define __NEED_RESOURCE
 #define __NEED_MM_RMEM_STUB
 
 #include <nanvix/runtime/mm.h>
-#include <nanvix/servers/shm.h>
+#include <nanvix/servers/sysv.h>
 #include <nanvix/sys/noc.h>
 #include <nanvix/types.h>
 #include <nanvix/ulib.h>
@@ -350,7 +350,7 @@ static int shm_put(int shmid)
 }
 
 /*============================================================================*
- * __do_shm_ftruncate()                                                       *
+ * __do_shm_ftruncate()                                                   *
  *============================================================================*/
 
 /**
@@ -363,7 +363,7 @@ int __do_shm_ftruncate(
 	off_t size
 )
 {
-	shm_debug("ftruncate proc=%d shmid=%d", proc, shmid);
+	sysv_debug("ftruncate proc=%d shmid=%d", proc, shmid);
 
 	/* Invalid shared memory region. */
 	if (!nanvix_shm_is_valid(shmid))
@@ -402,7 +402,7 @@ int __do_shm_ftruncate(
 }
 
 /*============================================================================*
- * do_open()                                                                  *
+ * do_shm_open()                                                              *
  *============================================================================*/
 
 /**
@@ -417,7 +417,7 @@ int __do_shm_open(
 {
 	int shmid;
 
-	shm_debug("open proc=%d name=%s", proc, name);
+	sysv_debug("open proc=%d name=%s", proc, name);
 
 	/*
 	 * TODO: check if process ID is valid.
@@ -473,7 +473,7 @@ int __do_shm_open(
 }
 
 /*============================================================================*
- * __do_create()                                                              *
+ * __do_shm_create()                                                          *
  *============================================================================*/
 
 /**
@@ -489,7 +489,7 @@ int __do_shm_create(
 {
 	int shmid;
 
-	shm_debug("create proc=%d name=%s oflags=%x mode=%x", proc, name, oflags, mode);
+	sysv_debug("create proc=%d name=%s oflags=%x mode=%x", proc, name, oflags, mode);
 
 	/*
 	 * TODO: check if process ID is valid.
@@ -560,7 +560,7 @@ out:
 }
 
 /*============================================================================*
- * __do_shm_close()                                                           *
+ * __do_shm_close()                                                       *
  *============================================================================*/
 
 /**
@@ -568,7 +568,7 @@ out:
  */
 int __do_shm_close(nanvix_pid_t proc, int shmid)
 {
-	shm_debug("close proc=%d shmid=%d", proc, shmid);
+	sysv_debug("close proc=%d shmid=%d", proc, shmid);
 
 	/* Invalid shared memory region. */
 	if (!nanvix_shm_is_valid(shmid))
@@ -587,7 +587,7 @@ int __do_shm_close(nanvix_pid_t proc, int shmid)
 }
 
 /*============================================================================*
- * do_unlink()                                                                *
+ * do_shm_unlink()                                                            *
  *============================================================================*/
 
 /**
@@ -597,7 +597,7 @@ int __do_shm_unlink(nanvix_pid_t proc, const char *name)
 {
 	int shmid;
 
-	shm_debug("unlink proc=%d name=%s", proc, name);
+	sysv_debug("unlink proc=%d name=%s", proc, name);
 
 	/* Shared memory region does not exist. */
 	if ((shmid = shm_get(name)) < 0)

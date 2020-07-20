@@ -101,6 +101,7 @@ int do_msg_get(key_t key, int msgflg)
 			if ((msgflg & IPC_CREAT) && (msgflg & IPC_EXCL))
 				return (-EEXIST);
 
+			msgid = i;
 			goto found;
 		}
 	}
@@ -228,8 +229,6 @@ error:
  */
 int do_msg_receive(int msgid, void **msgp, size_t msgsz, long msgtyp, int msgflg)
 {
-	int ret;
-
 	sysv_debug("do_msg_receive() msgid=%d, msgsz=%d, msgtyp=%d, msgflg=%x",
 		msgid,
 		msgsz,
@@ -259,11 +258,7 @@ int do_msg_receive(int msgid, void **msgp, size_t msgsz, long msgtyp, int msgflg
 
 	((void) msgtyp);
 
-	/* Get a buffer. */
-	if ((ret = msgbuf_get(mqueues[msgid].buf, msgp)) < 0)
-		return (-EAGAIN);
-
-	return (ret);
+	return (msgbuf_get(mqueues[msgid].buf, msgp));
 }
 
 /*============================================================================*

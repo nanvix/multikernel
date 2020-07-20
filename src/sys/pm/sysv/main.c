@@ -53,6 +53,192 @@ extern void msg_test(void);
 extern void sem_test(void);
 
 /*============================================================================*
+ * do_shm_open()                                                              *
+ *============================================================================*/
+
+/**
+ * @brief Handles an open request.
+ */
+static int do_shm_open(struct sysv_message *request, struct sysv_message *response)
+{
+	int ret;
+
+	ret = __do_shm_open(
+		&response->payload.ret.page,
+		request->header.source,
+		request->payload.shm.open.name,
+		request->payload.shm.open.oflags
+	);
+
+	if (ret < 0)
+		return (ret);
+
+	response->payload.ret.ipcid = ret;
+	uassert(connect(request->header.source, request->header.mailbox_port) == 0);
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_shm_close()                                                             *
+ *============================================================================*/
+
+/**
+ * @brief Handles an close request.
+ */
+static int do_shm_close(struct sysv_message *request, struct sysv_message *response)
+{
+	int ret;
+
+	ret = __do_shm_close(request->header.source, request->payload.shm.close.shmid);
+
+	if (ret < 0)
+		return (ret);
+
+	response->payload.ret.status = ret;
+	uassert(disconnect(
+		request->header.source,
+		request->header.mailbox_port
+	) == 0);
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_shm_create()                                                            *
+ *============================================================================*/
+
+/**
+ * @brief Handles a create request.
+ */
+static int do_shm_create(struct sysv_message *request, struct sysv_message *response)
+{
+	int ret;
+
+	ret = __do_shm_create(
+		&response->payload.ret.page,
+		request->header.source,
+		request->payload.shm.create.name,
+		request->payload.shm.create.oflags,
+		request->payload.shm.create.mode
+	);
+
+	if (ret < 0)
+		return (ret);
+
+	response->payload.ret.ipcid = ret;
+	uassert(connect(request->header.source, request->header.mailbox_port) == 0);
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_shm_unlink()                                                            *
+ *============================================================================*/
+
+/**
+ * @brief Handles an unlink request.
+ */
+static int do_shm_unlink(struct sysv_message *request, struct sysv_message *response)
+{
+	int ret;
+
+	ret = __do_shm_unlink(request->header.source, request->payload.shm.unlink.name);
+
+	if (ret < 0)
+		return (ret);
+
+	response->payload.ret.status = ret;
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_shm_ftruncate()                                                         *
+ *============================================================================*/
+
+/**
+ * @brief Handles an truncate request.
+ */
+static int do_shm_ftruncate(struct sysv_message *request, struct sysv_message *response)
+{
+	int ret;
+
+	ret = __do_shm_ftruncate(
+		&response->payload.ret.page,
+		request->header.source,
+		request->payload.shm.ftruncate.shmid,
+		request->payload.shm.ftruncate.size
+	);
+
+	if (ret < 0)
+		return (ret);
+
+	response->payload.ret.status = ret;
+
+	return (0);
+}
+
+/*============================================================================*
+ * do_shm_inval()                                                             *
+ *============================================================================*/
+
+/**
+ * @brief Handles an truncate request.
+ */
+static int do_shm_inval(struct sysv_message *request, struct sysv_message *response)
+{
+	int nremotes;
+	int shmid;
+	rpage_t page;
+	struct connection remotes[NANVIX_PROC_MAX];
+
+	shmid = request->payload.shm.inval.shmid;
+	page = request->payload.shm.inval.page;
+
+	sysv_debug("inval proc=%d shmid=%d page=%x",
+		request->header.source,
+		shmid,
+		page
+	);
+
+	nremotes = get_connections(remotes);
+
+	/* Broadcast invalidation signal. */
+	for (int i = 0; i < nremotes; i++)
+	{
+		int outbox;
+		struct sysv_message msg;
+
+		message_header_build(
+			&msg.header, SYSV_SHM_INVAL
+		);
+
+		msg.payload.shm.inval.shmid = shmid;
+		msg.payload.shm.inval.page = page;
+
+		uassert((
+			outbox = kmailbox_open(
+				remotes[i].remote,
+				NANVIX_SHM_SNOOPER_PORT_NUM	
+			)) >= 0
+		);
+		uassert(
+			kmailbox_write(
+				outbox,
+				&msg,
+				sizeof(struct sysv_message
+			)) == sizeof(struct sysv_message)
+		);
+		uassert(kmailbox_close(outbox) == 0);
+	}
+
+	response->payload.ret.status = 0;
+
+	return (0);
+}
+
+/*============================================================================*
  * do_sysv_msg_get()                                                          *
  *============================================================================*/
 
@@ -437,7 +623,7 @@ static int do_sysv_server_loop(void)
 
 		sysv_debug("sysv request source=%d port=%d opcode=%d",
 			request.header.source,
-			request.header.portal_port,
+			request.header.mailbox_port,
 			request.header.opcode
 		);
 
@@ -446,6 +632,36 @@ static int do_sysv_server_loop(void)
 		/* Handle request. */
 		switch (request.header.opcode)
 		{
+			case SYSV_SHM_CREATE:
+				ret = do_shm_create(&request, &response);
+				reply = 1;
+				break;
+
+			case SYSV_SHM_OPEN:
+				ret = do_shm_open(&request, &response);
+				reply = 1;
+				break;
+
+			case SYSV_SHM_UNLINK:
+				ret = do_shm_unlink(&request, &response);
+				reply = 1;
+				break;
+
+			case SYSV_SHM_CLOSE:
+				ret = do_shm_close(&request, &response);
+				reply = 1;
+				break;
+
+			case SYSV_SHM_FTRUNCATE:
+				ret = do_shm_ftruncate(&request, &response);
+				reply = 1;
+				break;
+
+			case SYSV_SHM_INVAL:
+				ret = do_shm_inval(&request, &response);
+				reply = 1;
+				break;
+
 			/* Get message queue. */
 			case SYSV_MSG_GET:
 				ret = do_sysv_msg_get(&request, &response);

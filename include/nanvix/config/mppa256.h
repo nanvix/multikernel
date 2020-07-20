@@ -32,7 +32,6 @@
 	#define __NANVIX_HAS_SPAWN_SERVER /**< Spawn Server */
 	#define __NANVIX_HAS_NAME_SERVER  /**< Name Server  */
 	#define __NANVIX_HAS_RMEM_SERVER  /**< RMem Server  */
-	#define __NANVIX_HAS_SHM_SERVER   /**< SHmem Server */
 	#define __NANVIX_HAS_SYSV_SERVER  /**< SYSV Server  */
 	/**@}*/
 
@@ -43,7 +42,6 @@
 	#define SPAWNERS_NUM      2 /**< Spawn Servers */
 	#define NAME_SERVERS_NUM  1 /**< Name Servers  */
 	#define RMEM_SERVERS_NUM  1 /**< RMem Servers  */
-	#define SHM_SERVERS_NUM   1 /**< SHM Servers  */
 	#define SYSV_SERVERS_NUM  1 /**< SYSV Servers  */
 	/**@}*/
 
@@ -62,7 +60,6 @@
 	#define NAME_SERVER_NODE   0 /**< Name Server */
 	#define SYSV_SERVER_NODE   0 /**< RMem Server */
 	#define RMEM_SERVER_0_NODE 4 /**< RMem Server */
-	#define SHM_SERVER_NODE    4 /**< SHM Server  */
 	/**@}*/
 
 	/**
@@ -72,7 +69,6 @@
 	#define NAME_SERVER_PORT_NUM   2 /**< Name Server   */
 	#define RMEM_SERVER_0_PORT_NUM 2 /**< RMem Server 0 */
 	#define SYSV_SERVER_PORT_NUM   3 /**< SYSV Server   */
-	#define SHM_SERVER_PORT_NUM    3 /**< SHM Server    */
 	/**@}*/
 
 	/**

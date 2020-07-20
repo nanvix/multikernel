@@ -22,95 +22,77 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_SERVERS_SHM_H_
-#define NANVIX_SERVERS_SHM_H_
+#ifndef NANVIX_SERVERS_SYSV_SHM_H_
+#define NANVIX_SERVERS_SYSV_SHM_H_
 
-#if defined(__NEED_MM_SHM_SERVER) || defined(__SHM_SERVER)
+#if defined(__NEED_SYSV_SERVER) || defined(__SYSV_SERVER)
 
 	/* Must come first. */
-	#define __NEED_LIMITS_SHM
+	#define __NEED_LIMITS_PM
+	#define __NEED_TYPES_PM
 
-	#include <nanvix/servers/message.h>
-	#include <nanvix/limits/shm.h>
-	#include <nanvix/types/mm/rmem.h>
-	#include <posix/sys/types.h>
+	#include <nanvix/limits/pm.h>
 	#include <nanvix/types.h>
 	#include <nanvix/ulib.h>
-	#include <posix/errno.h>
-	#include <posix/stddef.h>
+	#include <posix/sys/types.h>
 
 	/**
-	 * @bried Shared memory region operations.
+	 * @name Types of Messages
 	 */
 	/**@{*/
-	#define SHM_EXIT         0  /**< Exit Request.     */
-	#define SHM_OPEN         1  /**< Open.             */
-	#define SHM_CREATE       2  /**< Create.           */
-	#define SHM_UNLINK       3  /**< Unlink.           */
-	#define SHM_CLOSE        4  /**< Close             */
-	#define SHM_FTRUNCATE    5  /**< Truncate.         */
-	#define SHM_INVAL        6  /**< Truncate.         */
-	#define SHM_SUCCESS      7  /**< Success.          */
-	#define SHM_FAIL         8  /**< Failure.          */
+	#define SYSV_SHM_OPEN      11 /**< Open     */
+	#define SYSV_SHM_CREATE    12 /**< Create   */
+	#define SYSV_SHM_UNLINK    13 /**< Unlink   */
+	#define SYSV_SHM_CLOSE     14 /**< Close    */
+	#define SYSV_SHM_FTRUNCATE 15 /**< Truncate */
+	#define SYSV_SHM_INVAL     16 /**< Truncate */
+	#define SYSV_SHM_SUCCESS   17 /**< Success  */
+	#define SYSV_SHM_FAIL      18 /**< Failure  */
 	/**@}*/
 
 	/**
-	 * @brief Shared Memory Region message.
+	 * @brief Payload for Semaphore Message
 	 */
-	struct shm_message
+	union shm_payload
 	{
-		message_header header; /**< Message header.  */
+		/* Create message. */
+		struct {
+			char name[NANVIX_SHM_NAME_MAX]; /**< Name of Shared Memory Region */
+			int oflags;                     /**< Opening Flags                */
+			mode_t mode;                    /**< Access Permission            */
+		} create;
 
-		/* Operation-specific fields. */
-		union
-		{
-			/* Create message. */
-			struct {
-				char name[NANVIX_SHM_NAME_MAX]; /**< Name of Shared Memory Region */
-				int oflags;                     /**< Opening Flags                */
-				mode_t mode;                    /**< Access Permission            */
-			} create;
+		/* Open message. */
+		struct {
+			char name[NANVIX_SHM_NAME_MAX]; /**< Name of Shared Memory Region */
+			int oflags;                     /**< Opening Flags                */
+		} open;
 
-			/* Open message. */
-			struct {
-				char name[NANVIX_SHM_NAME_MAX]; /**< Name of Shared Memory Region */
-				int oflags;                     /**< Opening Flags                */
-			} open;
+		/* Unlink message. */
+		struct {
+			char name[NANVIX_SHM_NAME_MAX]; /**< Shared Memory Region name. */
+		} unlink;
 
-			/* Unlink message. */
-			struct {
-				char name[NANVIX_SHM_NAME_MAX]; /**< Shared Memory Region name. */
-			} unlink;
+		/* Close message. */
+		struct {
+			int shmid; /**< ID of shared memory region.  */
+		} close;
 
-			/* Close message. */
-			struct {
-				int shmid; /**< ID of shared memory region.  */
-			} close;
+		/**
+		 * Truncate message.
+		 */
+		struct {
+			int shmid;  /**< Target shared memory region. */
+			off_t size; /**< Size (in bytes).             */
+		} ftruncate;
 
-			/**
-			 * Truncate message.
-			 */
-			struct {
-				int shmid;  /**< Target shared memory region. */
-				off_t size; /**< Size (in bytes).             */
-			} ftruncate;
-
-			/**
-			 * Invalidate message.
-			 */
-			struct {
-				int shmid;    /**< Target Shared Memory Region */
-				rpage_t page; /**< Target Page                 */
-			} inval;
-
-			/* Return message. */
-			struct
-			{
-				int shmid;    /**< ID of shared memory region.  */
-				int status;   /**< Status code.                 */
-				rpage_t page; /**< Base Address                 */
-			} ret;
-		} op;
+		/**
+		 * Invalidate message.
+		 */
+		struct {
+			int shmid;    /**< Target Shared Memory Region */
+			rpage_t page; /**< Target Page                 */
+		} inval;
 	};
 
 	/**
@@ -146,7 +128,7 @@
 		return (0);
 	}
 
-#ifdef __SHM_SERVER
+#ifdef __SYSV_SERVER
 
 	/**
 	 * @brief Creates a shared memory region
@@ -232,19 +214,9 @@
 	 */
 	extern void shm_init(void);
 
-	/**
-	 * @brief Debug SHM Server?
-	 */
-	#define __DEBUG_SHM 0
+#endif /* __SYSV_SERVER */
 
-	#if (__DEBUG_SHM)
-	#define shm_debug(fmt, ...) uprintf(fmt, __VA_ARGS__)
-	#else
-	#define shm_debug(fmt, ...) { }
-	#endif
+#endif /* __NEED_SYSV_SERVER || __SYSV_SERVER */
 
-#endif /*__SHM_SERVER */
+#endif /* NANVIX_SERVERS_SYSV_SHM_H_ */
 
-#endif /* defined(__NEED_SHM_SERVER) || defined(__SHM_SERVER) */
-
-#endif /* _MAILBOX_H_ */

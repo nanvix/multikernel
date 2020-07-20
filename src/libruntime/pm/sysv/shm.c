@@ -24,7 +24,8 @@
 
 /* Must come first. */
 #define __NEED_RESOURCE
-#define __NEED_MM_SHM_SERVER
+#define __NEED_SYSV_SERVER
+#define __SYSV_SERVICE
 #define __NEED_MM_RMEM_CACHE
 
 #include <nanvix/runtime/pm.h>
@@ -42,18 +43,6 @@
  * @brief ID of snooper thread.
  */
 static kthread_t nanvix_shm_snooper_tid;
-
-/**
- * @brief Connection to SHMem Server.
- */
-static struct
-{
-	int initialized; /**< Is the connection initialized? */
-	int outbox;      /**< Output mailbox for requests.   */
-} server = {
-	.initialized = 0,
-	.outbox = -1
-};
 
 /**
  * Table of opened shared memory regions (cache).
@@ -197,7 +186,7 @@ static void __nanvix_shm_initializer(
 static int __do_nanvix_shm_ftruncate(int shmid, off_t size)
 {
 	int oshmid;             /* ID of Opened Shared Memory Region */
-	struct shm_message msg; /* Message to SHM Server             */
+	struct sysv_message msg; /* Message to SHM Server             */
 
 	/* Shared memory region is not opened. */
 	if ((oshmid = shm_lookup_shmid(shmid)) < 0)
@@ -208,16 +197,16 @@ static int __do_nanvix_shm_ftruncate(int shmid, off_t size)
 		return (-ENOENT);
 
 	/* Build message.*/
-	message_header_build(&msg.header, SHM_FTRUNCATE);
-	msg.op.ftruncate.shmid = shmid;
-	msg.op.ftruncate.size = size;
+	message_header_build(&msg.header, SYSV_SHM_FTRUNCATE);
+	msg.payload.shm.ftruncate.shmid = shmid;
+	msg.payload.shm.ftruncate.size = size;
 
 	/* Send operation. */
 	uassert(
 		nanvix_mailbox_write(
-			server.outbox,
+			__nanvix_sysv_outbox(),
 			&msg,
-			sizeof(struct shm_message)
+			sizeof(struct sysv_message)
 		) == 0
 	);
 
@@ -226,18 +215,18 @@ static int __do_nanvix_shm_ftruncate(int shmid, off_t size)
 		kmailbox_read(
 			stdinbox_get(),
 			&msg,
-			sizeof(struct shm_message)
-		) == sizeof(struct shm_message)
+			sizeof(struct sysv_message)
+		) == sizeof(struct sysv_message)
 	);
 
 	/* Failed to truncate shared memory region. */
-	if (msg.header.opcode == SHM_FAIL)
+	if (msg.header.opcode == SYSV_SHM_FAIL)
 	{
 		resource_free(&pool, oshmid);
-		return (msg.op.ret.status);
+		return (msg.payload.ret.status);
 	}
 
-	oregions[oshmid].page = msg.op.ret.page;
+	oregions[oshmid].page = msg.payload.ret.page;
 
 	return (0);
 }
@@ -248,7 +237,7 @@ static int __do_nanvix_shm_ftruncate(int shmid, off_t size)
 int __nanvix_shm_ftruncate(int shmid, off_t size)
 {
 	/* Uninitialized server. */
-	if (!server.initialized)
+	if (!__nanvix_sysv_is_initialized())
 		return (-EAGAIN);
 
 	/* Invalid ID. */
@@ -285,7 +274,7 @@ static int __do_nanvix_shm_create(const char *name, int oflags, mode_t mode)
 {
 	int shmid;              /* ID of the Underlying Shared Memory Region */
 	int oshmid;             /* ID of Opened Shared Memory Region         */
-	struct shm_message msg; /* Message to SHM Server                     */
+	struct sysv_message msg; /* Message to SHM Server                     */
 
 	/*
 	 * Allocate an entry in the local
@@ -301,17 +290,17 @@ static int __do_nanvix_shm_create(const char *name, int oflags, mode_t mode)
 	}
 
 	/* Build message.*/
-	message_header_build(&msg.header, SHM_CREATE);
-	ustrcpy(msg.op.create.name, name);
-	msg.op.create.oflags = oflags;
-	msg.op.create.mode = mode;
+	message_header_build(&msg.header, SYSV_SHM_CREATE);
+	ustrcpy(msg.payload.shm.create.name, name);
+	msg.payload.shm.create.oflags = oflags;
+	msg.payload.shm.create.mode = mode;
 
 	/* Send operation. */
 	uassert(
 		nanvix_mailbox_write(
-			server.outbox,
+			__nanvix_sysv_outbox(),
 			&msg,
-			sizeof(struct shm_message)
+			sizeof(struct sysv_message)
 		) == 0
 	);
 
@@ -320,24 +309,24 @@ static int __do_nanvix_shm_create(const char *name, int oflags, mode_t mode)
 		kmailbox_read(
 			stdinbox_get(),
 			&msg,
-			sizeof(struct shm_message)
-		) == sizeof(struct shm_message)
+			sizeof(struct sysv_message)
+		) == sizeof(struct sysv_message)
 	);
 
 	/* Failed to open shared memory region. */
-	if (msg.header.opcode == SHM_FAIL)
+	if (msg.header.opcode == SYSV_SHM_FAIL)
 	{
 		resource_free(&pool, oshmid);
-		return (msg.op.ret.status);
+		return (msg.payload.ret.status);
 	}
 
-	shmid = msg.op.ret.shmid;
+	shmid = msg.payload.ret.ipcid;
 
 	/*
 	 * Initialize entry in local table of
 	 * opened shared memory regions.
 	 */
-	oregions[oshmid].page = msg.op.ret.page;
+	oregions[oshmid].page = msg.payload.ret.page;
 	__nanvix_shm_initializer(oshmid, shmid, name, oflags, mode);
 
 	return (shmid);
@@ -362,7 +351,7 @@ static int __do_nanvix_shm_open(const char *name, int oflags, mode_t mode)
 {
 	int shmid;              /* ID of the Underlying Shared Memory Region */
 	int oshmid;             /* ID of Opened Shared Memory Region         */
-	struct shm_message msg; /* Message to SHM Server                     */
+	struct sysv_message msg; /* Message to SHM Server                     */
 
 	/* Already opened. */
 	if ((oshmid = shm_lookup_name(name)) >=  0)
@@ -410,16 +399,16 @@ static int __do_nanvix_shm_open(const char *name, int oflags, mode_t mode)
 		return (-ENFILE);
 
 	/* Build message.*/
-	message_header_build(&msg.header, SHM_OPEN);
-	ustrcpy(msg.op.open.name, name);
-	msg.op.open.oflags = oflags;
+	message_header_build(&msg.header, SYSV_SHM_OPEN);
+	ustrcpy(msg.payload.shm.open.name, name);
+	msg.payload.shm.open.oflags = oflags;
 
 	/* Send operation. */
 	uassert(
 		nanvix_mailbox_write(
-			server.outbox,
+			__nanvix_sysv_outbox(),
 			&msg,
-			sizeof(struct shm_message)
+			sizeof(struct sysv_message)
 		) == 0
 	);
 
@@ -428,24 +417,24 @@ static int __do_nanvix_shm_open(const char *name, int oflags, mode_t mode)
 		kmailbox_read(
 			stdinbox_get(),
 			&msg,
-			sizeof(struct shm_message)
-		) == sizeof(struct shm_message)
+			sizeof(struct sysv_message)
+		) == sizeof(struct sysv_message)
 	);
 
 	/* Failed to open shared memory region. */
-	if (msg.header.opcode == SHM_FAIL)
+	if (msg.header.opcode == SYSV_SHM_FAIL)
 	{
 		resource_free(&pool, oshmid);
-		return (msg.op.ret.status);
+		return (msg.payload.ret.status);
 	}
 
-	shmid = msg.op.ret.shmid;
+	shmid = msg.payload.ret.ipcid;
 
 	/*
 	 * Initialize entry in local table of
 	 * opened shared memory regions.
 	 */
-	oregions[oshmid].page = msg.op.ret.page;
+	oregions[oshmid].page = msg.payload.ret.page;
 	__nanvix_shm_initializer(oshmid, shmid, name, oflags, mode);
 
 	return (shmid);
@@ -459,7 +448,7 @@ int __nanvix_shm_open(const char *name, int oflags, mode_t mode)
 	int ret;
 
 	/* Uninitialized server. */
-	if (!server.initialized)
+	if (!__nanvix_sysv_is_initialized())
 		return (-EAGAIN);
 
 	/* Invalid name. */
@@ -493,7 +482,7 @@ int __nanvix_shm_open(const char *name, int oflags, mode_t mode)
 static int __do_nanvix_shm_unlink(const char *name)
 {
 	int oshmid;             /* ID of Opened Shared Memory Region */
-	struct shm_message msg; /* Message to SHM Server             */
+	struct sysv_message msg; /* Message to SHM Server             */
 
 	/* Invalid shared memory region. */
 	if ((oshmid = shm_lookup_name(name)) < 0)
@@ -504,15 +493,15 @@ static int __do_nanvix_shm_unlink(const char *name)
 		return (-EBUSY);
 
 	/* Build message. */
-	message_header_build(&msg.header, SHM_UNLINK);
-	ustrcpy(msg.op.unlink.name, name);
+	message_header_build(&msg.header, SYSV_SHM_UNLINK);
+	ustrcpy(msg.payload.shm.unlink.name, name);
 
 	/* Send operation. */
 	uassert(
 		nanvix_mailbox_write(
-			server.outbox,
+			__nanvix_sysv_outbox(),
 			&msg,
-			sizeof(struct shm_message)
+			sizeof(struct sysv_message)
 		) == 0
 	);
 
@@ -521,13 +510,13 @@ static int __do_nanvix_shm_unlink(const char *name)
 		kmailbox_read(
 			stdinbox_get(),
 			&msg,
-			sizeof(struct shm_message)
-		) == sizeof(struct shm_message)
+			sizeof(struct sysv_message)
+		) == sizeof(struct sysv_message)
 	);
 
 	/* Failed to unlink shared memory region. */
-	if (msg.header.opcode == SHM_FAIL)
-		return (msg.op.ret.status);
+	if (msg.header.opcode == SYSV_SHM_FAIL)
+		return (msg.payload.ret.status);
 
 	/* Release region. */
 	resource_free(&pool, oshmid);
@@ -543,7 +532,7 @@ int __nanvix_shm_unlink(const char *name)
 	int ret;
 
 	/* Uninitialized server. */
-	if (!server.initialized)
+	if (!__nanvix_sysv_is_initialized())
 		return (-EAGAIN);
 
 	/* Invalid name. */
@@ -581,18 +570,18 @@ static int __do_nanvix_shm_close(int shmid)
 	/* Release remote shared memory region. */
 	if (oregions[oshmid].refcount == 1)
 	{
-		struct shm_message msg;
+		struct sysv_message msg;
 
 		/* Build message. */
-		message_header_build(&msg.header, SHM_CLOSE);
-		msg.op.close.shmid = shmid;
+		message_header_build(&msg.header, SYSV_SHM_CLOSE);
+		msg.payload.shm.close.shmid = shmid;
 
 		/* Send operation. */
 		uassert(
 			nanvix_mailbox_write(
-				server.outbox,
+				__nanvix_sysv_outbox(),
 				&msg,
-				sizeof(struct shm_message)
+				sizeof(struct sysv_message)
 			) == 0
 		);
 
@@ -601,13 +590,13 @@ static int __do_nanvix_shm_close(int shmid)
 			kmailbox_read(
 				stdinbox_get(),
 				&msg,
-				sizeof(struct shm_message)
-			) == sizeof(struct shm_message)
+				sizeof(struct sysv_message)
+			) == sizeof(struct sysv_message)
 		);
 
 		/* Failed to close shared memory region. */
-		if (msg.header.opcode == SHM_FAIL)
-			return (msg.op.ret.status);
+		if (msg.header.opcode == SYSV_SHM_FAIL)
+			return (msg.payload.ret.status);
 	}
 
 	/* Release region. */
@@ -624,7 +613,7 @@ static int __do_nanvix_shm_close(int shmid)
 int __nanvix_shm_close(int shmid)
 {
 	/* Uninitialized server. */
-	if (!server.initialized)
+	if (!__nanvix_sysv_is_initialized())
 		return (-EAGAIN);
 
 	/* Invalid ID. */
@@ -682,7 +671,7 @@ static ssize_t __do_nanvix_shm_read(int shmid, void *buf, size_t n, off_t off)
 ssize_t __nanvix_shm_read(int shmid, void *buf, size_t n, off_t off)
 {
 	/* Uninitialized server. */
-	if (!server.initialized)
+	if (!__nanvix_sysv_is_initialized())
 		return (-EAGAIN);
 
 	/* Invalid ID. */
@@ -780,7 +769,7 @@ ssize_t __nanvix_shm_write(int shmid, const void *buf, size_t n, off_t off)
 static int __do_nanvix_shm_inval(int shmid)
 {
 	int oshmid;
-	struct shm_message msg;
+	struct sysv_message msg;
 
 	/* Invalid shared memory region. */
 	if ((oshmid = shm_lookup_shmid(shmid)) < 0)
@@ -791,15 +780,15 @@ static int __do_nanvix_shm_inval(int shmid)
 		return (-ENOENT);
 
 	/* Build message. */
-	message_header_build(&msg.header, SHM_INVAL);
-	msg.op.inval.page = oregions[oshmid].page;
+	message_header_build(&msg.header, SYSV_SHM_INVAL);
+	msg.payload.shm.inval.page = oregions[oshmid].page;
 
 	/* Send operation. */
 	uassert(
 		nanvix_mailbox_write(
-			server.outbox,
+			__nanvix_sysv_outbox(),
 			&msg,
-			sizeof(struct shm_message)
+			sizeof(struct sysv_message)
 		) == 0
 	);
 
@@ -808,13 +797,13 @@ static int __do_nanvix_shm_inval(int shmid)
 		kmailbox_read(
 			stdinbox_get(),
 			&msg,
-			sizeof(struct shm_message)
-		) == sizeof(struct shm_message)
+			sizeof(struct sysv_message)
+		) == sizeof(struct sysv_message)
 	);
 
 	/* Failed to close shared memory region. */
-	if (msg.header.opcode == SHM_FAIL)
-		return (msg.op.ret.status);
+	if (msg.header.opcode == SYSV_SHM_FAIL)
+		return (msg.payload.ret.status);
 
 	return (0);
 }
@@ -825,7 +814,7 @@ static int __do_nanvix_shm_inval(int shmid)
 int __nanvix_shm_inval(int shmid)
 {
 	/* Uninitialized server. */
-	if (!server.initialized)
+	if (!__nanvix_sysv_is_initialized())
 		return (-EAGAIN);
 
 	/* Invalid ID. */
@@ -848,7 +837,7 @@ int __nanvix_shm_inval(int shmid)
  */
 static void *nanvix_shm_snooper(void *args)
 {
-	struct shm_message msg;
+	struct sysv_message msg;
 
 	UNUSED(args);
 
@@ -866,44 +855,14 @@ static void *nanvix_shm_snooper(void *args)
 			kmailbox_read(
 				stdinbox_get(),
 				&msg,
-				sizeof(struct shm_message)
-			) == sizeof(struct shm_message)
+				sizeof(struct sysv_message)
+			) == sizeof(struct sysv_message)
 		);
 
 		uprintf("[nanvix][shm] invalidation signal received");
 	}
 
 	return (NULL);
-}
-
-/*============================================================================*
- * nanvix_shm_shutdown()                                                      *
- *============================================================================*/
-
-/**
- * The nanvix_shm_shutdown() function issues the shutdown signal to the
- * SHM server, thus causing the server to terminate.
- */
-int nanvix_shm_shutdown(void)
-{
-	struct shm_message msg;
-
-	/* Invalid server ID. */
-	if (!server.initialized)
-		return (-EAGAIN);
-
-	/* Build operation header. */
-	message_header_build(&msg.header, SHM_EXIT);
-
-	/* Send operation header. */
-	uassert(
-		nanvix_mailbox_write(
-			server.outbox,
-			&msg, sizeof(struct shm_message)
-		) == 0
-	);
-
-	return (0);
 }
 
 /*============================================================================*
@@ -917,25 +876,9 @@ int nanvix_shm_shutdown(void)
 int __nanvix_shm_setup(void)
 {
 	/* Nothing to do.  */
-	if (server.initialized)
+	if (__nanvix_sysv_is_initialized())
 		return (0);
 
-	/* Initialize table of shared memory regions. */
-	for (int i = 0; i < NANVIX_SHM_OPEN_MAX; i++)
-	{
-		oregions[i].shmid = -1;
-		oregions[i].resource = RESOURCE_INITIALIZER;
-		ustrcpy(oregions[i].name, "");
-	}
-
-	/* Open output mailbox */
-	if ((server.outbox = nanvix_mailbox_open(SHM_SERVER_NAME, SHM_SERVER_PORT_NUM)) < 0)
-	{
-		uprintf("[nanvix][shm] cannot open outbox to server");
-		return (server.outbox);
-	}
-
-	server.initialized = true;
 	uprintf("[nanvix][shm] connection with server established");
 
 	uassert(kthread_create(&nanvix_shm_snooper_tid, &nanvix_shm_snooper, NULL) == 0);
@@ -953,20 +896,10 @@ int __nanvix_shm_setup(void)
  */
 int __nanvix_shm_cleanup(void)
 {
-	int ret;
-
 	/* Nothing to do. */
-	if (!server.initialized)
+	if (!__nanvix_sysv_is_initialized())
 		return (0);
 
-	/* Close output mailbox. */
-	if ((ret = nanvix_mailbox_close(server.outbox)) < 0)
-	{
-		uprintf("[nanvix][shm] cannot close outbox to server");
-		return (ret);
-	}
-
-	server.initialized = 0;
 
 	return (0);
 }

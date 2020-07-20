@@ -34,16 +34,17 @@
 #if defined(__NEED_SYSV_SERVER) || defined(__SYSV_SERVER)
 
 	#include <nanvix/servers/sysv/msg.h>
+	#include <nanvix/servers/sysv/shm.h>
 	#include <nanvix/servers/message.h>
 
 	/**
 	 * @name Types of Messages
 	 */
 	/**@{*/
-	#define SYSV_SUCCESS (0 << 0) /**< Success */
-	#define SYSV_ACK     (1 << 0) /**< Fail    */
-	#define SYSV_FAIL    (2 << 0) /**< Fail    */
-	#define SYSV_EXIT    (3 << 0) /**< Exit    */
+	#define SYSV_SUCCESS 0 /**< Success */
+	#define SYSV_ACK     1 /**< Fail    */
+	#define SYSV_FAIL    2 /**< Fail    */
+	#define SYSV_EXIT    3 /**< Exit    */
 	/**@}*/
 
 	/**
@@ -72,12 +73,18 @@
 			union sem_payload sem;
 
 			/**
+			 * @brief Shared Memory Region
+			 */
+			union shm_payload shm;
+
+			/**
 			 * @brief Return Message
 			 */
 			struct
 			{
-				int ipcid;   /**< ID of IPC Structure */
-				int status; /**< Status Code          */
+				int ipcid;     /**< ID of IPC Structure */
+				int status;   /**< Status Code          */
+				rpage_t page; /**< Base Address         */
 			} ret;
 		} payload;
 	};

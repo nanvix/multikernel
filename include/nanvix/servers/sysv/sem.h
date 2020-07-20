@@ -39,9 +39,9 @@
 	 * @name Types of Messages
 	 */
 	/**@{*/
-	#define SYSV_SEM_GET      (1 << 5) /**< Get Semaphore     */
-	#define SYSV_SEM_CLOSE    (2 << 5) /**< Close Semaphore   */
-	#define SYSV_SEM_OPERATE  (3 << 5) /**< Operate Semaphore */
+	#define SYSV_SEM_GET      8 /**< Get Semaphore     */
+	#define SYSV_SEM_CLOSE    9 /**< Close Semaphore   */
+	#define SYSV_SEM_OPERATE 10 /**< Operate Semaphore */
 	/**@}*/
 
 	/**

@@ -30,6 +30,7 @@
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
+#include <posix/fcntl.h>
 
 /*============================================================================*
  * vfs_open()                                                                 *

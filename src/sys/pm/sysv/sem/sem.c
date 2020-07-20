@@ -106,6 +106,7 @@ int do_sem_get(key_t key, int semflg)
 			if ((semflg & IPC_CREAT) && (semflg & IPC_EXCL))
 				return (-EEXIST);
 
+			semid = i;
 			goto found;
 		}
 	}
@@ -235,6 +236,10 @@ nanvix_pid_t do_sem_operate(
 	const struct nanvix_sembuf *sops
 )
 {
+	/* Invalid semaphore buffer. */
+	if (sops == NULL)
+		return (-EINVAL);
+
 	sysv_debug("do_sem_operate() pid=%d, semid=%d, sops.val=%d",
 		pid, semid, sops->sem_op
 	);
@@ -249,10 +254,6 @@ nanvix_pid_t do_sem_operate(
 
 	/* Bad ID for semaphore. */
 	if (!resource_is_used(&semaphores[semid].resource))
-		return (-EINVAL);
-
-	/* Invalid semaphore buffer. */
-	if (sops == NULL)
 		return (-EINVAL);
 
 	/* Not supported. */

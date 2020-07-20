@@ -36,7 +36,6 @@ SRC = $(wildcard *.c)                        \
       $(wildcard pm/sysv/*.c)                \
       $(wildcard pm/*.c)                     \
       $(wildcard mm/*.c)                     \
-      $(wildcard mm/shm/*.c)                 \
       $(wildcard utils/*.c)
 
 # Object Files
