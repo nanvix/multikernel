@@ -544,39 +544,40 @@ static int do_sysv_sem_close(const struct sysv_message *request)
  */
 static int do_sysv_sem_operate(const struct sysv_message *request)
 {
-	nanvix_pid_t ret;
 	int outbox;
 	struct sysv_message response;
+	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
+	int connection = connect(pid, port);
 
-	ret = do_sem_operate(
-		pid,
+	connection = do_sem_operate(
+		connection,
 		request->payload.sem.operate.semid,
 		&request->payload.sem.operate.sembuf
 	);
 
 	/* Operation failed. */
-	if (ret < 0)
-		return (ret);
+	if (connection < 0)
+		return (connection);
 
 	/* Block. */
-	if (ret == pid)
+	if (connection == pid)
 		return (1);
 
 	/*  Operation completed. */
-	if (ret == 0)
+	if (connection == 0)
 		return (0);
 
 	/* Unblock remote. */
-	response.payload.ret.status = ret;
+	response.payload.ret.status = connection;
 	message_header_build(
 		&response.header,
 		SYSV_SUCCESS
 	);
 	uassert((
 		outbox = kmailbox_open(
-			ret,
-			connection_get_port(ret)
+			connection,
+			connection_get_port(connection)
 		)) >= 0
 	);
 	uassert(
