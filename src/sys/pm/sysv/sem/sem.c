@@ -33,11 +33,11 @@
 #include <posix/errno.h>
 
 /**
- * @brief  Sleeping processes.
+ * @brief  Sleeping conncetions.
  */
 static struct
 {
-	nanvix_pid_t pid; /**< ID of Sleeping Process */
+	int conn;         /**< ID of Sleeping Process */
 	int semid;        /**< ID of Target Semaphore */
 	int val;          /**< Target Value.          */
 } sleeping[NANVIX_PROC_MAX];
@@ -52,11 +52,11 @@ static struct sem
 	 */
 	struct resource resource; /**< Generic resource information.  */
 
-	nanvix_pid_t owner;       /**< ID of owner process.  */
-	key_t key;                /**< Key.                  */
-	int refcount;             /**< Number of references. */
-	mode_t mode;              /**< Access permissions.   */
-	int val;                  /**< Counter               */
+	int owner;                /**< ID of owner conncetion. */
+	key_t key;                /**< Key.                    */
+	int refcount;             /**< Number of references.   */
+	mode_t mode;              /**< Access permissions.     */
+	int val;                  /**< Counter                 */
 } semaphores[NANVIX_SEM_MAX];
 
 /**
@@ -165,21 +165,21 @@ int do_sem_close(int semid)
  *============================================================================*/
 
 /**
- * @brief Puts a process to sleep.
+ * @brief Puts a conncetion to sleep.
  *
- * @param pid   ID of the target process.
+ * @param conn  ID of the target conncetion.
  * @param semid ID of the target semaphore.
  * @param val   Sleeping val.
  *
  * @author Pedro Henrique Penna
  */
-static void do_sleep(nanvix_pid_t pid, int semid, int val)
+static void do_sleep(int conn, int semid, int val)
 {
 	for (int i = 0; i < NANVIX_PROC_MAX; i++)
 	{
 		if (sleeping[i].semid == -1)
 		{
-			sleeping[i].pid = pid;
+			sleeping[i].conn = conn;
 			sleeping[i].semid = semid;
 			sleeping[i].val = val;
 		}
@@ -187,20 +187,20 @@ static void do_sleep(nanvix_pid_t pid, int semid, int val)
 }
 
 /**
- * @brief Wakes up a process.
+ * @brief Wakes up a conncetion.
  *
  * @param semid ID of the target semaphore.
  *
- * @returns If a process that can be awaken is found, the ID of such
- * process is returned. Otherwise, zero is returned instead.
+ * @returns If a conncetion that can be awaken is found, the ID of such
+ * conncetion is returned. Otherwise, zero is returned instead.
  *
  * @author Pedro Henrique Penna
  */
-static nanvix_pid_t do_wakeup(int semid)
+static int do_wakeup(int semid)
 {
 	for (int i = 0; i < NANVIX_PROC_MAX; i++)
 	{
-		/* Skip invalid processes. */
+		/* Skip invalid conncetions. */
 		if (sleeping[i].semid != semid)
 			continue;
 
@@ -210,7 +210,7 @@ static nanvix_pid_t do_wakeup(int semid)
 			sleeping[i].semid = -1;
 			semaphores[semid].val -= sleeping[i].val;
 
-			return (sleeping[i].pid);
+			return (sleeping[i].conn);
 		}
 	}
 
@@ -222,16 +222,16 @@ static nanvix_pid_t do_wakeup(int semid)
  * @p semid. The @p sops parameter speficies the operation to execute.
  * Upon successful completion, this function returns either: (i) zero
  * (indicating tha the operation was promptly completed and no futher
- * action is required; or (ii) a positive process identifier that
+ * action is required; or (ii) a positive conncetion identifier that
  * signals, which in turn provides additional information on whether the
- * calling process should block (return value equals @p pid parameter)
- * or another process should be awaken return value differs from @p pid
- * parameter).
+ * calling conncetion should block (return value equals @p conn
+ * parameter) or another conncetion should be awaken return value
+ * differs from @p conn parameter).
  *
  * @author Pedro Henrique Penna
  */
-nanvix_pid_t do_sem_operate(
-	nanvix_pid_t pid,
+int do_sem_operate(
+	int conn,
 	int semid,
 	const struct nanvix_sembuf *sops
 )
@@ -240,12 +240,12 @@ nanvix_pid_t do_sem_operate(
 	if (sops == NULL)
 		return (-EINVAL);
 
-	sysv_debug("do_sem_operate() pid=%d, semid=%d, sops.val=%d",
-		pid, semid, sops->sem_op
+	sysv_debug("do_sem_operate() conn=%d, semid=%d, sops.val=%d",
+		conn, semid, sops->sem_op
 	);
 
-	/* Invalid process. */
-	if (pid < 0)
+	/* Invalid conncetion. */
+	if (conn < 0)
 		return (-EINVAL);
 
 	/* Invalid semaphore. */
@@ -263,7 +263,7 @@ nanvix_pid_t do_sem_operate(
 	/* Increment semaphore. */
 	if (sops->sem_op > 0)
 	{
-		nanvix_pid_t awaken;
+		int awaken;
 
 		semaphores[semid].val += sops->sem_op;
 		if ((awaken = do_wakeup(semid)) > 0)
@@ -279,8 +279,8 @@ nanvix_pid_t do_sem_operate(
 			if (sops->sem_flg & IPC_NOWAIT)
 				return (0);
 
-			do_sleep(pid, semid, sops->sem_op);
-			return (pid);
+			do_sleep(conn, semid, sops->sem_op);
+			return (conn);
 		}
 
 		semaphores[semid].val += sops->sem_op;
@@ -295,8 +295,8 @@ nanvix_pid_t do_sem_operate(
 			if (sops->sem_flg & IPC_NOWAIT)
 				return (0);
 
-			do_sleep(pid, semid, 0);
-			return (pid);
+			do_sleep(conn, semid, 0);
+			return (conn);
 		}
 	}
 
@@ -309,8 +309,8 @@ nanvix_pid_t do_sem_operate(
 
 /**
  * The do_sem_init() function initializes the semaphore service. It
- * traverses the table of semaphores and sleeping processes initializing
- * all entries.
+ * traverses the table of semaphores and sleeping conncetions
+ * initializing all entries.
  *
  * @author Pedro Henrique Penna
  */
@@ -323,7 +323,7 @@ void do_sem_init(void)
 		semaphores[i].resource = RESOURCE_INITIALIZER;
 	}
 
-	/* Initialize table of sleeping processes. */
+	/* Initialize table of sleeping conncetions. */
 	for (int i = 0; i < NANVIX_PROC_MAX; i++)
 		sleeping[i].semid = -1;
 }
