@@ -246,8 +246,6 @@ static void test_shm_read_inval(void)
 		uassert(__nanvix_shm_read(shmid, NULL, NANVIX_SHM_SIZE_MAX, 0) == -EINVAL);
 
 		/* Invalid read size. */
-		uassert(__nanvix_shm_read(shmid, buffer, 0, 0) == -EINVAL);
-		uassert(__nanvix_shm_read(shmid, buffer, NANVIX_SHM_SIZE_MAX - 1, 0) == -EINVAL);
 		uassert(__nanvix_shm_read(shmid, buffer, NANVIX_SHM_SIZE_MAX + 1, 0) == -EINVAL);
 
 		/* Invalid offset. */
@@ -282,8 +280,6 @@ static void test_shm_write_inval(void)
 		uassert(__nanvix_shm_write(shmid, NULL, NANVIX_SHM_SIZE_MAX, 0) == -EINVAL);
 
 		/* Invalid write size. */
-		uassert(__nanvix_shm_write(shmid, buffer, 0, 0) == -EINVAL);
-		uassert(__nanvix_shm_write(shmid, buffer, NANVIX_SHM_SIZE_MAX - 1, 0) == -EINVAL);
 		uassert(__nanvix_shm_write(shmid, buffer, NANVIX_SHM_SIZE_MAX + 1, 0) == -EINVAL);
 
 		/* Invalid offset. */
