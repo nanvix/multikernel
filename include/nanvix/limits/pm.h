@@ -66,7 +66,7 @@
 	/**
 	 * @brief Maximum number of active connections in a server.
 	 */
-	#define NANVIX_CONNECTIONS_MAX NANVIX_PROC_MAX
+	#define NANVIX_CONNECTIONS_MAX (NANVIX_PROC_MAX * 4)
 
 	/**
 	 * @brief Defines the base for the general purpose ports range for communicators.
