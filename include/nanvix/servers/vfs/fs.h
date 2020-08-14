@@ -188,7 +188,7 @@
 	/**
 	 * @brief Root File System
 	 */
-	struct filesystem fs_root;
+	extern struct filesystem fs_root;
 
 /*============================================================================*
  * Interface for Refule Files                                                 *
