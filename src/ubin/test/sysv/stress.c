@@ -34,7 +34,7 @@
 /**
  * Used for tests.
  */
-char msgp[NANVIX_MSG_SIZE_MAX];
+static char msgp[NANVIX_MSG_SIZE_MAX];
 
 /**
  * @brief Stress Test: Get / Close 1
