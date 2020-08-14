@@ -66,7 +66,16 @@
 	/**
 	 * @brief Maximum number of active connections in a server.
 	 */
-	#define NANVIX_CONNECTIONS_MAX NANVIX_PROC_MAX
+	#define NANVIX_CONNECTIONS_MAX (NANVIX_PROC_MAX * 4)
+
+	/**
+	 * @brief Defines the base for the general purpose ports range for communicators.
+	 *
+	 * @note It's the first not reserved port for standard structures of the IKC module.
+	 *
+	 * @note Just a workaround. Redefine to at least 16 when possible.
+	 */
+	#define NANVIX_GENERAL_PORTS_BASE 13
 
 /*============================================================================*
  * System V Service                                                           *

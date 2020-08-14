@@ -58,9 +58,11 @@ static int inbox = -1;
  * @brief Lookup table of process names.
  */
 static struct {
-	int nodenum;                     /**< NoC node.                 */
+	int nodenum;                     /**< NoC nodenum.              */
+	int port_nr;                     /**< Server connection.        */
 	char name[NANVIX_PROC_NAME_MAX]; /**< Process name.             */
 	uint64_t timestamp;              /**< Timestamp for heartbeats. */
+	int refcount;                    /**< Link reference counter.   */
 } procs[NANVIX_PNAME_MAX];
 
 /**
@@ -85,11 +87,15 @@ static void do_name_init(struct nanvix_semaphore *lock)
 	/* Initialize lookup table. */
 	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
-		procs[i].nodenum = -1;
-		procs[i].timestamp = 0;
+		procs[i].nodenum   = -1;
+		procs[i].port_nr   = -1;
+		procs[i].timestamp =  0;
+		procs[i].refcount  =  0;
 	}
 
-	procs[0].nodenum = knode_get_num();
+	procs[0].nodenum  = knode_get_num();
+	procs[0].port_nr  = kthread_self();
+	procs[0].refcount = 1;
 	ustrcpy(procs[0].name, "/io0");
 
 	uassert((inbox = stdinbox_get()) >= 0);
@@ -164,10 +170,12 @@ static int do_name_link(const struct name_message *request)
 	int ret;
 	int index;
 	int nodenum;
+	uint8_t remote_port;
 	const char *name;
 
 	name = request->op.link.name;
 	nodenum = request->header.source;
+	remote_port = request->header.mailbox_port;
 
 	stats.nlinks++;
 	name_debug("link nodenum=%d name=%s", nodenum, name);
@@ -184,18 +192,27 @@ static int do_name_link(const struct name_message *request)
 	if (nr_registration >= NANVIX_PNAME_MAX)
 		return (-EINVAL);
 
-	/* Check that the name is not already used */
+	/* Check if the name is already in use. */
 	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		if (ustrcmp(procs[i].name, name) == 0)
-			return (-EINVAL);
+		{
+			/* Confirm connection. */
+			if ((procs[i].nodenum == nodenum) && (procs[i].port_nr == remote_port))
+			{
+				index = i;
+				goto connect;
+			}
+			else
+				return (-EINVAL);
+		}
 	}
 
 	/* Find index. */
 	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		/* Found. */
-		if (procs[i].nodenum == -1)
+		if (procs[i].nodenum < 0)
 		{
 			index = i;
 			goto found;
@@ -205,10 +222,14 @@ static int do_name_link(const struct name_message *request)
 	return (-EINVAL);
 
 found:
+	ustrcpy(procs[index].name, name);
+	procs[index].nodenum = nodenum;
+	procs[index].port_nr = remote_port;
+
+connect:
+	procs[index].refcount++;
 
 	nr_registration++;
-	procs[index].nodenum = nodenum;
-	ustrcpy(procs[index].name, name);
 
 	return (0);
 }
@@ -228,9 +249,11 @@ found:
 static int do_name_unlink(const struct name_message *request)
 {
 	int ret;
+	uint8_t remote_port;
 	const char *name;
 
 	name = request->op.unlink.name;
+	remote_port = request->header.mailbox_port;
 
 	stats.nlinks++;
 	name_debug("unlink name=%s", name);
@@ -243,15 +266,26 @@ static int do_name_unlink(const struct name_message *request)
 	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
 		/* Skip invalid entries. */
-		if (procs[i].nodenum == -1)
+		if (procs[i].nodenum < 0)
 			continue;
 
 		/* Found*/
 		if (ustrcmp(procs[i].name, name) == 0)
 		{
+			/* Checks if it is the same port that linked this name. */
+			if (procs[i].port_nr != remote_port)
+				return (-EINVAL);
+
 			nr_registration--;
-			ustrcpy(procs[i].name, "");
-			procs[i].nodenum = -1;
+
+			/* Checks if it was the last reference to this name link. */
+			if ((--procs[i].refcount) == 0)
+			{
+				ustrcpy(procs[i].name, "");
+				procs[i].nodenum = -1;
+				procs[i].port_nr = -1;
+			}
+
 			return (0);
 		}
 	}
@@ -346,7 +380,7 @@ int do_name_server(struct nanvix_semaphore *lock)
 
 			/* Add name. */
 			case NAME_LINK:
-				ret =  do_name_link(&request);
+				ret = do_name_link(&request);
 				reply = 1;
 				break;
 
@@ -377,7 +411,7 @@ int do_name_server(struct nanvix_semaphore *lock)
 		response.op.ret.errcode = ret;
 		message_header_build(
 			&response.header,
-			(ret <= 0) ? NAME_FAIL : NAME_SUCCESS
+			(ret < 0) ? NAME_FAIL : NAME_SUCCESS
 		);
 
 		uassert((

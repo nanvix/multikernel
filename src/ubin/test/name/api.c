@@ -52,6 +52,28 @@ static void test_name_link_unlink(void)
 }
 
 /*============================================================================*
+ * API Test: Double Link                                                      *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Double Link
+ */
+static void test_name_double_link(void)
+{
+	int nodenum;
+	char pathname[NANVIX_PROC_NAME_MAX];
+
+	nodenum = knode_get_num();
+
+	/* Link name. */
+	ustrcpy(pathname, "cool-name");
+	TEST_ASSERT(nanvix_name_link(nodenum, pathname) == 0);
+	TEST_ASSERT(nanvix_name_link(nodenum, pathname) == 0);
+	TEST_ASSERT(nanvix_name_unlink(pathname) == 0);
+	TEST_ASSERT(nanvix_name_unlink(pathname) == 0);
+}
+
+/*============================================================================*
  * API Test: Lookup                                                           *
  *============================================================================*/
 
@@ -100,6 +122,7 @@ static void test_name_heartbeat(void)
  */
 struct test tests_name_api[] = {
 	{ test_name_link_unlink, "link unlink"    },
+	{ test_name_double_link, "double link"    },
 	{ test_name_lookup,      "lookup"         },
 	{ test_name_heartbeat,   "heartbeat"      },
 	{ NULL,                   NULL            }

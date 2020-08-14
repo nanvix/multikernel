@@ -69,27 +69,6 @@ static void test_name_bad_link(void)
 }
 
 /*============================================================================*
- * Fault Injection Test: Double Link                                          *
- *============================================================================*/
-
-/**
- * @brief Fault Injection Test: Double Link
- */
-static void test_name_double_link(void)
-{
-	int nodenum;
-	char pathname[NANVIX_PROC_NAME_MAX];
-
-	nodenum = knode_get_num();
-
-	/* Link name. */
-	ustrcpy(pathname, "cool-name");
-	TEST_ASSERT(nanvix_name_link(nodenum, pathname) == 0);
-	TEST_ASSERT(nanvix_name_link(nodenum, pathname) < 0);
-	TEST_ASSERT(nanvix_name_unlink(pathname) == 0);
-}
-
-/*============================================================================*
  * Fault Injection Test: Invalid Unlink                                       *
  *============================================================================*/
 
@@ -189,7 +168,6 @@ static void test_name_invalid_lookup(void)
 struct test tests_name_fault[] = {
 	{ test_name_invalid_link,   "invalid link"   },
 	{ test_name_bad_link,       "bad link"       },
-	{ test_name_double_link,    "double link"    },
 	{ test_name_invalid_unlink, "invalid unlink" },
 	{ test_name_bad_unlink,     "bad unlink"     },
 	{ test_name_double_unlink,  "double unlink"  },

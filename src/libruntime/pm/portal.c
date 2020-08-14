@@ -224,6 +224,73 @@ error0:
 }
 
 /*============================================================================*
+ * nanvix_portal_create2()                                                    *
+ *============================================================================*/
+
+/**
+ * @brief Creates a portal specifying the input port.
+ *
+ * @param name Portal name.
+ * @param port Local port.
+ *
+ * @returns Upon successful completion, the ID of the new portal is
+ * returned. Upon failure, a negative error code is returned instead.
+ *
+ * @note This function should be called only for creating portals with
+ * ports specified in the special range that is not related with the
+ * standard ones.
+ */
+int nanvix_portal_create2(const char *name, int port)
+{
+	int fd;       /* NoC connector. */
+	int nodenum;  /* NoC node.      */
+	int portalid; /* Portal ID.     */
+
+	/* Invalid name. */
+	if (name == NULL)
+		return (-EINVAL);
+
+	/* Check name length. */
+	if (ustrlen(name) > KMAILBOX_MESSAGE_SIZE)
+		return (-EINVAL);
+
+	/* Check port number. */
+	if (!WITHIN(port, NANVIX_GENERAL_PORTS_BASE, KPORTAL_PORT_NR))
+		return (-EINVAL);
+
+	nodenum = knode_get_num();
+
+	/* Allocate portal. */
+	if ((portalid = resource_alloc(&pool_portals)) < 0)
+		return (-EAGAIN);
+
+	/* Creates the underlying NoC connector. */
+	if ((fd = kportal_create(nodenum, port)) < 0)
+		goto error0;
+
+	/* Link name. */
+	if (nanvix_name_link(nodenum, name) != 0)
+		goto error1;
+
+	/* Initialize portal. */
+	portals[portalid].portalid = fd;
+	portals[portalid].owner = nodenum;
+	ustrcpy(portals[portalid].name, name);
+
+	resource_set_rdonly(&portals[portalid].resource);
+
+	return (portalid);
+
+error1:
+	if (kportal_unlink(fd) < 0)
+		upanic("Could not clean an erroneus call to nanvix_portal_create2(). Aborting.");
+
+error0:
+	resource_free(&pool_portals, portalid);
+	return (-EAGAIN);
+}
+
+/*============================================================================*
  * nanvix_portal_allow()                                                      *
  *============================================================================*/
 
@@ -257,6 +324,43 @@ int nanvix_portal_allow(int id, int nodenum)
 		return (-EINVAL);
 
 	return (kportal_allow(portals[id].portalid, nodenum, kthread_self()));
+}
+
+/*============================================================================*
+ * nanvix_portal_allow2()                                                     *
+ *============================================================================*/
+
+/**
+ * @brief Enables read operations on a portal specifying remote port.
+ *
+ * @param id	   ID of the target portal.
+ * @param nodenum  Target node.
+ * @param port     Remote port.
+ *
+ * @returns Upons successful completion zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @note This function is NOT thread-safe.
+ */
+PUBLIC int nanvix_portal_allow2(int id, int nodenum, int port)
+{
+	/* Invalid portal ID.*/
+	if (!nanvix_portal_is_valid(id))
+		return (-EINVAL);
+
+	/*  Bad portal. */
+	if (!resource_is_used(&portals[id].resource))
+		return (-EINVAL);
+
+	/* Operation no supported. */
+	if (!resource_is_rdonly(&portals[id].resource))
+		return (-ENOTSUP);
+
+	/* Not the owner. */
+	if (portals[id].owner != knode_get_num())
+		return (-EINVAL);
+
+	return (kportal_allow(portals[id].portalid, nodenum, port));
 }
 
 /*============================================================================*

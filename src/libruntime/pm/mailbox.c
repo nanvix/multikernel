@@ -53,10 +53,10 @@ static struct named_mailbox
 } mailboxes[NANVIX_MAILBOX_MAX];
 
 /**
- * @brief Pool of named mailboxs.
+ * @brief Pool of named mailboxes.
  */
 static const struct resource_pool pool_mailboxes = {
-	mailboxes, NANVIX_PORTAL_MAX, sizeof(struct named_mailbox)
+	mailboxes, NANVIX_MAILBOX_MAX, sizeof(struct named_mailbox)
 };
 
 /**
@@ -83,7 +83,7 @@ static int initialized[NANVIX_PNAME_MAX] = { 0, };
  *
  * @note This function is @b NOT thread safe.
  */
-static int mailboxes_are_initialized(void )
+static int mailboxes_are_initialized(void)
 {
 	int nodenum;
 
@@ -116,7 +116,7 @@ static inline int nanvix_mailbox_is_valid(int mbxid)
 
 /**
  * @todo TODO: provide a detailed description for this function.
-*/
+ */
 int nanvix_mailbox_create(const char *name)
 {
 	int fd;      /* NoC connector. */
@@ -162,12 +162,71 @@ error0:
 }
 
 /*============================================================================*
+ * nanvix_mailbox_create2()                                                   *
+ *============================================================================*/
+
+/**
+ * @todo TODO: provide a detailed description for this function.
+ *
+ * @todo See if it's necessary to put the new mbxid in the named_inboxes table.
+ */
+int nanvix_mailbox_create2(const char *name, int port)
+{
+	int fd;      /* NoC connector. */
+	int nodenum; /* NoC node.      */
+	int mbxid;   /* ID of mailbox. */
+
+	/* Invalid name. */
+	if (name == NULL)
+		return (-EINVAL);
+
+	/* Check name length. */
+	if (ustrlen(name) > KMAILBOX_MESSAGE_SIZE)
+		return (-EINVAL);
+
+	/* Check port number. */
+	if (!WITHIN(port, NANVIX_GENERAL_PORTS_BASE, MAILBOX_PORT_NR))
+		return (-EINVAL);
+
+	nodenum = knode_get_num();
+
+	/* Allocate mailbox. */
+	if ((mbxid = resource_alloc(&pool_mailboxes)) < 0)
+		return (-EAGAIN);
+
+	/* Creates the underlying NoC connector. */
+	if ((fd = kmailbox_create(nodenum, port)) < 0)
+		goto error0;
+
+	/* Link name. */
+	if (nanvix_name_link(nodenum, name) != 0)
+		goto error1;
+
+	/* Initialize mailbox. */
+	mailboxes[mbxid].fd = fd;
+	mailboxes[mbxid].owner = nodenum;
+	ustrcpy(mailboxes[mbxid].name, name);
+
+	resource_set_rdonly(&mailboxes[mbxid].resource);
+
+	return (mbxid);
+
+error1:
+	if (kmailbox_unlink(fd) < 0)
+		upanic("Could not clean an erroneus call to nanvix_mailbox_create2(). Aborting.");
+
+error0:
+	resource_free(&pool_mailboxes, mbxid);
+	return (-EAGAIN);
+}
+
+/*============================================================================*
  * nanvix_mailbox_open()                                                      *
  *============================================================================*/
 
 /**
  * @todo TODO: provide a detailed description for this function.
-*/
+ */
 int nanvix_mailbox_open(const char *name, int port)
 {
 	int fd;      /* NoC connector. */
@@ -236,6 +295,34 @@ int nanvix_mailbox_read(int mbxid, void *buf, size_t n)
 		return (-EINVAL);
 
 	return (0);
+}
+
+/*============================================================================*
+ * mailbox_set_remote()                                                       *
+ *============================================================================*/
+
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+int nanvix_mailbox_set_remote(int mbxid, int remote, int port)
+{
+	int ret;
+
+	/* Invalid mailbox ID.*/
+	if (!nanvix_mailbox_is_valid(mbxid))
+		return (-EINVAL);
+
+	/* Invalid nodenum. */
+	if (!WITHIN(remote, 0, (MAILBOX_ANY_SOURCE + 1)))
+		return (-EINVAL);
+
+	/* Invalid port number. */
+	if (!WITHIN(port, 0, (MAILBOX_ANY_PORT + 1)))
+		return (-EINVAL);
+
+	ret = kmailbox_ioctl(mailboxes[mbxid].fd, KMAILBOX_IOCTL_SET_REMOTE, remote, port);
+
+	return (ret);
 }
 
 /*============================================================================*
