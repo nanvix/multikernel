@@ -656,8 +656,6 @@ static ssize_t __do_nanvix_shm_read(int shmid, void *buf, size_t n, off_t off)
 	if (oregions[oshmid].page == RMEM_NULL)
 		return (-ENOMEM);
 
-	((void) off);
-
 	uassert((ptr = nanvix_rcache_get(oregions[oshmid].page)) != NULL);
 	umemcpy(buf, ptr + off, n);
 	uassert(nanvix_rcache_put(oregions[oshmid].page, 1) == 0);
@@ -683,7 +681,7 @@ ssize_t __nanvix_shm_read(int shmid, void *buf, size_t n, off_t off)
 		return (-EINVAL);
 
 	/* Invalid read size. */
-	if (n != NANVIX_SHM_SIZE_MAX)
+	if (n > NANVIX_SHM_SIZE_MAX)
 		return (-EINVAL);
 
 	/* Invalid offset. */
@@ -726,8 +724,6 @@ static ssize_t __do_nanvix_shm_write(int shmid, const void *buf, size_t n, off_t
 	if (oregions[oshmid].page == RMEM_NULL)
 		return (-ENOMEM);
 
-	((void) off);
-
 	uassert((ptr = nanvix_rcache_get(oregions[oshmid].page)) != NULL);
 	umemcpy(ptr + off, buf, n);
 	uassert(nanvix_rcache_put(oregions[oshmid].page, 1) == 0);
@@ -749,7 +745,7 @@ ssize_t __nanvix_shm_write(int shmid, const void *buf, size_t n, off_t off)
 		return (-EINVAL);
 
 	/* Invalid read size. */
-	if (n != NANVIX_SHM_SIZE_MAX)
+	if (n > NANVIX_SHM_SIZE_MAX)
 		return (-EINVAL);
 
 	/* Invalid offset. */
