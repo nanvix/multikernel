@@ -267,7 +267,7 @@ int shm_alloc(void)
 	if ((shmid = resource_alloc(&pool)) < 0)
 		return (-1);
 
-	regions[shmid].refcount = 1;
+	regions[shmid].refcount = 2;
 	resource_set_busy(&regions[shmid].resource);
 	resource_set_rdonly(&regions[shmid].resource);
 
