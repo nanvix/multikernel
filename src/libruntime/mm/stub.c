@@ -85,7 +85,7 @@ rpage_t nanvix_rmem_alloc(void)
 		) == sizeof(struct rmem_message)
 	);
 
-	if (msg.errcode == RMEM_NULL)
+	if (msg.errcode < 0)
 		return RMEM_NULL;
 
 	nallocs++;
