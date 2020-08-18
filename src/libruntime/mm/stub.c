@@ -143,8 +143,6 @@ int nanvix_rmem_free(rpage_t blknum)
  * nanvix_rmem_read()                                                         *
  *============================================================================*/
 
-#ifndef __RMEM_USES_MAILBOX
-
 /**
  * @todo TODO: Provide a detailed description for this function.
  */
@@ -219,79 +217,9 @@ size_t nanvix_rmem_read(rpage_t blknum, void *buf)
 	return ((msg.errcode < 0) ? 0 : RMEM_BLOCK_SIZE);
 }
 
-#else
-
-/**
- * @todo TODO: Provide a detailed description for this function.
- */
-size_t nanvix_rmem_read(rpage_t blknum, void *buf)
-{
-	int serverid;
-	struct rmem_message msg;
-
-	/* Invalid block number. */
-	if ((blknum == RMEM_NULL) || (RMEM_BLOCK_NUM(blknum) >= RMEM_NUM_BLOCKS))
-		return (0);
-
-	/* Invalid buffer. */
-	if (buf == NULL)
-		return (0);
-
-	serverid = RMEM_BLOCK_SERVER(blknum);
-
-	/* Client not initialized.  */
-	if (!server[serverid].initialized)
-		return (0);
-
-	/* Build operation header. */
-	message_header_build(&msg.header, RMEM_READ);
-
-	msg.blknum = blknum;
-
-	/* Send operation header. */
-	uassert(
-		nanvix_mailbox_write(
-			server[serverid].outbox,
-			&msg,
-			sizeof(struct rmem_message)
-		) == 0
-	);
-
-	for (size_t i = 0; i < RMEM_BLOCK_SIZE; i += RMEM_PAYLOAD_SIZE)
-	{
-		/* Wait acknowledge. */
-		uassert(
-			kmailbox_read(
-				stdinbox_get(),
-				&msg,
-				sizeof(struct rmem_message)
-			) == sizeof(struct rmem_message)
-		);
-		uassert(msg.header.opcode == RMEM_ACK);
-
-		umemcpy(&((char *)buf)[i], &msg.payload, RMEM_PAYLOAD_SIZE);
-
-	}
-
-	/* Receive reply. */
-	uassert(
-		kmailbox_read(
-			stdinbox_get(),
-			&msg,
-			sizeof(struct rmem_message)
-		) == sizeof(struct rmem_message)
-	);
-
-	return ((msg.errcode < 0) ? 0 : RMEM_BLOCK_SIZE);
-}
-
-#endif
-
 /*============================================================================*
  * nanvix_rmem_write()                                                        *
  *============================================================================*/
-
-#ifndef __RMEM_USES_MAILBOX
 
 /**
  * @todo TODO: Provide a detailed description for this function.
@@ -351,64 +279,6 @@ size_t nanvix_rmem_write(rpage_t blknum, const void *buf)
 
 	return ((msg.errcode < 0) ? 0 : RMEM_BLOCK_SIZE);
 }
-
-#else
-
-/**
- * @todo TODO: Provide a detailed description for this function.
- */
-size_t nanvix_rmem_write(rpage_t blknum, const void *buf)
-{
-	int serverid;
-	struct rmem_message msg;
-
-	/* Invalid block number. */
-	if ((blknum == RMEM_NULL) || (RMEM_BLOCK_NUM(blknum) >= RMEM_NUM_BLOCKS))
-		return (0);
-
-	/* Invalid buffer. */
-	if (buf == NULL)
-		return (0);
-
-	serverid = RMEM_BLOCK_SERVER(blknum);
-
-	/* Client not initialized.  */
-	if (!server[serverid].initialized)
-		return (0);
-
-	for (size_t i = 0; i < RMEM_BLOCK_SIZE; i += RMEM_PAYLOAD_SIZE)
-	{
-		message_header_build2(
-			&msg.header,
-			RMEM_WRITE,
-			nanvix_portal_get_port(server[serverid].outportal)
-		);
-		msg.blknum = blknum;
-		msg.offset = i;
-
-		umemcpy(&msg.payload, &((const char *)buf)[i], RMEM_PAYLOAD_SIZE);
-
-		uassert(
-			nanvix_mailbox_write(
-				server[serverid].outbox,
-				&msg, sizeof(struct rmem_message)
-			) == 0
-		);
-
-		/* Receive reply. */
-		uassert(
-			kmailbox_read(
-				stdinbox_get(),
-				&msg,
-				sizeof(struct rmem_message)
-			) == sizeof(struct rmem_message)
-		);
-	}
-
-	return ((msg.errcode < 0) ? 0 : RMEM_BLOCK_SIZE);
-}
-
-#endif
 
 /*============================================================================*
  * nanvix_rmem_shutdown()                                                     *
