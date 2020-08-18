@@ -363,7 +363,7 @@ int __do_shm_ftruncate(
 	off_t size
 )
 {
-	sysv_debug("ftruncate proc=%d shmid=%d", proc, shmid);
+	sysv_debug("ftruncate proc=%d shmid=%d size=%d", proc, shmid, size);
 
 	/* Invalid shared memory region. */
 	if (!nanvix_shm_is_valid(shmid))

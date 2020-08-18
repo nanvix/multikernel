@@ -61,13 +61,6 @@
 	#define RMEM_NUM_BLOCKS (RMEM_SIZE/RMEM_BLOCK_SIZE)
 
 	/**
-	 * @brief Size of payload for RMem messages.
-	 */
-	#ifdef __RMEM_USES_MAILBOX
-	#define RMEM_PAYLOAD_SIZE 64
-	#endif
-
-	/**
 	 * @name Shifts for remote addresses.
 	 */
 	/**@{*/
@@ -136,10 +129,6 @@
 		message_header header; /**< Message header. */
 		rpage_t blknum;        /**< Block number.   */
 		int errcode;           /**< Error code.     */
-		#ifdef __RMEM_USES_MAILBOX
-		char payload[RMEM_PAYLOAD_SIZE]; /**< Payload.           */
-		size_t offset;                   /**< Read/Write offset. */
-		#endif
 	};
 
 	/**
