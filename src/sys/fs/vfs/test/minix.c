@@ -1077,6 +1077,316 @@ static void test_stress_minix_inode_read_write2(void)
 }
 
 /**
+ * @brief Stress Test: Inode Alloc/Free Interleaved One Step
+ */
+static void test_stress_minix_inode_alloc_free_interleaved1(void)
+{
+	minix_ino_t inos[NANVIX_NR_INODES];
+
+	/* Even inodes*/
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&fs_root.super->data,
+				fs_root.super->imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+		uassert((
+			minix_inode_free(
+				&fs_root.super->data,
+				fs_root.super->imap,
+				inos[i])
+			) == 0
+		);
+	}
+
+	/* Odd inodes*/
+	for (minix_ino_t i = 3; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&fs_root.super->data,
+				fs_root.super->imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+		uassert((
+			minix_inode_free(
+				&fs_root.super->data,
+				fs_root.super->imap,
+				inos[i])
+			) == 0
+		);
+	}
+}
+
+/**
+ * @brief Stress Test: Inode Alloc/Free Interleaved Two Steps
+ */
+static void test_stress_minix_inode_alloc_free_interleaved2(void)
+{
+	minix_ino_t inos[NANVIX_NR_INODES];
+
+	/* Even inodes*/
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&fs_root.super->data,
+				fs_root.super->imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+	}
+
+	/* Odd inodes*/
+	for (minix_ino_t i = 3; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&fs_root.super->data,
+				fs_root.super->imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+	}
+
+	/* Even inodes*/
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			minix_inode_free(
+				&fs_root.super->data,
+				fs_root.super->imap,
+				inos[i])
+			) == 0
+		);
+	}
+
+	/* Odd inodes*/
+	for (minix_ino_t i = 3; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			minix_inode_free(
+				&fs_root.super->data,
+				fs_root.super->imap,
+				inos[i])
+			) == 0
+		);
+	}
+}
+
+/**
+ * @brief Stress Test: Inode Read/Write Interleaved One Step
+ */
+static void test_stress_minix_inode_read_write_interleaved1(void)
+{
+	minix_ino_t inos[NANVIX_NR_INODES];
+	struct d_inode inode;
+
+	/*Even inodes*/
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&fs_root.super->data,
+				fs_root.super->imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+			uassert((
+				minix_inode_read(
+					NANVIX_ROOT_DEV,
+					&fs_root.super->data,
+					&inode,
+					inos[i])
+				) == 0
+			);
+
+			uassert((
+				minix_inode_write(
+					NANVIX_ROOT_DEV,
+					&fs_root.super->data,
+					&inode,
+					inos[i])
+				) == 0
+			);
+
+		uassert((
+			minix_inode_free(
+				&fs_root.super->data,
+				fs_root.super->imap,
+				inos[i])
+			) == 0
+		);
+	}
+
+	/*Odd inodes*/
+	for (minix_ino_t i = 3; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&fs_root.super->data,
+				fs_root.super->imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+			uassert((
+				minix_inode_read(
+					NANVIX_ROOT_DEV,
+					&fs_root.super->data,
+					&inode,
+					inos[i])
+				) == 0
+			);
+
+			uassert((
+				minix_inode_write(
+					NANVIX_ROOT_DEV,
+					&fs_root.super->data,
+					&inode,
+					inos[i])
+				) == 0
+			);
+
+		uassert((
+			minix_inode_free(
+				&fs_root.super->data,
+				fs_root.super->imap,
+				inos[i])
+			) == 0
+		);
+	}
+}
+
+/**
+ * @brief Stress Test: Inode Read/Write Interleaved Two Steps
+ */
+static void test_stress_minix_inode_read_write_interleaved2(void)
+{
+	minix_ino_t inos[NANVIX_NR_INODES];
+	struct d_inode inode;
+
+	/*Even inodes*/
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&fs_root.super->data,
+				fs_root.super->imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+	}
+
+	/*Odd inodes*/
+	for (minix_ino_t i = 3; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+		uassert((
+			inos[i] = minix_inode_alloc(
+				NANVIX_ROOT_DEV,
+				&fs_root.super->data,
+				fs_root.super->imap,
+				0, 0, 0)
+			) != MINIX_INODE_NULL
+		);
+
+	}
+
+		/*Even inodes*/
+		for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i+=2)
+		{
+			uassert((
+				minix_inode_read(
+					NANVIX_ROOT_DEV,
+					&fs_root.super->data,
+					&inode,
+					inos[i])
+				) == 0
+			);
+		}
+
+		/*Odd inodes*/
+		for (minix_ino_t i = 3; i < fs_root.super->data.s_ninodes; i+=2)
+		{
+			uassert((
+				minix_inode_read(
+					NANVIX_ROOT_DEV,
+					&fs_root.super->data,
+					&inode,
+					inos[i])
+				) == 0
+			);
+		}
+
+		/*Even inodes*/
+		for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i+=2)
+		{
+			uassert((
+				minix_inode_write(
+					NANVIX_ROOT_DEV,
+					&fs_root.super->data,
+					&inode,
+					inos[i])
+				) == 0
+			);
+		}
+
+		/*Odd inodes*/
+		for (minix_ino_t i = 3; i < fs_root.super->data.s_ninodes; i+=2)
+		{
+			uassert((
+				minix_inode_write(
+					NANVIX_ROOT_DEV,
+					&fs_root.super->data,
+					&inode,
+					inos[i])
+				) == 0
+			);
+		}
+
+	/*Even inodes*/
+	for (minix_ino_t i = 2; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+
+		uassert((
+			minix_inode_free(
+				&fs_root.super->data,
+				fs_root.super->imap,
+				inos[i])
+			) == 0
+		);
+	}
+
+	/*Odd inodes*/
+	for (minix_ino_t i = 3; i < fs_root.super->data.s_ninodes; i+=2)
+	{
+
+		uassert((
+			minix_inode_free(
+				&fs_root.super->data,
+				fs_root.super->imap,
+				inos[i])
+			) == 0
+		);
+	}
+}
+
+/**
  * @brief MINIX File System Tests
  */
 static struct
@@ -1084,28 +1394,32 @@ static struct
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
 } minix_tests[] = {
-	{ test_api_minix_block_alloc_free,     "[minix][api] block alloc/free         " },
-	{ test_api_minix_inode_alloc_free,     "[minix][api] inode alloc/free         " },
-	{ test_api_minix_inode_read_write,     "[minix][api] inode read/write         " },
-	{ test_api_minix_dirent_add_remove,    "[minix][api] dirent add/remove        " },
-	{ test_api_minix_dirent_search,        "[minix][api] dirent search            " },
-	{ test_fault_minix_block_alloc_inval,  "[minix][fault] block alloc inval      " },
-	{ test_fault_minix_block_free_inval,   "[minix][fault] block free inval       " },
-	{ test_fault_minix_super_read_inval,   "[minix][fault] superblock read inval  " },
-	{ test_fault_minix_super_write_inval,  "[minix][fault] superblock write inval " },
-	{ test_fault_minix_inode_alloc_inval,  "[minix][fault] inode alloc inval      " },
-	{ test_fault_minix_inode_free_inval,   "[minix][fault] inode free inval       " },
-	{ test_fault_minix_inode_read_inval,   "[minix][fault] inode read inval       " },
-	{ test_fault_minix_inode_write_inval,  "[minix][fault] inode write inval      " },
-	{ test_fault_minix_dirent_add_inval,   "[minix][fault] dirent add inval       " },
-	{ test_fault_minix_dirent_remove_inval,"[minix][fault] dirent remove inval    " },
-	{ test_fault_minix_dirent_search_inval,"[minix][fault] dirent search inval    " },
-	{ test_stress_minix_block_alloc_free1, "[minix][stress] block alloc/free 1    " },
-	{ test_stress_minix_block_alloc_free2, "[minix][stress] block alloc/free 2    " },
-	{ test_stress_minix_inode_alloc_free1, "[minix][stress] inode alloc/free 1    " },
-	{ test_stress_minix_inode_alloc_free2, "[minix][stress] inode alloc/free 2    " },
-	{ test_stress_minix_inode_read_write1, "[minix][stress] inode read/write 1    " },
-	{ test_stress_minix_inode_read_write2, "[minix][stress] inode read/write 2    " },
+	{ test_api_minix_block_alloc_free,                "[minix][api] block alloc/free                 " },
+	{ test_api_minix_inode_alloc_free,                "[minix][api] inode alloc/free                 " },
+	{ test_api_minix_inode_read_write,                "[minix][api] inode read/write                 " },
+	{ test_api_minix_dirent_add_remove,               "[minix][api] dirent add/remove                " },
+	{ test_api_minix_dirent_search,                   "[minix][api] dirent search                    " },
+	{ test_fault_minix_block_alloc_inval,             "[minix][fault] block alloc inval              " },
+	{ test_fault_minix_block_free_inval,              "[minix][fault] block free inval               " },
+	{ test_fault_minix_super_read_inval,              "[minix][fault] superblock read inval          " },
+	{ test_fault_minix_super_write_inval,             "[minix][fault] superblock write inval         " },
+	{ test_fault_minix_inode_alloc_inval,             "[minix][fault] inode alloc inval              " },
+	{ test_fault_minix_inode_free_inval,              "[minix][fault] inode free inval               " },
+	{ test_fault_minix_inode_read_inval,              "[minix][fault] inode read inval               " },
+	{ test_fault_minix_inode_write_inval,             "[minix][fault] inode write inval              " },
+	{ test_fault_minix_dirent_add_inval,              "[minix][fault] dirent add inval               " },
+	{ test_fault_minix_dirent_remove_inval,           "[minix][fault] dirent remove inval            " },
+	{ test_fault_minix_dirent_search_inval,           "[minix][fault] dirent search inval            " },
+	{ test_stress_minix_block_alloc_free1,            "[minix][stress] block alloc/free 1            " },
+	{ test_stress_minix_block_alloc_free2,            "[minix][stress] block alloc/free 2            " },
+	{ test_stress_minix_inode_alloc_free1,            "[minix][stress] inode alloc/free 1            " },
+	{ test_stress_minix_inode_alloc_free2,            "[minix][stress] inode alloc/free 2            " },
+	{ test_stress_minix_inode_read_write1,            "[minix][stress] inode read/write 1            " },
+	{ test_stress_minix_inode_read_write2,            "[minix][stress] inode read/write 2            " },
+	{ test_stress_minix_inode_alloc_free_interleaved1,"[minix][stress] inode alloc/free interleaved 1" },
+	{ test_stress_minix_inode_alloc_free_interleaved2,"[minix][stress] inode alloc/free interleaved 2" },
+	{ test_stress_minix_inode_read_write_interleaved1,"[minix][stress] inode read/write interleaved 1" },
+	{ test_stress_minix_inode_read_write_interleaved2,"[minix][stress] inode read/write interleaved 2" },
 	{ NULL,                                 NULL                                    },
 };
 
