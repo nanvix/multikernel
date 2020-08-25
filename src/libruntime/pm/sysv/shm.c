@@ -896,6 +896,5 @@ int __nanvix_shm_cleanup(void)
 	if (!__nanvix_sysv_is_initialized())
 		return (0);
 
-
 	return (0);
 }

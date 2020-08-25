@@ -149,10 +149,10 @@ int __nanvix_sysv_setup(void)
 		return (server.outportal);
 	}
 
+	__nanvix_shm_setup();
+
 	server.initialized = true;
 	uprintf("[nanvix][sysv] connection with server established");
-
-	__nanvix_shm_setup();
 
 #endif
 
