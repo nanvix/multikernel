@@ -31,12 +31,22 @@
 /**
  * @brief expand() in at least NALLOC blocks.
  */
-#define NALLOC 511
+#define BLOCK_SIZE 512
 
 /**
- * @brief Size of block structure.
+ * @brief Size of the meta-information of a block.
  */
-#define BLOCK_SIZE (sizeof(struct block))
+#define BLOCK_STRUCT_SIZE (sizeof(struct block))
+
+/**
+ * @brief Real size of the block (metadata + user data).
+ */
+#define BLOCK_META_SIZE(_size) (BLOCK_STRUCT_SIZE + _size)
+
+/**
+ * @brief Minimum size of block in bytes (metadata + 1 char).
+ */
+#define BLOCK_MIN_SIZE (BLOCK_META_SIZE(sizeof(char)))
 
 /**
  * @brief Memory block.
@@ -44,7 +54,7 @@
 struct block
 {
 	struct block *nextp; /* Next free block.  */
-	unsigned nblocks;    /* Size (in blocks). */
+	size_t size;         /* Size (in bytes). */
 };
 
 /**
@@ -75,31 +85,30 @@ void nanvix_free(void *ptr)
 	bp = (struct block *)ptr - 1;
 
 	/* Look for insertion point. */
-	for (p = freep; !(p < bp && p->nextp > bp); p = p->nextp)
+	for (p = freep; !(p <= bp && bp <= p->nextp); p = p->nextp)
 	{
 		/* Freed block at start or end. */
-		if (p >= p->nextp && (bp > p || bp < p->nextp))
+		if (p >= p->nextp && (p < bp || bp < p->nextp))
 			break;
 	}
 
 	/* Merge with upper block. */
-	if (bp + bp->nblocks == p->nextp)
+	if (bp + bp->size == p->nextp)
 	{
-		bp->nblocks += p->nextp->nblocks;
+		bp->size += p->nextp->size;
 		bp->nextp = p->nextp->nextp;
 	}
 	else
 		bp->nextp = p->nextp;
 
 	/* Merge with lower block. */
-	if (p + p->nblocks == bp)
+	if (p + p->size == bp)
 	{
-		p->nblocks += bp->nblocks;
+		p->size += bp->size;
 		p->nextp = bp->nextp;
 	}
 	else
 		p->nextp = bp;
-
 
 	freep = p;
 }
@@ -115,22 +124,18 @@ void nanvix_free(void *ptr)
  *          Upon failure, a null pointed is returned instead and errno is set
  *          to indicate the error.
  */
-static void *expand(unsigned nblocks)
+static void *expand(size_t size)
 {
-	struct block *p;
 	size_t n;
+	struct block *p;
 
-	/* Expand in at least NALLOC blocks. */
-	if (nblocks < NALLOC)
-		nblocks = NALLOC;
-
-	n = TRUNCATE(nblocks*BLOCK_SIZE, PAGE_SIZE)/PAGE_SIZE;
+	n = TRUNCATE(size, PAGE_SIZE)/PAGE_SIZE;
 
 	/* Request more memory to the kernel. */
 	if ((p = nanvix_vmem_alloc(n)) == NULL)
 		return (NULL);
 
-	p->nblocks = nblocks;
+	p->size = n*PAGE_SIZE;
 	nanvix_free(p + 1);
 
 	return (freep);
@@ -149,39 +154,49 @@ static void *expand(unsigned nblocks)
  */
 void *nanvix_malloc(size_t size)
 {
+	size_t bsize;        /* Requested block size.     */
 	struct block *p;     /* Working block.            */
+	struct block *q;     /* Auxiliar block.           */
 	struct block *prevp; /* Previous working block.   */
-	unsigned nblocks;    /* Request size (in blocks). */
 
 	/* Nothing to be done. */
 	if (size == 0)
 		return (NULL);
 
-	nblocks = (size + (BLOCK_SIZE - 1))/BLOCK_SIZE + 1;
-
 	/* Create free list. */
 	if ((prevp = freep) == NULL)
 	{
 		head.nextp = freep = prevp = &head;
-		head.nblocks = 0;
+		head.size = 0;
 	}
+
+	bsize = BLOCK_META_SIZE(size);
 
 	/* Look for a free block that is big enough. */
 	for (p = prevp->nextp; /* void */ ; prevp = p, p = p->nextp)
 	{
 		/* Found. */
-		if (p->nblocks >= nblocks)
+		if (p->size >= bsize)
 		{
-			/* Exact. */
-			if (p->nblocks == nblocks)
+			/* Exact or there isn't enough space for another block. */
+			if (WITHIN(p->size, bsize, bsize + BLOCK_MIN_SIZE))
 				prevp->nextp = p->nextp;
 
 			/* Split block. */
 			else
 			{
-				p->nblocks -= nblocks;
-				p += p->nblocks;
-				p->nblocks = nblocks;
+				/* Gets the next block pointer. */
+				q = (struct block *) (((char *) p) + bsize);
+
+				/* Sets remaining size. */
+				q->size = (p->size - bsize);
+
+				/* Puts new block into free list. */
+				prevp->nextp = q;
+				q->nextp     = p->nextp;
+
+				/* Updates size of allocated block. */
+				p->size = bsize;
 			}
 
 			freep = prevp;
@@ -193,7 +208,7 @@ void *nanvix_malloc(size_t size)
 		if (p == freep)
 		{
 			/* Expand heap. */
-			if ((p = expand(nblocks)) == NULL)
+			if ((p = expand(bsize)) == NULL)
 				break;
 		}
 	}
@@ -218,16 +233,17 @@ void *nanvix_realloc(void *ptr, size_t size)
 
 	/* Nothing to be done. */
 	if (size == 0)
-	{
-		errno = EINVAL;
 		return (NULL);
-	}
 
 	newptr = nanvix_malloc(size);
+
+	/* Checks if there are more operations to be done. */
 	if (ptr != NULL)
+	{
 		umemcpy(newptr, ptr, size);
 
-	nanvix_free(ptr);
+		nanvix_free(ptr);
+	}
 
 	return (newptr);
 }
