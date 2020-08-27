@@ -75,6 +75,62 @@ static void test_rmem_stub_read_write(void)
 }
 
 /*============================================================================*
+ * API Test: Stats                                                            *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Stats
+ */
+static void test_rmem_stub_stats(void)
+{
+	rpage_t blknum;
+	struct rmem_stats stats1;
+	struct rmem_stats stats2;
+
+	TEST_ASSERT(nanvix_rmem_stats(&stats1) == 0);
+	TEST_ASSERT((blknum = nanvix_rmem_alloc()) != RMEM_NULL);
+	TEST_ASSERT(nanvix_rmem_stats(&stats2) == 0);
+
+	TEST_ASSERT((stats2.nallocs - stats1.nallocs) == 1);
+	TEST_ASSERT((stats2.nfrees - stats1.nfrees) == 0);
+	TEST_ASSERT((stats2.nreads - stats1.nreads) == 0);
+	TEST_ASSERT((stats2.nwrites - stats1.nwrites) == 0);
+
+		TEST_ASSERT(nanvix_rmem_stats(&stats1) == 0);
+		umemset(buffer, 1, RMEM_BLOCK_SIZE);
+		TEST_ASSERT(nanvix_rmem_write(blknum, buffer) == RMEM_BLOCK_SIZE);
+		TEST_ASSERT(nanvix_rmem_stats(&stats2) == 0);
+
+		TEST_ASSERT((stats2.nallocs - stats1.nallocs) == 0);
+		TEST_ASSERT((stats2.nfrees - stats1.nfrees) == 0);
+		TEST_ASSERT((stats2.nreads - stats1.nreads) == 0);
+		TEST_ASSERT((stats2.nwrites - stats1.nwrites) == 1);
+
+		TEST_ASSERT(nanvix_rmem_stats(&stats1) == 0);
+		umemset(buffer, 0, RMEM_BLOCK_SIZE);
+		TEST_ASSERT(nanvix_rmem_read(blknum, buffer) == RMEM_BLOCK_SIZE);
+		TEST_ASSERT(nanvix_rmem_stats(&stats2) == 0);
+
+		TEST_ASSERT((stats2.nallocs - stats1.nallocs) == 0);
+		TEST_ASSERT((stats2.nfrees - stats1.nfrees) == 0);
+		TEST_ASSERT((stats2.nreads - stats1.nreads) == 1);
+		TEST_ASSERT((stats2.nwrites - stats1.nwrites) == 0);
+
+		/* Checksum. */
+		for (unsigned long i = 0; i < RMEM_BLOCK_SIZE; i++)
+			TEST_ASSERT(buffer[i] == 1);
+
+	TEST_ASSERT(nanvix_rmem_stats(&stats1) == 0);
+	TEST_ASSERT(nanvix_rmem_free(blknum) == 0);
+	TEST_ASSERT(nanvix_rmem_stats(&stats2) == 0);
+
+	TEST_ASSERT((stats2.nallocs - stats1.nallocs) == 0);
+	TEST_ASSERT((stats2.nfrees - stats1.nfrees) == 1);
+	TEST_ASSERT((stats2.nreads - stats1.nreads) == 0);
+	TEST_ASSERT((stats2.nwrites - stats1.nwrites) == 0);
+}
+
+/*============================================================================*
  * API Test: Consistency                                                      *
  *============================================================================*/
 
@@ -130,8 +186,9 @@ static void test_rmem_stub_consistency(void)
  * @brief Unit tests.
  */
 struct test tests_rmem_stub_api[] = {
-	{ test_rmem_stub_alloc_free, "alloc/free"   },
-	{ test_rmem_stub_read_write, "read/write"   },
+	{ test_rmem_stub_alloc_free,  "alloc/free"  },
+	{ test_rmem_stub_read_write,  "read/write"  },
+	{ test_rmem_stub_stats,       "stats"       },
 	{ test_rmem_stub_consistency, "consistency" },
 	{ NULL,                       NULL          },
 };

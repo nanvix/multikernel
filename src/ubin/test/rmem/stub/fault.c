@@ -157,6 +157,18 @@ static void test_rmem_stub_bad_read(void)
 #endif
 
 /*============================================================================*
+ * Fault Injection Test: Invalid Stats                                        *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Invalid Stats
+ */
+static void test_rmem_stub_invalid_stats(void)
+{
+	TEST_ASSERT(nanvix_rmem_stats(NULL) == -EINVAL);
+}
+
+/*============================================================================*
  * Test Driver Table                                                          *
  *============================================================================*/
 
@@ -174,5 +186,6 @@ struct test tests_rmem_stub_fault[] = {
 #if __TEST_BAD_READ
 	{ test_rmem_stub_bad_read,      "bad read     " },
 #endif
+	{ test_rmem_stub_invalid_stats, "invalid stats" },
 	{ NULL,                          NULL           },
 };
