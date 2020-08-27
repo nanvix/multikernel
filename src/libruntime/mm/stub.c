@@ -46,6 +46,11 @@ static struct
 	[0 ... (RMEM_SERVERS_NUM - 1)] = { 0, -1, -1 }
 };
 
+/**
+ * @brief Runtime Statistics
+ */
+static struct rmem_stats stats = { 0, 0, 0, 0 };
+
 /*============================================================================*
  * nanvix_rmem_alloc()                                                        *
  *============================================================================*/
@@ -89,6 +94,7 @@ rpage_t nanvix_rmem_alloc(void)
 		return RMEM_NULL;
 
 	nallocs++;
+	stats.nallocs++;
 	return (msg.blknum);
 }
 
@@ -136,6 +142,7 @@ int nanvix_rmem_free(rpage_t blknum)
 		) == sizeof(struct rmem_message)
 	);
 
+	stats.nfrees++;
 	return (msg.errcode);
 }
 
@@ -214,6 +221,7 @@ size_t nanvix_rmem_read(rpage_t blknum, void *buf)
 		) == sizeof(struct rmem_message)
 	);
 
+	stats.nreads++;
 	return ((msg.errcode < 0) ? 0 : RMEM_BLOCK_SIZE);
 }
 
@@ -277,7 +285,27 @@ size_t nanvix_rmem_write(rpage_t blknum, const void *buf)
 		) == sizeof(struct rmem_message)
 	);
 
+	stats.nwrites++;
 	return ((msg.errcode < 0) ? 0 : RMEM_BLOCK_SIZE);
+}
+
+/*============================================================================*
+ * nanvix_rmem_stats()                                                        *
+ *============================================================================*/
+
+/**
+ * The nanvix_rmem_stats() function retrieves runtime statistics of the
+ * RMem service.
+ */
+int nanvix_rmem_stats(struct rmem_stats *buf)
+{
+	/* Invalid buffer. */
+	if (buf == NULL)
+		return (-EINVAL);
+
+	umemcpy(buf, &stats, sizeof(struct rmem_stats));
+
+	return (0);
 }
 
 /*============================================================================*
@@ -341,6 +369,9 @@ int __nanvix_rmem_setup(void)
 		uprintf("[nanvix][rmem] connection with server established");
 		server[i].initialized = 1;
 	}
+
+	/* Reset runtime statistics. */
+	umemset(&stats, 0, sizeof(struct rmem_stats));
 
 #if (CLUSTER_HAS_TLB_SHOOTDOWN)
 	uassert(excp_ctrl(EXCEPTION_PAGE_FAULT, EXCP_ACTION_HANDLE) == 0);

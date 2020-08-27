@@ -25,6 +25,8 @@
 #ifndef NANVIX_RUNTIME_MM_STUB_H_
 #define NANVIX_RUNTIME_MM_STUB_H_
 
+	#include <posix/stdint.h>
+
 #ifdef __NEED_MM_RMEM_STUB
 
 	#include <nanvix/types/mm/rmem.h>
@@ -75,7 +77,7 @@
 	extern size_t nanvix_rmem_write(rpage_t blknum, const void *buf);
 
 	/**
-	 * @brief Shutdowns aall remote memory servers.
+	 * @brief Shutdowns all remote memory servers.
 	 *
 	 * @returns Upon successful completion 0 is returned. Upon
 	 * failure, a negative error code is returned instead.
@@ -83,6 +85,27 @@
 	extern int nanvix_rmem_shutdown(void);
 
 #endif /* __NEED_MM_RMEM_STUB */
+
+	/**
+	 * @brief Statistics for RMem Service.
+	 */
+	struct rmem_stats
+	{
+		uint64_t nallocs; /**< Number of Allocations */
+		uint64_t nfrees;  /**< Number of Releases    */
+		uint64_t nreads;  /**< Number of Reads       */
+		uint64_t nwrites; /**< Number of Writes      */
+	};
+
+	/**
+	 * @brief Retrieves runtime statistics.
+	 *
+	 * @param buf Buffer to store statistics.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int nanvix_rmem_stats(struct rmem_stats *buf);
 
 #endif /* NANVIX_RUNTIME_MM_STUB_H_ */
 
