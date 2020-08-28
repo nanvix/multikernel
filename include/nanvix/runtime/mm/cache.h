@@ -25,52 +25,40 @@
 #ifndef NANVIX_RUNTIME_MM_CACHE_H_
 #define NANVIX_RUNTIME_MM_CACHE_H_
 
-#ifdef __NEED_MM_RMEM_CACHE
+#ifdef __NEED_MM_RCACHE
 
 	#include <nanvix/servers/rmem.h>
 	#include <nanvix/types/mm/rmem.h>
 
-#endif /* __NEED_MM_RMEM_CACHE */
-
-	/**
-	 * @#brief Size of a block in the page cache.
-	 */
-	#ifndef __RMEM_CACHE_BLOCK_SIZE
-	#define RMEM_CACHE_BLOCK_SIZE 1
-	#endif
+#endif /* __NEED_MM_RCACHE */
 
 	/**
 	 * @brief Length of the page cache.
 	 */
-	#ifndef __RMEM_CACHE_LENGTH
-	#define RMEM_CACHE_LENGTH 32
+	#ifndef __RCACHE_LENGTH
+	#define RCACHE_LENGTH 32
 	#endif
 
 	/**
-	 * @brief Size of the page cache.
+	 * @brief Cache Size (in entries)
 	 */
-	#define RMEM_CACHE_SIZE (RMEM_CACHE_BLOCK_SIZE*RMEM_CACHE_LENGTH)
+	#define RCACHE_SIZE RCACHE_LENGTH
 
 	/**
 	 * @name Page replacement policies.
 	 */
 	/**@{*/
-	#define RMEM_CACHE_BYPASS 0 /**< Bypass Mode         */
-	#define RMEM_CACHE_FIFO   1 /**< First In First Out  */
-	#define RMEM_CACHE_LIFO   2 /**< Last In First Out   */
-	#define RMEM_CACHE_NFU    3 /**< Not Frequently Used */
-	#define RMEM_CACHE_AGING  4 /**< Aging               */
+	#define RCACHE_BYPASS 0 /**< Bypass Mode        */
 	/**@}*/
 
 	/**
-	 * @name Page Writing Policies
+	 * @brief Default cache replacement policy.
 	 */
-	/**@{*/
-	#define RMEM_CACHE_WRITE_BACK    0 /**< Write Back    */
-	#define RMEM_CACHE_WRITE_THROUGH 1 /**< Write Through */
-	/**@}*/
+	#ifndef __RCACHE_DEFAULT_REPLACEMENT
+	#define __RCACHE_DEFAULT_REPLACEMENT RCACHE_BYPASS
+	#endif
 
-#ifdef __NEED_MM_RMEM_CACHE
+#ifdef __NEED_MM_RCACHE
 
 	/**
 	 * @brief Allocates a remote page.
@@ -80,11 +68,6 @@
 	 * is returned instead.
 	 */
 	extern rpage_t nanvix_rcache_alloc(void);
-
-	/**
-	 * @brief Cleans the cache..
-	 */
-	extern void nanvix_rcache_clean(void);
 
 	/**
 	 * @brief Frees a remote page.
@@ -117,15 +100,6 @@
 	 */
 	extern int nanvix_rcache_put(rpage_t pgnum, int strike);
 
-	/**
-	 * @brief Flushes changes on a remote page.
-	 *
-	 * @param pgnum Number of the target page.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure a negative error code is returned instead.
-	 */
-	extern int nanvix_rcache_flush(rpage_t pgnum);
 
 	/**
 	 * @brief Selects the cache replacement_policy.
@@ -134,24 +108,7 @@
 	 */
 	extern int nanvix_rcache_select_replacement_policy(int num);
 
-	/**
-	 * @brief Selects the write policy.
-	 *
-	 * @param num Number of the policy.
-	 */
-	extern int nanvix_rcache_select_write(int num);
-
-	/**
-	 * @brief Invalidates a lone of the page cache.
-	 *
-	 * @param lineno Number of target line.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure a negative error code is returned instead.
-	 */
-	extern int nanvix_rcache_line_inval(int lineno);
-
-#endif /* __NEED_MM_RMEM_CACHE */
+#endif /* __NEED_MM_RCACHE */
 
 #endif /* NANVIX_RUNTIME_MM_CACHE_H_ */
 
