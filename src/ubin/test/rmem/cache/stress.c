@@ -22,7 +22,7 @@
  * SOFTWARE.
  */
 
-#define __NEED_MM_RMEM_CACHE
+#define __NEED_MM_RCACHE
 
 #include <nanvix/runtime/mm.h>
 #include <nanvix/ulib.h>
@@ -31,7 +31,92 @@
 /**
  * @brief Number of blocks to allocate.
  */
-#define NUM_BLOCKS 256
+#define NUM_BLOCKS (4)
+
+/**
+ * @brief Page numbers used in tests.
+ */
+rpage_t pgnums[NUM_BLOCKS];
+
+/*============================================================================*
+ * Stress Test: Alloc Free                                                   *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Alloc Free
+ */
+static void test_rmem_rcache_alloc_free(void)
+{
+	rpage_t pgnum;
+
+	for (int i = 0; i < NUM_BLOCKS; i++)
+	{
+		TEST_ASSERT((pgnum = nanvix_rcache_alloc()) != RMEM_NULL);
+		TEST_ASSERT(nanvix_rcache_free(pgnum) == 0);
+	}
+}
+
+/*============================================================================*
+ * Stress Test: Alloc Free                                                    *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Alloc Free 2-Step
+ */
+static void test_rmem_rcache_alloc_free2(void)
+{
+	for (int i = 0; i < NUM_BLOCKS; i++)
+		TEST_ASSERT((pgnums[i] = nanvix_rcache_alloc()) != RMEM_NULL);
+
+	for (int i = 0; i < NUM_BLOCKS; i++)
+		TEST_ASSERT(nanvix_rcache_free(pgnums[i]) == 0);
+}
+
+/*============================================================================*
+ * Stress Test: Get Put                                                       *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Consistency
+ */
+static void test_rmem_rcache_get_put(void)
+{
+	rpage_t pgnum;
+
+	for (int i = 0; i < NUM_BLOCKS; i++)
+	{
+		TEST_ASSERT((pgnum = nanvix_rcache_alloc()) != RMEM_NULL);
+
+			TEST_ASSERT(nanvix_rcache_get(pgnum) != NULL);
+			TEST_ASSERT(nanvix_rcache_put(pgnum, 0) == 0);
+
+		TEST_ASSERT(nanvix_rcache_free(pgnum) == 0);
+	}
+}
+
+/*============================================================================*
+ * Stress Test: Get Put 2-Step                                                *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Consistency 2-Step
+ */
+static void test_rmem_rcache_get_put2(void)
+{
+	for (int i = 0; i < NUM_BLOCKS; i++)
+	{
+		TEST_ASSERT((pgnums[i] = nanvix_rcache_alloc()) != RMEM_NULL);
+
+			TEST_ASSERT(nanvix_rcache_get(pgnums[i]) != NULL);
+	}
+
+	for (int i = 0; i < NUM_BLOCKS; i++)
+	{
+			nanvix_rcache_put(pgnums[i], 0);
+
+		TEST_ASSERT(nanvix_rcache_free(pgnums[i]) == 0);
+	}
+}
 
 /*============================================================================*
  * Stress Test: Consistency                                                   *
@@ -42,59 +127,28 @@
  */
 static void test_rmem_rcache_consistency(void)
 {
-	rpage_t numbers;
-	unsigned *cached_data;
+	char *page;
 
-	for (unsigned i = 1; i <= NUM_BLOCKS; i++)
+	for (int i = 0; i < NUM_BLOCKS; i++)
 	{
-		TEST_ASSERT((numbers = nanvix_rcache_alloc()) != RMEM_NULL);
+		TEST_ASSERT((pgnums[i] = nanvix_rcache_alloc()) != RMEM_NULL);
 
-		TEST_ASSERT((cached_data = nanvix_rcache_get(numbers)) != NULL);
-		for (unsigned j = 0; j < RMEM_BLOCK_SIZE/sizeof(unsigned); j++)
-			cached_data[j] = (i - 1)*RMEM_NUM_BLOCKS + j;
-
-		TEST_ASSERT(nanvix_rcache_flush(numbers) == 0);
-		TEST_ASSERT(nanvix_rcache_put(numbers, 0) == 0);
-
-		TEST_ASSERT((cached_data = nanvix_rcache_get(numbers)) != NULL);
-
-		for (unsigned j = 0; j < RMEM_BLOCK_SIZE/sizeof(unsigned); j++)
-			TEST_ASSERT(cached_data[j] == (i - 1)*RMEM_NUM_BLOCKS + j);
-
-		TEST_ASSERT(nanvix_rcache_free(numbers) == 0);
-	}
-}
-
-/*============================================================================*
- * Stress Test: Consistency                                                   *
- *============================================================================*/
-
-/**
- * @brief Stress Test: Consistency 2-Step
- */
-static void test_rmem_rcache_consistency2(void)
-{
-	rpage_t numbers[NUM_BLOCKS];
-	unsigned *cached_data;
-
-	for (unsigned i = 1; i <= NUM_BLOCKS; i++)
-	{
-		TEST_ASSERT((numbers[i - 1] = nanvix_rcache_alloc()) != RMEM_NULL);
-
-		TEST_ASSERT((cached_data = nanvix_rcache_get(numbers[i - 1])) != NULL);
-		for (unsigned j = 0; j < RMEM_BLOCK_SIZE/sizeof(unsigned); j++)
-			cached_data[j] = (i - 1)*RMEM_NUM_BLOCKS + j;
-
+			TEST_ASSERT((page = nanvix_rcache_get(pgnums[i])) != NULL);
+			umemset(page, i, RMEM_BLOCK_SIZE);
 	}
 
-	for (unsigned i = 1; i <= NUM_BLOCKS; i++)
+	for (int i = 0; i < NUM_BLOCKS; i++)
 	{
-		TEST_ASSERT((cached_data = nanvix_rcache_get(numbers[i - 1])) != NULL);
+		TEST_ASSERT((page = nanvix_rcache_get(pgnums[i])) != NULL);
+		for (int j = 0; j < RMEM_BLOCK_SIZE; j++)
+			TEST_ASSERT(page[j] == i);
+	}
 
-		for (unsigned j = 0; j < RMEM_BLOCK_SIZE/sizeof(unsigned); j++)
-			TEST_ASSERT(cached_data[j] == (i - 1)*RMEM_NUM_BLOCKS + j);
+	for (int i = 0; i < NUM_BLOCKS; i++)
+	{
+			nanvix_rcache_put(pgnums[i], 0);
 
-		TEST_ASSERT(nanvix_rcache_free(numbers[i - 1]) == 0);
+		TEST_ASSERT(nanvix_rcache_free(pgnums[i]) == 0);
 	}
 }
 
@@ -106,7 +160,10 @@ static void test_rmem_rcache_consistency2(void)
  * @brief Unit tests.
  */
 struct test tests_rmem_cache_stress[] = {
+	{ test_rmem_rcache_alloc_free,   "alloc free        " },
+	{ test_rmem_rcache_alloc_free2,  "alloc free 2-step " },
+	{ test_rmem_rcache_get_put,      "get put           " },
+	{ test_rmem_rcache_get_put2,     "get put 2-step    " },
 	{ test_rmem_rcache_consistency,  "consistency       " },
-	{ test_rmem_rcache_consistency2, "consistency 2-step" },
 	{ NULL,                           NULL                },
 };
