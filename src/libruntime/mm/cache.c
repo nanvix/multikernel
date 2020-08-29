@@ -172,6 +172,40 @@ static int nanvix_rcache_bypass(void)
 }
 
 /*============================================================================*
+ * nanvix_rcache_fifo()                                                       *
+ *============================================================================*/
+
+/**
+ * @brief Evicts a page using FIFO replacement policy.
+ *
+ * @returns Upon successful completion, the index of the page is
+ * returned. Upon failure a negative error code is returned instead.
+ */
+static int nanvix_rcache_fifo(void)
+{
+	int idx;
+
+	/* Get an empty entry. */
+	if ((idx = nanvix_rcache_empty()) >= 0)
+		return (idx);
+
+	/* Find the oldest entry. */
+	for (int i = 0; i < RCACHE_LENGTH; i++)
+	{
+		if (cache.lines[i].age < cache.lines[idx].age)
+			idx = i;
+	}
+
+	/* Write back entry. */
+	nanvix_rcache_flush(idx);
+
+	/* Update entry. */
+	CACHE_ENTRY_INITIALIZER(idx);
+
+	return (nanvix_rcache_bypass());
+}
+
+/*============================================================================*
  * nanvix_rcache_select_replacement_policy()                                  *
  *============================================================================*/
 
@@ -184,6 +218,10 @@ int nanvix_rcache_select_replacement_policy(int num)
 	{
 		case RCACHE_BYPASS:
 			cache.evict_fn = nanvix_rcache_bypass;
+			break;
+
+		case RCACHE_FIFO:
+			cache.evict_fn = nanvix_rcache_fifo;
 			break;
 
 		default:

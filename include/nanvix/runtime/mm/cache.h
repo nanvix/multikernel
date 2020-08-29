@@ -49,13 +49,14 @@
 	 */
 	/**@{*/
 	#define RCACHE_BYPASS 0 /**< Bypass Mode        */
+	#define RCACHE_FIFO   1 /**< First In First Out */
 	/**@}*/
 
 	/**
 	 * @brief Default cache replacement policy.
 	 */
 	#ifndef __RCACHE_DEFAULT_REPLACEMENT
-	#define __RCACHE_DEFAULT_REPLACEMENT RCACHE_BYPASS
+	#define __RCACHE_DEFAULT_REPLACEMENT RCACHE_FIFO
 	#endif
 
 #ifdef __NEED_MM_RCACHE
@@ -99,7 +100,6 @@
 	 * negative error code is returned instead.
 	 */
 	extern int nanvix_rcache_put(rpage_t pgnum, int strike);
-
 
 	/**
 	 * @brief Selects the cache replacement_policy.
