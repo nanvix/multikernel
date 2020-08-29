@@ -20,7 +20,7 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-#define __NEED_MM_RMEM_CACHE
+#define __NEED_MM_RCACHE
 
 #include <nanvix/runtime/mm.h>
 #include <nanvix/sys/page.h>
@@ -370,8 +370,8 @@ static struct
 {
 	vaddr_t laddr; /**< Local address.                         */
 	void *raddr;   /**< Pointer to locally-mapped remote page. */
-} maps[RMEM_CACHE_SIZE] = {
-	[0 ... (RMEM_CACHE_SIZE - 1)] = { RMEM_NULL, NULL }
+} maps[RCACHE_SIZE] = {
+	[0 ... (RCACHE_SIZE - 1)] = { RMEM_NULL, NULL }
 };
 
 /**
@@ -396,7 +396,7 @@ int nanvix_rfault(vaddr_t vaddr)
 		return (-EFAULT);
 
 	/* Unlink old page page from there. */
-	for (int i = 0; i < RMEM_CACHE_SIZE; i++)
+	for (int i = 0; i < RCACHE_SIZE; i++)
 	{
 		/* Found. */
 		if (maps[i].raddr == rptr)

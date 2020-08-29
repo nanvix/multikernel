@@ -81,7 +81,7 @@ static void test_api_mem_read_write(void)
 static void test_stress_mem_read_write(void)
 {
 	unsigned char *ptr;
-	unsigned size = 2*RMEM_CACHE_SIZE*PAGE_SIZE;
+	unsigned size = 2*RCACHE_SIZE*PAGE_SIZE;
 
 	/* Allocate twice the size of the cache (in bytes). */
 	TEST_ASSERT((ptr = nanvix_malloc(size)) != NULL);

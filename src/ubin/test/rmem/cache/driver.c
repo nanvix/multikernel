@@ -20,6 +20,9 @@
  * WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+#define __NEED_MM_RCACHE
+
+#include <nanvix/runtime/mm.h>
 #include <nanvix/ulib.h>
 #include "../../test.h"
 
@@ -32,17 +35,26 @@ extern struct test tests_rmem_cache_stress[];
  */
 void test_rmem_cache(void)
 {
-	/* Run API tests. */
-	for (int i = 0; tests_rmem_cache_api[i].test_fn != NULL; i++)
+	int policies[] = { RCACHE_BYPASS, RCACHE_FIFO, -1 };
+
+	for (int j = 0; policies[j] >= 0; j++)
 	{
-		uprintf("[nanvix][test][rmem][cache][api] %s", tests_rmem_cache_api[i].name);
-		tests_rmem_cache_api[i].test_fn();
+		nanvix_rcache_select_replacement_policy(policies[j]);
+
+		/* Run API tests. */
+		for (int i = 0; tests_rmem_cache_api[i].test_fn != NULL; i++)
+		{
+			uprintf("[nanvix][test][rmem][cache][api] %s", tests_rmem_cache_api[i].name);
+			tests_rmem_cache_api[i].test_fn();
+		}
+
+		/* Run stress tests. */
+		for (int i = 0; tests_rmem_cache_stress[i].test_fn != NULL; i++)
+		{
+			uprintf("[nanvix][test][rmem][cache][stress] %s", tests_rmem_cache_stress[i].name);
+			tests_rmem_cache_stress[i].test_fn();
+		}
 	}
 
-	/* Run stress tests. */
-	for (int i = 0; tests_rmem_cache_stress[i].test_fn != NULL; i++)
-	{
-		uprintf("[nanvix][test][rmem][cache][stress] %s", tests_rmem_cache_stress[i].name);
-		tests_rmem_cache_stress[i].test_fn();
-	}
+	nanvix_rcache_select_replacement_policy(__RCACHE_DEFAULT_REPLACEMENT);
 }

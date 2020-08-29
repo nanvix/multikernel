@@ -26,7 +26,7 @@
 #define __NEED_RESOURCE
 #define __NEED_SYSV_SERVER
 #define __SYSV_SERVICE
-#define __NEED_MM_RMEM_CACHE
+#define __NEED_MM_RCACHE
 
 #include <nanvix/runtime/pm.h>
 #include <nanvix/runtime/mm.h>
