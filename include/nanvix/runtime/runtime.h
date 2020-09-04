@@ -29,6 +29,7 @@
 	#include <nanvix/runtime/mm.h>
 	#include <nanvix/runtime/fs.h>
 	#include <nanvix/runtime/stdikc.h>
+	#include <nanvix/runtime/barrier.h>
 
 	/**
 	 * @brief Initializes the runtime.
