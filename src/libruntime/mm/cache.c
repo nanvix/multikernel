@@ -36,18 +36,13 @@
  */
 static struct
 {
-	int initialized;     /**< Initialized?      */
+	int initialized;       /**< Initialized?      */
 	int (*evict_fn)(void); /**< Eviction Strategy */
 
 	/**
 	 * @brief Statistics
 	 */
-	struct
-	{
-		unsigned ngets;   /**< Number of Cache Gets */
-		unsigned nmisses; /**< Number of Misses     */
-		unsigned nhits;   /**< Number of Hits       */
-	} stats;
+	struct rcache_stats stats;
 
 	/**
 	 * @brief Lines
@@ -289,6 +284,8 @@ void *nanvix_rcache_get(rpage_t pgnum)
 	{
 		int err;
 
+		cache.stats.nmisses++;
+
 		/* Evit a page. */
 		if ((idx = cache.evict_fn()) < 0)
 			return (NULL);
@@ -301,11 +298,32 @@ void *nanvix_rcache_get(rpage_t pgnum)
 		cache.lines[idx].age = cache.stats.ngets;
 		cache.lines[idx].pgnum = pgnum;
 	}
+	else
+		cache.stats.nhits++;
 
 	cache.lines[idx].refcount++;
 
 	cache.stats.ngets++;
 	return (cache.lines[idx].page);
+}
+
+/*============================================================================*
+ * nanvix_rcache_stats()                                                      *
+ *============================================================================*/
+
+/**
+ * The nanvix_rcache_stats() function retrieves runtime statistics of
+ * the page cache.
+ */
+int nanvix_rcache_stats(struct rcache_stats *buf)
+{
+	/* Invalid buffer. */
+	if (buf == NULL)
+		return (-EINVAL);
+
+	umemcpy(buf, &cache.stats, sizeof(struct rcache_stats));
+
+	return (0);
 }
 
 /*============================================================================*

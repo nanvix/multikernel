@@ -110,5 +110,25 @@
 
 #endif /* __NEED_MM_RCACHE */
 
+	/**
+	 * @brief Statistics for the Page Cache
+	 */
+	struct rcache_stats
+	{
+		unsigned ngets;   /**< Number of Cache Gets */
+		unsigned nmisses; /**< Number of Misses     */
+		unsigned nhits;   /**< Number of Hits       */
+	};
+
+	/**
+	 * @brief Retrieves runtime statistics of the page cache.
+	 *
+	 * @param buf Buffer to store statistics.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int nanvix_rcache_stats(struct rcache_stats *buf);
+
 #endif /* NANVIX_RUNTIME_MM_CACHE_H_ */
 
