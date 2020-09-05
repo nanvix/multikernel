@@ -72,6 +72,61 @@ static void test_rmem_rcache_put_write(void)
 }
 
 /*============================================================================*
+ * API Test: Cache Stats                                                      *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Cache Stats
+ */
+static void test_rmem_rcache_stats(void)
+{
+	char *page;
+	rpage_t pgnum;
+	struct rcache_stats stats1;
+	struct rcache_stats stats2;
+
+	TEST_ASSERT(nanvix_rcache_stats(&stats1) == 0);
+	TEST_ASSERT((pgnum = nanvix_rcache_alloc()) != RMEM_NULL);
+	TEST_ASSERT(nanvix_rcache_stats(&stats2) == 0);
+
+	TEST_ASSERT((stats2.ngets - stats1.ngets) == 0);
+	TEST_ASSERT((stats2.nmisses - stats1.nmisses) == 0);
+	TEST_ASSERT((stats2.nhits - stats1.nhits) == 0);
+
+		TEST_ASSERT(nanvix_rcache_stats(&stats1) == 0);
+		TEST_ASSERT((page = nanvix_rcache_get(pgnum)) != NULL);
+		TEST_ASSERT(nanvix_rcache_stats(&stats2) == 0);
+
+		TEST_ASSERT((stats2.ngets - stats1.ngets) == 1);
+		TEST_ASSERT((stats2.nmisses - stats1.nmisses) == 1);
+		TEST_ASSERT((stats2.nhits - stats1.nhits) == 0);
+
+		TEST_ASSERT(nanvix_rcache_stats(&stats1) == 0);
+		TEST_ASSERT((page = nanvix_rcache_get(pgnum)) != NULL);
+		TEST_ASSERT(nanvix_rcache_stats(&stats2) == 0);
+
+		TEST_ASSERT((stats2.ngets - stats1.ngets) == 1);
+		TEST_ASSERT((stats2.nmisses - stats1.nmisses) == 0);
+		TEST_ASSERT((stats2.nhits - stats1.nhits) == 1);
+
+		TEST_ASSERT(nanvix_rcache_stats(&stats1) == 0);
+		TEST_ASSERT(nanvix_rcache_put(pgnum, 0) == 0);
+		TEST_ASSERT(nanvix_rcache_stats(&stats2) == 0);
+
+		TEST_ASSERT((stats2.ngets - stats1.ngets) == 0);
+		TEST_ASSERT((stats2.nmisses - stats1.nmisses) == 0);
+		TEST_ASSERT((stats2.nhits - stats1.nhits) == 0);
+
+	TEST_ASSERT(nanvix_rcache_stats(&stats1) == 0);
+	TEST_ASSERT(nanvix_rcache_free(pgnum) == 0);
+	TEST_ASSERT(nanvix_rcache_stats(&stats2) == 0);
+
+	TEST_ASSERT((stats2.ngets - stats1.ngets) == 0);
+	TEST_ASSERT((stats2.nmisses - stats1.nmisses) == 0);
+	TEST_ASSERT((stats2.nhits - stats1.nhits) == 0);
+}
+
+/*============================================================================*
  * Test Driver Table                                                          *
  *============================================================================*/
 
@@ -79,7 +134,8 @@ static void test_rmem_rcache_put_write(void)
  * @brief Unit tests.
  */
 struct test tests_rmem_cache_api[] = {
-	{ test_rmem_rcache_put_write,  "get put"    },
+	{ test_rmem_rcache_put_write,  "get put   " },
 	{ test_rmem_rcache_alloc_free, "alloc free" },
+	{ test_rmem_rcache_stats,      "stats     " },
 	{ NULL,                         NULL        },
 };
