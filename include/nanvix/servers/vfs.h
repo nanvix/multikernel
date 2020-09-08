@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+#include <posix/sys/stat.h>
+
 #ifndef NANVIX_SERVERS_VFS_H_
 #define NANVIX_SERVERS_VFS_H_
 
