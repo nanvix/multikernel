@@ -31,7 +31,6 @@
 #include <nanvix/dev.h>
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
-#include <posix/sys/stat.h>
 #include <posix/errno.h>
 
 #define ROUND(x) (((x) == 0) ? 1 : (x))

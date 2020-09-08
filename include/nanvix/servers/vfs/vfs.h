@@ -42,6 +42,22 @@
 	extern void vfs_shutdown(void);
 
 	/**
+	 * @brief Gets stats about a file
+	 *
+	 * @param connection Target connection.
+	 * @param filename   Filename Name of the target file.
+	 * @param buf        Stat struct to write stats to
+	 *
+	 * @returns Upon successful completion, returns 0
+	 * Upon failure, a negative error code is returned instead.
+	 */
+	extern int vfs_stat(
+		int connection,
+		const char *filename,
+		struct nanvix_stat *restrict buf
+	);
+
+	/**
 	 * @brief Opens a file.
 	 *
 	 * @param connection Target connection.

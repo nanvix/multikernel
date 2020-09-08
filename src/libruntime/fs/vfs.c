@@ -47,6 +47,70 @@ static struct
 };
 
 /*============================================================================*
+ * nanvix_stat()                                                              *
+ *============================================================================*/
+
+/**
+ * @brief The do_nanvix_stat() function gets metadata about the file specified
+ * by @p filename.
+ */
+static int do_nanvix_stat(const char *filename,struct nanvix_stat *restrict buf)
+{
+	struct vfs_message msg;
+
+	/* Build message.*/
+	message_header_build(&msg.header, VFS_STAT);
+	ustrncpy(msg.op.stat.filename, filename, NANVIX_NAME_MAX);
+	msg.op.stat.buf = buf;
+
+	/* Send operation. */
+	uassert(
+		nanvix_mailbox_write(
+			server.outbox,
+			&msg, sizeof(struct vfs_message)
+		) == 0
+	);
+
+	/* Receive reply. */
+	uassert(
+		kmailbox_read(
+			stdinbox_get(),
+			&msg,
+			sizeof(struct vfs_message)
+		) == sizeof(struct vfs_message)
+	);
+
+	/* Operation failed. */
+	if (msg.header.opcode == VFS_FAIL)
+		return (msg.op.ret.status);
+
+	return (msg.op.ret.fd);
+	
+}
+
+/**
+ * @see do_nanvix_stat().
+ *
+ * @author Lucca Augusto
+ */
+int nanvix_stat(const char *filename, struct nanvix_stat *restrict buf)
+{
+	/* Invalid server ID. */
+	if (!server.initialized)
+		return (-EAGAIN);
+
+	/* Invalid filename. */
+	if (filename == NULL)
+		return (-EINVAL);
+
+	/* TODO: check for long filename. */
+	if (ustrlen(filename) >= NANVIX_NAME_MAX)
+		return (-ENAMETOOLONG);
+
+	return (do_nanvix_stat(filename, buf));
+}
+
+/*============================================================================*
  * nanvix_vfs_open()                                                          *
  *============================================================================*/
 
