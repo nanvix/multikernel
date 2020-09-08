@@ -702,6 +702,106 @@ int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 }
 
 /**
+ * @todo TODO: Provide a detailed description for this function.
+ */
+static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
+{
+	struct inode *ip;
+
+	/* Invalid filename. */
+	if (filename == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return -EINVAL;
+	}
+
+	/* Search file. */
+	if ((ip = inode_name(&fs_root, filename)) == NULL)
+	{
+		/* File doesn't exist*/
+		curr_proc->errcode = -ENOENT;
+		goto error;
+	}
+
+	/* Block special file. */
+	if (S_ISBLK(inode_disk_get(ip)->i_mode))
+	{
+		if (bdev_open(inode_disk_get(ip)->i_zones[0]) < 0)
+			goto error;
+	}
+
+	/* Regular file. */
+	else if (S_ISREG(inode_disk_get(ip)->i_mode))
+	{
+		curr_proc->errcode = -ENOTSUP;
+		goto error;
+	}
+
+	/* Directory. */
+	else if (S_ISDIR(inode_disk_get(ip)->i_mode))
+	{
+		curr_proc->errcode = -ENOTSUP;
+		goto error;
+	}
+
+	/* file stats */
+	/*TODO Update time related fields first */
+
+	/* write stats in buf */
+	/*TODO count number of blocks
+	 *     write st_dev and st_ino
+	 */
+	/*buf->st_dev = ip->dev;*/
+	/*buf->st_ino = ip->num;*/
+	buf->st_mode = inode_disk_get(ip)->i_mode;
+	buf->st_nlink = inode_disk_get(ip)->i_nlinks;
+	buf->st_uid = inode_disk_get(ip)->i_uid;
+	buf->st_gid = inode_disk_get(ip)->i_gid;
+	buf->st_rdev = 0; /* character or block special */
+	buf->st_size = inode_disk_get(ip)->i_size;
+	buf->st_blksize = NANVIX_FS_BLOCK_SIZE;
+	buf->st_blocks = 1;
+
+
+	return 0;
+
+error:
+	inode_put(&fs_root, ip);
+	return -1;
+}
+
+/**
+ * The fs_stat() function returns information about the file 
+ * named @p filename.
+ */
+int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
+{
+	int fd;           /* File Descriptor  */
+	struct file *f;   /* File             */
+
+	/* Get a free file descriptor. */
+	if ((fd = getfildes()) < 0)
+		return -EMFILE;
+
+	/* Grab a free entry in the file table. */
+	if ((f = getfile()) == NULL)
+		return -ENFILE;
+
+	/* Increment reference count before actually opening
+	 * the file because we can sleep below and another process
+	 * may want to use this file table entry also.  */
+	f->count = 1;
+
+	/* Get file stat. */
+	if (do_stat(filename, buf) != 0)
+	{
+		f->count = 0;
+		return curr_proc->errcode;
+	}
+	return 0;
+}
+
+/**
  * The fs_open() function opens the file named @p filename. The @p
  * oflag parameter is used to set the opening flags, and @p mode is used
  * to defined the access mode for the file, if the @p O_CREAT flag is
