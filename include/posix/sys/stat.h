@@ -73,7 +73,6 @@
 
 #endif /* !__unix64__*/
 
-
 	typedef mode_t nanvix_mode_t;
 	typedef uid_t nanvix_uid_t;
 	typedef gid_t nanvix_gid_t;
