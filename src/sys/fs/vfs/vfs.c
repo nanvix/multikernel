@@ -53,6 +53,26 @@ int vfs_open(int connection, const char *filename, int oflag, mode_t mode)
 }
 
 /*============================================================================*
+ * vfs_stat()                                                                 *
+ *============================================================================*/
+
+/**
+ * @see fs_stat().
+ */
+int vfs_stat(int connection, const char *filename, struct nanvix_stat *restrict buf)
+{
+	/* Invalid file name. */
+	if (filename == NULL)
+		return (-EINVAL);
+
+	/* Launch process. */
+	if (fprocess_launch(connection) < 0)
+		return (-EINVAL);
+
+	return (fs_stat(filename, buf));
+}
+
+/*============================================================================*
  * vfs_close()                                                                *
  *============================================================================*/
 

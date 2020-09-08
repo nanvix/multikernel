@@ -83,6 +83,17 @@
 	extern void fs_shutdown(void);
 
 	/**
+	 * @brief Gets Stats about a file
+	 *
+	 * @param filename Filename Name of the target file.
+	 * @param buf      Buffer to write stats to.
+	 *
+	 * @returns Upon successful completion, this function returns 0.
+	 * Upon failure, a negative error code is returned instead.
+	 */
+	extern int fs_stat(const char *filename, struct nanvix_stat *restrict buf);
+
+	/**
 	 * @brief Opens a file.
 	 *
 	 * @param filename Filename Name of the target file.

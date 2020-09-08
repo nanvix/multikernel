@@ -22,6 +22,8 @@
  * SOFTWARE.
  */
 
+#include <posix/sys/stat.h>
+
 #ifndef NANVIX_SERVERS_VFS_H_
 #define NANVIX_SERVERS_VFS_H_
 
@@ -42,6 +44,7 @@
 	#include <nanvix/servers/vfs/fprocess.h>
 	#include <nanvix/servers/vfs/vfs.h>
 #endif
+
 
 	/**
 	 * @bried Virtual File System Operations
@@ -81,6 +84,15 @@
 				char filename[NANVIX_NAME_MAX]; /**< File Name  */
 				int oflag;                      /**< Open Flags */
 			} open;
+
+			/**
+			 * @brief Stat
+			 */
+			struct
+			{
+				char filename[NANVIX_NAME_MAX]; /**< File Name  */
+				struct nanvix_stat *buf;        /**< Stats buf */
+			} stat;
 
 			/**
 			 * @brief Close
