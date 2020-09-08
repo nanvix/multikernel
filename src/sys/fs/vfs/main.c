@@ -58,6 +58,51 @@ static struct
 static char buffer[NANVIX_FS_BLOCK_SIZE];
 
 /*============================================================================*
+ * do_vfs_server_stat()                                                       *
+ *============================================================================*/
+
+/**
+ * @brief Handles an stat request.
+ *
+ * @param request  Target request.
+ * @param response Response.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Lucca Augusto
+ */
+static int do_vfs_server_stat(
+	const struct vfs_message *request,
+	struct vfs_message *response
+)
+{
+	int ret;
+	const int port = request->header.mailbox_port;
+	const nanvix_pid_t pid = request->header.source;
+	const int connection = connect(pid, port);
+
+	/* XXX: forward parameter checking to lower level function. */
+
+	ret = vfs_stat(
+		connection,
+		request->op.stat.filename,
+		request->op.stat.buf
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+	{
+		disconnect(pid, port);
+		return (ret);
+	}
+
+	response->op.ret.fd = ret;
+
+	return (0);
+}
+
+/*============================================================================*
  * do_vfs_server_open()                                                       *
  *============================================================================*/
 
@@ -342,6 +387,8 @@ static int do_vfs_server_read(
 	return (0);
 }
 
+
+
 /*============================================================================*
  * vfs_loop()                                                                 *
  *============================================================================*/
@@ -415,6 +462,7 @@ static int do_vfs_server_loop(void)
 
 			case VFS_STAT:
 				reply = 1;
+				ret = do_vfs_server_stat(&request, &response);
 				break;
 
 			case VFS_READ:
