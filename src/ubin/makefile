@@ -23,13 +23,13 @@
 #
 
 # Builds Everything
-all: all-zombie all-test
+all: all-zombie all-test all-model
 
 # Cleans Build Objects
-clean: clean-zombie clean-test
+clean: clean-zombie clean-test clean-model
 
 # Cleans Everything
-distclean: distclean-zombie distclean-test
+distclean: distclean-zombie distclean-test distclean-model
 
 #===============================================================================
 # Zombie Server
@@ -62,3 +62,19 @@ clean-test:
 # Cleans Test Server build.
 distclean-test:
 	$(MAKE) -C test distclean
+
+#===============================================================================
+# Model
+#===============================================================================
+
+# Builds Model Server.
+all-model:
+	$(MAKE) -C model all
+
+# Cleans Model Server Build objects.
+clean-model:
+	$(MAKE) -C model clean
+
+# Cleans Model Server build.
+distclean-model:
+	$(MAKE) -C model distclean
