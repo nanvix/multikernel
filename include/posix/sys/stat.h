@@ -64,8 +64,11 @@
         #define S_ISVTX 01000 /* On directories, restricted deletion flag. */
     #endif /* __APPLE__ */
 
+<<<<<<< HEAD
 	typedef long blkcnt_t;
 	typedef long blksize_t;
+=======
+>>>>>>> 180e2854 (Bug Fix: Bad Include Guardian)
 
 #else
 
