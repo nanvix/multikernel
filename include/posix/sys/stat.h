@@ -22,13 +22,13 @@
  * SOFTWARE.
  */
 
-#ifndef __unix64__
-
 #ifndef POSIX_SYS_STAT_H_
 #define POSIX_SYS_STAT_H_
 
+#ifndef __unix64__
+
 	#include <posix/sys/types.h>
-	
+
 	/* File types. */
     #ifndef __APPLE__
 	    #define S_IFMT  00170000
@@ -64,7 +64,6 @@
         #define S_ISVTX 01000 /* On directories, restricted deletion flag. */
     #endif /* __APPLE__ */
 
-#endif /* POSIX_SYS_STAT_H_ */
 
 #else
 
@@ -98,3 +97,5 @@ struct nanvix_stat {
 	nanvix_blksize_t st_blksize;
 	nanvix_blkcnt_t st_blocks;
 };
+
+#endif /* POSIX_SYS_STAT_H_ */
