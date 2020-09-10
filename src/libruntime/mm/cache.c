@@ -111,10 +111,6 @@ static int nanvix_rcache_page_search(rpage_t pgnum)
 {
 	for (int i = 0; i < RCACHE_LENGTH; i++)
 	{
-		/* Skip unused entries. */
-		if (cache.lines[i].refcount == 0)
-			continue;
-
 		/* Found. */
 		if (cache.lines[i].pgnum == pgnum)
 			return (i);
@@ -285,7 +281,7 @@ void *nanvix_rcache_get(rpage_t pgnum)
 		return (NULL);
 
 	/* Search the cache. */
-	if ((idx = nanvix_rcache_page_search(pgnum)) < 0)
+	if((idx = nanvix_rcache_page_search(pgnum)) < 0)
 	{
 		int err;
 
@@ -298,6 +294,7 @@ void *nanvix_rcache_get(rpage_t pgnum)
 			return (NULL);
 
 		/* Update entry.*/
+		cache.stats.nmisses++;
 		cache.lines[idx].age = cache.stats.ngets;
 		cache.lines[idx].pgnum = pgnum;
 	}
@@ -305,6 +302,7 @@ void *nanvix_rcache_get(rpage_t pgnum)
 	cache.lines[idx].refcount++;
 
 	cache.stats.ngets++;
+	uprintf("[cache] stats: %d hits, %d misses", cache.stats.ngets - cache.stats.nmisses, cache.stats.nmisses);
 	return (cache.lines[idx].page);
 }
 
