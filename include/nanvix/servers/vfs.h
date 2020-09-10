@@ -22,13 +22,12 @@
  * SOFTWARE.
  */
 
-#include <posix/sys/stat.h>
-
 #ifndef NANVIX_SERVERS_VFS_H_
 #define NANVIX_SERVERS_VFS_H_
 
 	#include <nanvix/servers/vfs/const.h>
 	#include <nanvix/servers/vfs/types.h>
+	#include <posix/sys/stat.h>
 
 #if defined(__NEED_FS_VFS_SERVER) || defined(__VFS_SERVER)
 
