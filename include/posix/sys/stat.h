@@ -74,30 +74,31 @@
 #endif /* !__unix64__*/
 
 
-typedef mode_t nanvix_mode_t;
-typedef uid_t nanvix_uid_t;
-typedef gid_t nanvix_gid_t;
-typedef blkcnt_t nanvix_blkcnt_t;
-typedef blksize_t nanvix_blksize_t;
-typedef dev_t nanvix_dev_t;
-typedef ino_t nanvix_ino_t;
-typedef nlink_t nanvix_nlink_t;
-typedef off_t nanvix_off_t;
+	typedef mode_t nanvix_mode_t;
+	typedef uid_t nanvix_uid_t;
+	typedef gid_t nanvix_gid_t;
+	typedef blkcnt_t nanvix_blkcnt_t;
+	typedef blksize_t nanvix_blksize_t;
+	typedef dev_t nanvix_dev_t;
+	typedef ino_t nanvix_ino_t;
+	typedef int nanvix_nlink_t;
+	typedef off_t nanvix_off_t;
 
-struct nanvix_stat {
-	nanvix_dev_t st_dev;
-	nanvix_ino_t st_ino;
-	nanvix_mode_t st_mode;
-	nanvix_nlink_t st_nlink;
-	nanvix_uid_t st_uid;
-	nanvix_gid_t st_gid;
-	nanvix_dev_t st_rdev;
-	nanvix_off_t st_size;
-	struct nanvix_timespec *st_atim;
-	struct nanvix_timespec *st_mtim;
-	struct nanvix_timespec *st_ctim;
-	nanvix_blksize_t st_blksize;
-	nanvix_blkcnt_t st_blocks;
-};
+	struct nanvix_stat
+	{
+		nanvix_dev_t st_dev;
+		nanvix_ino_t st_ino;
+		nanvix_mode_t st_mode;
+		nanvix_nlink_t st_nlink;
+		nanvix_uid_t st_uid;
+		nanvix_gid_t st_gid;
+		nanvix_dev_t st_rdev;
+		nanvix_off_t st_size;
+		struct nanvix_timespec *st_atim;
+		struct nanvix_timespec *st_mtim;
+		struct nanvix_timespec *st_ctim;
+		nanvix_blksize_t st_blksize;
+		nanvix_blkcnt_t st_blocks;
+	};
 
 #endif /* POSIX_SYS_STAT_H_ */
