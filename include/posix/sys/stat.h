@@ -64,8 +64,6 @@
         #define S_ISVTX 01000 /* On directories, restricted deletion flag. */
     #endif /* __APPLE__ */
 
-	typedef long blkcnt_t;
-	typedef long blksize_t;
 
 #else
 
