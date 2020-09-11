@@ -44,6 +44,8 @@ int __main2(int argc, const char *argv[])
 		uprintf("[nanvix][zombie] server alive");
 		uassert(stdsync_fence() == 0);
 
+		nanvix_shutdown();
+
 	__runtime_cleanup();
 
 	return (0);
