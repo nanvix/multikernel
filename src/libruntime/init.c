@@ -163,7 +163,6 @@ int __runtime_cleanup(void)
 	if (current_ring[tid] >= SPAWN_RING_5)
 	{
 		uprintf("[nanvix][thread %d] shutting down ring 5", tid);
-		uassert(kthread_join(exception_handler_tid, NULL) == 0);
 	}
 
 	/* Initialize Ring 4. */
