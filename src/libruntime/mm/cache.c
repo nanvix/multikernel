@@ -207,6 +207,11 @@ static int nanvix_rcache_fifo(void)
 	return (idx);
 }
 
+static int nanvix_rcache_nfu(void)
+{
+	return nanvix_rcache_fifo();
+}
+
 /*============================================================================*
  * nanvix_rcache_select_replacement_policy()                                  *
  *============================================================================*/
