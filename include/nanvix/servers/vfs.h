@@ -60,7 +60,7 @@
 	#define VFS_READ     10 /**< Read        */
 	#define VFS_WRITE    11 /**< Write       */
 	#define VFS_SEEK     12 /**< Seek        */
-	#define VFS_ACK      12 /**< Acknowledge */
+	#define VFS_ACK      13 /**< Acknowledge */
 	/**@}*/
 
 	/**
