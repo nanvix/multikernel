@@ -50,6 +50,7 @@
 	/**@{*/
 	#define RCACHE_BYPASS 0 /**< Bypass Mode        */
 	#define RCACHE_FIFO   1 /**< First In First Out */
+	#define RCACHE_NFU    2 /**< First In First Out */
 	/**@}*/
 
 	/**

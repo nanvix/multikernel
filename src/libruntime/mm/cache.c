@@ -37,6 +37,7 @@
 static struct
 {
 	int initialized;     /**< Initialized?      */
+	bool nfu_update;
 	int (*evict_fn)(void); /**< Eviction Strategy */
 
 	/**
@@ -180,6 +181,7 @@ static int nanvix_rcache_bypass(void)
 static int nanvix_rcache_fifo(void)
 {
 	int idx;
+	int old_entry;
 
 	/* Get an empty entry. */
 	if ((idx = nanvix_rcache_empty()) >= 0)
@@ -189,8 +191,11 @@ static int nanvix_rcache_fifo(void)
 	idx = 0;
 	for (int i = 1; i < RCACHE_LENGTH; i++)
 	{
-		if (cache.lines[i].age < cache.lines[idx].age)
+		if (cache.lines[i].age < old_entry)
+		{
+			old_entry = cache.lines[i].age;
 			idx = i;
+		}
 	}
 
 	/* Write back entry. */
@@ -219,6 +224,11 @@ int nanvix_rcache_select_replacement_policy(int num)
 
 		case RCACHE_FIFO:
 			cache.evict_fn = nanvix_rcache_fifo;
+			break;
+
+		case RCACHE_NFU:
+			cache.evict_fn = nanvix_rcache_nfu;
+			cache.nfu_update = true;
 			break;
 
 		default:
@@ -300,6 +310,8 @@ void *nanvix_rcache_get(rpage_t pgnum)
 	}
 
 	cache.lines[idx].refcount++;
+	if (cache.nfu_update == true)
+		cache.lines[idx].age = cache.stats.ngets;
 
 	cache.stats.ngets++;
 	uprintf("[cache] stats: %d hits, %d misses", cache.stats.ngets - cache.stats.nmisses, cache.stats.nmisses);
@@ -359,6 +371,7 @@ int __nanvix_rcache_setup(void)
 	nanvix_rcache_select_replacement_policy(__RCACHE_DEFAULT_REPLACEMENT);
 
 	cache.initialized = 1;
+	cache.nfu_update = false;
 
 	uprintf("[nanvix][rcache] page cache initialized");
 
