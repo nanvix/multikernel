@@ -1,12 +1,16 @@
 #define __NEED_MM_RCACHE
 
+#ifndef APP_HEADER
+#define APP_HEADER "fn_sequential_x86_42pages_21x_20y_10000red.h"
+#endif
+
 #include <nanvix/runtime/runtime.h>
 #include <nanvix/runtime/mm.h>
 #include <nanvix/ulib.h>
 #include <nanvix/pm.h>
 #include <posix/stdint.h>
 #include "benchmark.h"
-#include "fn_sequential_x86_42pages_21x_20y_10000red.h"
+#include APP_HEADER
 
 /**
  * @brief Ulibc is missing this.
@@ -16,7 +20,9 @@
 /**
  * @brief Define which struct to use.
  */
+#ifndef APPS_STRUCT
 #define APPS_STRUCT fn_sequential_x86_42pages_21x_20y_10000red
+#endif
 
 /**
  * @brief Number of trials.
@@ -37,29 +43,43 @@
  */
 #define ARRAY2D(a,w,i,j) (a)[(i)*(w) + (j)]
 
-struct division
+static rpage_t raw_pages[NUM_PAGES];
+
+#ifdef MPPA256
+uint32_t msbDeBruijn32( uint32_t v )
 {
-	int quotient;
-	int remainder;
-};
-
-struct division divide(int a, int b)
-{
-	struct division result;
-
-	result.quotient = 0;
-	result.remainder = a;
-
-	while (result.remainder >= b)
+	static const int MultiplyDeBruijnBitPosition[32] =
 	{
-		result.remainder -= b;
-		result.quotient++;
-	}
+		0, 9, 1, 10, 13, 21, 2, 29, 11, 14, 16, 18, 22, 25, 3, 30,
+		8, 12, 20, 28, 15, 17, 24, 7, 19, 27, 23, 6, 26, 5, 4, 31
+	};
 
-	return (result);
+	v |= v >> 1; // first round down to one less than a power of 2
+	v |= v >> 2;
+	v |= v >> 4;
+	v |= v >> 8;
+	v |= v >> 16;
+
+	return MultiplyDeBruijnBitPosition[( uint32_t )( v * 0x07C4ACDDU ) >> 27];
 }
 
-static rpage_t raw_pages[NUM_PAGES];
+int random_mod(int v)
+{
+		int random_number = urand();
+		uint32_t msb = msbDeBruijn32(v)+1;
+		uint32_t mod_power_two = ((0x1 << msb ) - 1) & random_number;
+		while(mod_power_two >= (uint32_t)v)
+				mod_power_two -= v;
+		random_number = mod_power_two;
+		return random_number;
+}
+#else
+int random_mod(int v)
+{
+		int random_number = urand();
+		return random_number%v;
+}
+#endif
 
 /**
  * @brief Syntetic Benchmark
@@ -81,8 +101,6 @@ int __main2(int argc, const char *argv[])
 	int random_num = 0;
 	int trials;
 	int total_trials = 0;
-	struct division app_rand;
-	struct division roulette_rand;
 	usrand(9876);
 
 	__runtime_setup(SPAWN_RING_FIRST);
@@ -119,9 +137,7 @@ int __main2(int argc, const char *argv[])
 			{
 				/* Num for a specific app */
 				random_num = 0;
-				app_rand = divide(urand(), APPS_STRUCT.size);
-				random_num = app_rand.remainder;
-				/* random_num =  random_mod(APPS_STRUCT.size); */
+				random_num = random_mod(APPS_STRUCT.size);
 
 				/* Computer number of occurences in a column. */
 				row_size = APPS_STRUCT.row[random_num];
@@ -131,10 +147,10 @@ int __main2(int argc, const char *argv[])
 				}
 
 				/* This will be commented but it is better for unix64.*/
-				roulette_rand = divide(urand(), total_ocurrences);
-				rand_number = roulette_rand.remainder;
+				/* roulette_rand = divide(urand(), total_ocurrences); */
+				/* rand_number = roulette_rand.remainder; */
 
-				/* rand_number = random_mod(total_ocurrences); */
+				rand_number = random_mod(total_ocurrences);
 				/* Probability Roulette */
 				sum = 0;
 				selection = -1;
@@ -162,7 +178,7 @@ int __main2(int argc, const char *argv[])
 				page_value += APPS_STRUCT.pages_interval[random_num][selection].high;
 
 				uprintf("[benchmark][heatmap] %d %d\n", access_time, page_value);
-                uprintf("[benchmark] iteration %d of %d\n", access_time, total_trials);
+				uprintf("[benchmark] iteration %d of %d\n", access_time, total_trials);
 
 				uprintf("%d\n", page_value);
 				uassert(nanvix_rcache_get(raw_pages[page_value]) != NULL);
