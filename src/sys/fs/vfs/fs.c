@@ -602,9 +602,8 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 					buf_data_di = bread(ip->dev,buf_data->data[j]);
 					/* count number of zones inside each indirect zone */
 					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
-						buf_data_dd = bread(ip->dev,buf_data_di->data[k]);
 
-						if (buf_data_dd->data[k] != MINIX_BLOCK_NULL) {
+						if (buf_data_di->data[k] != MINIX_BLOCK_NULL) {
 
 							++nr_zones;
 
