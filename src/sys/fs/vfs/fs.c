@@ -540,6 +540,7 @@ int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;
+	int nr_zones = 0;
 
 	/* Invalid filename. */
 	if (filename == NULL)
@@ -580,12 +581,43 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/* file stats */
 	/*TODO Update time related fields first */
 
+	/* Count number of blocks */
+	for (int i=0; i < MINIX_NR_ZONES; ++i) {
+		if (i == MINIX_ZONE_DOUBLE) {
+			/* counting double indirect zones */
+
+			for (int j=0; j < MINIX_NR_DOUBLE; ++j) {
+				for (int k=0; k < MINIX_NR_SINGLE; ++k) {
+					if (inode_disk_get(ip)->izones[i][j][k] != MINIX_BLOCK_NULL)
+						++nr_zones;
+					else
+						goto out;
+				}
+			}
+
+		} else if (i == MINIX_ZONE_SINGLE) {
+			/* counting single indirect zones */
+
+			for (int j=0; j < MINIX_NR_SINGLE; ++j) {
+				if (inode_disk_get(ip)->izones[i][j] != MINIX_BLOCK_NULL)
+					++nr_zones;
+				else
+					goto out;
+			}
+			
+		} else if (inode_disk_get(ip)->izones[i] != MINIX_BLOCK_NULL ) {
+			/* counting direct zones */
+			++nr_zones;
+		} else {
+			/* found MINIX_BLOCK_NULL so last zone was counted */
+			goto out;
+		}
+	}
+out:
+
 	/* write stats in buf */
-	/*TODO count number of blocks
-	 *     write st_dev and st_ino
-	 */
-	/*buf->st_dev = ip->dev;*/
-	/*buf->st_ino = ip->num;*/
+	buf->st_dev = ip->dev;
+	buf->st_ino = ip->num;
 	buf->st_mode = inode_disk_get(ip)->i_mode;
 	buf->st_nlink = inode_disk_get(ip)->i_nlinks;
 	buf->st_uid = inode_disk_get(ip)->i_uid;
@@ -593,7 +625,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	buf->st_rdev = 0; /* character or block special */
 	buf->st_size = inode_disk_get(ip)->i_size;
 	buf->st_blksize = NANVIX_FS_BLOCK_SIZE;
-	buf->st_blocks = 1;
+	buf->st_blocks = nr_zones;
 
 
 	return 0;
