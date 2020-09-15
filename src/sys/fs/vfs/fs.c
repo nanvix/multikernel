@@ -660,6 +660,40 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/* file stats */
 	/*TODO Update time related fields first */
 
+	/* Count number of blocks */
+	for (int i=0; i < MINIX_NR_ZONES; ++i) {
+		if (i == MINIX_ZONE_DOUBLE) {
+			/* counting double indirect zones */
+
+			for (int j=0; j < MINIX_NR_DOUBLE; ++j) {
+				for (int k=0; k < MINIX_NR_SINGLE; ++k) {
+					if (inode_disk_get(ip)->izones[i][j][k] != MINIX_BLOCK_NULL)
+						++nr_zones;
+					else
+						goto out;
+				}
+			}
+
+		} else if (i == MINIX_ZONE_SINGLE) {
+			/* counting single indirect zones */
+
+			for (int j=0; j < MINIX_NR_SINGLE; ++j) {
+				if (inode_disk_get(ip)->izones[i][j] != MINIX_BLOCK_NULL)
+					++nr_zones;
+				else
+					goto out;
+			}
+
+		} else if (inode_disk_get(ip)->izones[i] != MINIX_BLOCK_NULL ) {
+			/* counting direct zones */
+			++nr_zones;
+		} else {
+			/* found MINIX_BLOCK_NULL so last zone was counted */
+			goto out;
+		}
+	}
+out:
+
 	/* write stats in buf */
 	buf->st_dev = inode_get_dev(ip);
 	buf->st_ino = inode_get_num(ip);
