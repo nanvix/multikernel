@@ -262,7 +262,6 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 						}
 					}
 				}
-
 			}
 
 		} else if (i == MINIX_ZONE_SINGLE) {
@@ -283,9 +282,6 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 					}
 				}
 			}
-
-
-
 		} else if (ino_data->i_zones[i] != MINIX_BLOCK_NULL ) {
 			/* counting direct zones */
 			++nr_zones;
