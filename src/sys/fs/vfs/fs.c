@@ -186,11 +186,10 @@ error:
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;
-	int nr_zones = 0;                             /* Total number of zones        */
-	struct buffer *buf_data;                       /* block buffer                 */ 
-	struct buffer *buf_data_di;                    /* block buffer double indirect */ 
-	struct buffer *buf_data_dd;                    /* block buffer double data     */ 
-	struct d_inode *ino_data;/* inode data                   */
+	int nr_zones = 0;           /* Total number of zones        */
+	struct buffer *buf_data;    /* block buffer                 */ 
+	struct buffer *buf_data_di; /* block buffer double indirect */ 
+	struct d_inode *ino_data;   /* inode data                   */
 
 	/* Invalid filename. */
 	if (filename == NULL)
@@ -248,9 +247,8 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 					buf_data_di = bread(ip->dev,buf_data->data[j]);
 					/* count number of zones inside each indirect zone */
 					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
-						buf_data_dd = bread(ip->dev,buf_data_di->data[k]);
 
-						if (buf_data_dd->data[k] != MINIX_BLOCK_NULL) {
+						if (buf_data_di->data[k] != MINIX_BLOCK_NULL) {
 
 							++nr_zones;
 
