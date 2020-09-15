@@ -2,7 +2,7 @@ nanvix-spawn0.unix64
 nanvix-spawn1.unix64
 nanvix-spawn2.unix64
 nanvix-spawn3.unix64
-nanvix-tests.unix64
+nanvix-benchmark-model.unix64
 nanvix-zombie.unix64
 nanvix-zombie.unix64
 nanvix-zombie.unix64

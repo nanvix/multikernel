@@ -107,10 +107,10 @@ int __main2(int argc, const char *argv[])
 
 		/* Unblock spawners. */
 		uassert(stdsync_fence() == 0);
-		uprintf("[nanvix][benchmark] server starting...");
+		uprintf("[nanvix][benchmark] server starting...\n");
 		uassert(stdsync_fence() == 0);
 		uassert(stdsync_fence() == 0);
-		uprintf("[nanvix][benchmark] server alive");
+		uprintf("[nanvix][benchmark] server alive\n");
 
 	__runtime_setup(SPAWN_RING_LAST);
 
@@ -195,7 +195,7 @@ int __main2(int argc, const char *argv[])
 		for (int i = 0; i < NUM_PAGES; i++)
 			uassert(nanvix_rcache_free(raw_pages[i]) == 0);
 
-		uprintf("[nanvix][test] shutting down server");
+		uprintf("[nanvix][test] shutting down server\n");
 		uassert(stdsync_fence() == 0);
 
 	nanvix_shutdown();
