@@ -25,17 +25,17 @@
 #endif
 
 /**
- * @brief Number of trials.
+ * @brief Number of pages.
  */
-#ifndef __NTRIALS
-#define NTRIALS 50
+#ifndef NUM_PAGES
+#define NUM_PAGES (RMEM_SERVERS_NUM*(RMEM_NUM_BLOCKS - 1))
 #endif
 
 /**
- * @brief Number of pages.
+ * @brief number of cache warmups.
  */
-#ifndef __NUM_PAGES
-#define NUM_PAGES (RMEM_SERVERS_NUM*(RMEM_NUM_BLOCKS - 1))
+#ifndef TOTAL_WARMUPS
+#define TOTAL_WARMUPS 10
 #endif
 
 /**
@@ -93,7 +93,6 @@ int __main2(int argc, const char *argv[])
 	int page_value = 0;
 	int sum = 0;
 	int selection = -1;
-    int skipped = 0;
     int access_time = 1;
 	int total_ocurrences;
 	int row_size;
@@ -101,6 +100,7 @@ int __main2(int argc, const char *argv[])
 	int random_num = 0;
 	int trials;
 	int total_trials = 0;
+	int total_warmups = TOTAL_WARMUPS;
 	usrand(9876);
 
 	__runtime_setup(SPAWN_RING_FIRST);
@@ -126,69 +126,73 @@ int __main2(int argc, const char *argv[])
 
 		/* Run matrix. */
 		uprintf("[benchmark] applying puts and gets\n");
-		for (int j = 0; j < column_size; j++)
+		for (int warmup = 0; warmup < total_warmups+1; warmup++)
 		{
-			total_ocurrences = 0;
-			trials = APPS_STRUCT.trials[0][j];
-
-
-			/* Run trials on column. */
-			for (int trial = 0; trial < trials; trial++, access_time++)
+			for (int j = 0; j < column_size; j++)
 			{
-				/* Num for a specific app */
-				random_num = 0;
-				random_num = random_mod(APPS_STRUCT.size);
+				total_ocurrences = 0;
+				trials = APPS_STRUCT.trials[0][j];
 
-				/* Computer number of occurences in a column. */
-				row_size = APPS_STRUCT.row[random_num];
-				for (int i = 0; i < row_size; i++)
+
+				/* Run trials on column. */
+				for (int trial = 0; trial < trials; trial++, access_time++)
 				{
-					total_ocurrences += ARRAY2D(APPS_STRUCT.work[random_num], column_size, i, j);
-				}
+					/* Num for a specific app */
+					random_num = 0;
+					random_num = random_mod(APPS_STRUCT.size);
 
-				/* This will be commented but it is better for unix64.*/
-				/* roulette_rand = divide(urand(), total_ocurrences); */
-				/* rand_number = roulette_rand.remainder; */
+					/* Computer number of occurences in a column. */
+					row_size = APPS_STRUCT.row[random_num];
+					for (int i = 0; i < row_size; i++)
+					{
+						total_ocurrences += ARRAY2D(APPS_STRUCT.work[random_num], column_size, i, j);
+					}
 
-				rand_number = random_mod(total_ocurrences);
-				/* Probability Roulette */
-				sum = 0;
-				selection = -1;
-				for (int i = 0; i < row_size; i++)
-				{
-					sum += ARRAY2D(APPS_STRUCT.work[random_num], column_size, i, j);
+					/* This will be commented but it is better for unix64.*/
+					/* roulette_rand = divide(urand(), total_ocurrences); */
+					/* rand_number = roulette_rand.remainder; */
 
-					/* If first elements of column are equal to zero. */
-					if (rand_number == 0 && sum <= 0)
+					rand_number = random_mod(total_ocurrences);
+					/* Probability Roulette */
+					sum = 0;
+					selection = -1;
+					for (int i = 0; i < row_size; i++)
+					{
+						sum += ARRAY2D(APPS_STRUCT.work[random_num], column_size, i, j);
+
+						/* If first elements of column are equal to zero. */
+						if (rand_number == 0 && sum <= 0)
+							continue;
+
+						/* Roulette core. */
+						if ((rand_number - sum) <= 0)
+						{
+							selection = i;
+							break;
+						}
+					}
+					/* If all column elements are equal to zero, skip. */
+					if (selection == -1)
 						continue;
 
-					/* Roulette core. */
-					if ((rand_number - sum) <= 0)
-					{
-						selection = i;
-						break;
-					}
+					for (int i = 0; i <= random_num-1; i++)
+						page_value += APPS_STRUCT.row[i]-1;
+					page_value += APPS_STRUCT.pages_interval[random_num][selection].high;
+
+					uprintf("[benchmark] Access %d\n", j);
+					uprintf("[benchmark] Iteration %d of %d\n", access_time, total_trials);
+
+					if (warmup == total_warmups)
+						uprintf("[benchmark][heatmap] %d %d\n", access_time, page_value);
+
+					uassert(nanvix_rcache_get(raw_pages[page_value]) != NULL);
+					uassert(nanvix_rcache_put(raw_pages[page_value], 0) == 0);
+					total_ocurrences = 0;
+					page_value = 0;
 				}
-				/* If all column elements are equal to zero, skip. */
-				if (selection == -1)
-					continue;
-
-				for (int i = 0; i <= random_num-1; i++)
-					page_value += APPS_STRUCT.row[i]-1;
-				page_value += APPS_STRUCT.pages_interval[random_num][selection].high;
-
-				uprintf("[benchmark][heatmap] %d %d\n", access_time, page_value);
-				uprintf("[benchmark] iteration %d of %d\n", access_time, total_trials);
-
-				uprintf("%d\n", page_value);
-				uassert(nanvix_rcache_get(raw_pages[page_value]) != NULL);
-				uassert(nanvix_rcache_put(raw_pages[page_value], 0) == 0);
-				uprintf("[benchmark] Access %d\n", j);
-				total_ocurrences = 0;
-				page_value = 0;
 			}
+			access_time = 0;
 		}
-		uprintf("[benchmark] %d lines skipped\n", skipped);
 
 		/* Free pages. */
 		uprintf("[benchmark] freeing pages: %d\n", NUM_PAGES);
