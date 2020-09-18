@@ -295,8 +295,9 @@ void *nanvix_rcache_get(rpage_t pgnum)
 	if (pgnum == RMEM_NULL)
 		return (NULL);
 
+	idx = nanvix_rcache_page_search(pgnum);
 	/* Search the cache. */
-	if((idx = nanvix_rcache_page_search(pgnum)) < 0)
+	if(idx < 0)
 	{
 		int err;
 
@@ -312,6 +313,8 @@ void *nanvix_rcache_get(rpage_t pgnum)
 		cache.stats.nmisses++;
 		cache.lines[idx].age = cache.stats.ngets;
 		cache.lines[idx].pgnum = pgnum;
+	} else {
+		cache.stats.nhits++;
 	}
 
 	cache.lines[idx].refcount++;
@@ -319,7 +322,7 @@ void *nanvix_rcache_get(rpage_t pgnum)
 		cache.lines[idx].age = cache.stats.ngets;
 
 	cache.stats.ngets++;
-	uprintf("[cache] stats: %d hits, %d misses", cache.stats.ngets - cache.stats.nmisses, cache.stats.nmisses);
+	uprintf("[cache] stats: %d hits, %d misses", cache.stats.nhits, cache.stats.nmisses);
 	return (cache.lines[idx].page);
 }
 
@@ -348,6 +351,20 @@ int nanvix_rcache_put(rpage_t pgnum, int strike)
 	if (cache.lines[idx].refcount-- == 1)
 		nanvix_rcache_flush(idx);
 
+	return (0);
+}
+
+/*============================================================================*
+ * nanvix_rcache_put()                                                        *
+ *============================================================================*/
+
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+int nanvix_rcache_clear_stats(void)
+{
+	cache.stats.nhits = 0;
+	cache.stats.nmisses = 0;
 	return (0);
 }
 

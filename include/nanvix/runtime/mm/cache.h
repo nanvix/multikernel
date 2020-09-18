@@ -102,6 +102,8 @@
 	 */
 	extern int nanvix_rcache_put(rpage_t pgnum, int strike);
 
+	extern int nanvix_rcache_clear_stats(void);
+
 	/**
 	 * @brief Selects the cache replacement_policy.
 	 *
