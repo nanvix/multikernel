@@ -202,7 +202,7 @@ static int nanvix_rcache_fifo(void)
 	/* Update entry. */
 	CACHE_ENTRY_INITIALIZER(idx);
 
-	return (nanvix_rcache_bypass());
+	return (idx);
 }
 
 /*============================================================================*
