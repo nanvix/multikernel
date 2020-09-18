@@ -190,7 +190,8 @@ static int nanvix_rcache_fifo(void)
 		return (idx);
 
 	/* Find the oldest entry. */
-	for (int i = 0; i < RCACHE_LENGTH; i++)
+	idx = 0;
+	for (int i = 1; i < RCACHE_LENGTH; i++)
 	{
 		if (cache.lines[i].age < cache.lines[idx].age)
 			idx = i;
