@@ -379,10 +379,10 @@ static struct
  */
 int nanvix_rfault(vaddr_t vaddr)
 {
-	int idx = 0;  /* Idex to table of page maps.  */
-	void *lptr;   /* Local pointer.               */
-	void *rptr;   /* Remote pointer.              */
-	raddr_t base; /* Base address of remote page. */
+	int idx = 0;  /* Index to table of page maps.  */
+	void *lptr;   /* Local pointer.                */
+	void *rptr;   /* Remote pointer.               */
+	raddr_t base; /* Base address of remote page.  */
 
 	vaddr &= PAGE_MASK;
 	lptr = (void *)RADDR_INV(vaddr);
@@ -395,7 +395,7 @@ int nanvix_rfault(vaddr_t vaddr)
 	if ((rptr = nanvix_rcache_get(rmem_table[base])) == NULL)
 		return (-EFAULT);
 
-	/* Unlink old page page from there. */
+	/* Unlink old page. */
 	for (int i = 0; i < RCACHE_SIZE; i++)
 	{
 		/* Found. */
@@ -406,7 +406,8 @@ int nanvix_rfault(vaddr_t vaddr)
 		}
 
 		/* Remember this index. */
-		idx = i;
+		if (maps[i].raddr == RMEM_NULL)
+			idx = i;
 	}
 
 done:
