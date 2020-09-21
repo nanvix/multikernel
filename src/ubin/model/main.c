@@ -192,6 +192,7 @@ int __main2(int argc, const char *argv[])
 				}
 			}
 			access_time = 0;
+			uassert(nanvix_rcache_clear_stats() == 0);
 		}
 
 		/* Free pages. */
