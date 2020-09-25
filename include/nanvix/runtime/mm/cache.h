@@ -104,6 +104,8 @@
 
 	extern int nanvix_rcache_clear_stats(void);
 
+	extern void nanvix_rcache_reference_update(void);
+
 	/**
 	 * @brief Selects the cache replacement_policy.
 	 *

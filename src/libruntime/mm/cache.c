@@ -37,8 +37,10 @@
 static struct
 {
 	int initialized;     /**< Initialized?      */
-	bool nfu_update;
+	int update_frequency;
 	int (*evict_fn)(void); /**< Eviction Strategy */
+	bool nfu_update;
+	bool aging_update;
 
 	/**
 	 * @brief Statistics
@@ -57,6 +59,7 @@ static struct
 	{
 		int age;
 		rpage_t pgnum;
+		int refbit;
 		int refcount;
 		char page[RMEM_BLOCK_SIZE] ALIGN(PAGE_SIZE);
 	} lines[RCACHE_LENGTH];
@@ -69,6 +72,7 @@ static struct
  */
 #define CACHE_ENTRY_INITIALIZER(x) {       \
 		cache.lines[x].refcount = 0;       \
+		cache.lines[x].refbit = 0;		   \
 		cache.lines[x].pgnum = RMEM_NULL;  \
 }
 
@@ -212,6 +216,11 @@ static int nanvix_rcache_nfu(void)
 	return nanvix_rcache_fifo();
 }
 
+static int nanvix_rcache_aging(void)
+{
+	return nanvix_rcache_fifo();
+}
+
 /*============================================================================*
  * nanvix_rcache_select_replacement_policy()                                  *
  *============================================================================*/
@@ -233,7 +242,14 @@ int nanvix_rcache_select_replacement_policy(int num)
 
 		case RCACHE_NFU:
 			cache.evict_fn = nanvix_rcache_nfu;
+			cache.update_frequency = 10;
 			cache.nfu_update = true;
+			break;
+
+		case RCACHE_AGING:
+			cache.evict_fn = nanvix_rcache_aging;
+			cache.update_frequency = 10;
+			cache.aging_update = true;
 			break;
 
 		default:
@@ -281,6 +297,32 @@ int nanvix_rcache_free(rpage_t pgnum)
 }
 
 /*============================================================================*
+ * nanvix_rcache_reference_update()                                           *
+ *============================================================================*/
+
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+void nanvix_rcache_reference_update(void)
+{
+	if (cache.stats.ngets/cache.update_frequency == 0)
+	{
+		if (cache.nfu_update == true)
+		{
+			for (int i = 0; i < RCACHE_LENGTH; i++)
+				if (cache.lines[i].refbit == 1)
+					cache.lines[i].age++;
+		}
+		else if (cache.aging_update == true)
+		{
+			for (int i = 0; i < RCACHE_LENGTH; i++)
+				cache.lines[i].age = (cache.lines[i].age >> 1) | cache.lines[i].refbit;
+		}
+	}
+
+}
+
+/*============================================================================*
  * nanvix_rcache_get()                                                        *
  *============================================================================*/
 
@@ -295,9 +337,8 @@ void *nanvix_rcache_get(rpage_t pgnum)
 	if (pgnum == RMEM_NULL)
 		return (NULL);
 
-	idx = nanvix_rcache_page_search(pgnum);
 	/* Search the cache. */
-	if(idx < 0)
+	if((idx = nanvix_rcache_page_search(pgnum)) < 0)
 	{
 		int err;
 
@@ -311,17 +352,20 @@ void *nanvix_rcache_get(rpage_t pgnum)
 
 		/* Update entry.*/
 		cache.stats.nmisses++;
-		cache.lines[idx].age = cache.stats.ngets;
+
+		cache.lines[idx].age = ((cache.nfu_update == true) ? 0 : cache.stats.ngets);
 		cache.lines[idx].pgnum = pgnum;
 	} else {
 		cache.stats.nhits++;
 	}
 
+	cache.lines[idx].refbit |= 1
 	cache.lines[idx].refcount++;
-	if (cache.nfu_update == true)
-		cache.lines[idx].age = cache.stats.ngets;
-
 	cache.stats.ngets++;
+
+	nanvix_rcache_reference_update();
+
+
 	uprintf("[cache] stats: %d hits, %d misses", cache.stats.nhits, cache.stats.nmisses);
 	return (cache.lines[idx].page);
 }
@@ -394,6 +438,7 @@ int __nanvix_rcache_setup(void)
 
 	cache.initialized = 1;
 	cache.nfu_update = false;
+	cache.aging_update = false;
 
 	uprintf("[nanvix][rcache] page cache initialized");
 
