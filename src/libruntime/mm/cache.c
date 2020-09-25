@@ -234,10 +234,12 @@ int nanvix_rcache_select_replacement_policy(int num)
 	{
 		case RCACHE_BYPASS:
 			cache.evict_fn = nanvix_rcache_bypass;
+			cache.update_frequency = 1;
 			break;
 
 		case RCACHE_FIFO:
 			cache.evict_fn = nanvix_rcache_fifo;
+			cache.update_frequency = 1;
 			break;
 
 		case RCACHE_NFU:
@@ -305,7 +307,7 @@ int nanvix_rcache_free(rpage_t pgnum)
  */
 void nanvix_rcache_reference_update(void)
 {
-	if (cache.stats.ngets/cache.update_frequency == 0)
+	if (cache.stats.ngets%cache.update_frequency == 0)
 	{
 		if (cache.nfu_update == true)
 		{
