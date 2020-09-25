@@ -359,7 +359,7 @@ void *nanvix_rcache_get(rpage_t pgnum)
 		cache.stats.nhits++;
 	}
 
-	cache.lines[idx].refbit |= 1
+	cache.lines[idx].refbit |= 1;
 	cache.lines[idx].refcount++;
 	cache.stats.ngets++;
 
