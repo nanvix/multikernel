@@ -597,10 +597,12 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 			/* count zones if block is not null */
 			if (buf_data->data[i] != MINIX_BLOCK_NULL) {
 
+				/* traverse first indirect zone */
 				for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
 
 					buf_data_di = bread(ip->dev,buf_data->data[j]);
 					/* count number of zones inside each indirect zone */
+					/* traverse second indirect zone */
 					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
 
 						if (buf_data_di->data[k] != MINIX_BLOCK_NULL) {
@@ -628,7 +630,6 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
 					if (buf_data->data[j] != MINIX_BLOCK_NULL) {
-						//uint_16t
 						++nr_zones;
 					} else {
 						/* quit both loops */
