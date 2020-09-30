@@ -540,7 +540,8 @@ int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;
-	int nr_zones = 0;
+	block_t *zone;
+	int nr_zones = 0;      /* Total number of zones  */
 
 	/* Invalid filename. */
 	if (filename == NULL)
@@ -586,34 +587,55 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 		if (i == MINIX_ZONE_DOUBLE) {
 			/* counting double indirect zones */
 
-			for (int j=0; j < MINIX_NR_DOUBLE; ++j) {
-				for (int k=0; k < MINIX_NR_SINGLE; ++k) {
-					if (inode_disk_get(ip)->izones[i][j][k] != MINIX_BLOCK_NULL)
-						++nr_zones;
-					else
-						goto out;
+			/* count zones if block is not null */
+			if (inode_disk_get(ip)->i_zones[i] != MINIX_BLOCK_NULL) {
+				for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
+					/* count number of zones inside each indirect zone */
+					zone = ((block_t *)inode_disk_get(ip)->i_zones)[j];
+					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
+						if (((block_t *)zone)[j] != MINIX_BLOCK_NULL) {
+							//uint_16t
+							++nr_zones;
+						} else {
+							/* quit all loops */
+							i = MINIX_NR_ZONES;
+							j = MINIX_NR_DOUBLE;
+							break;
+						}
+					}
 				}
+
 			}
 
 		} else if (i == MINIX_ZONE_SINGLE) {
 			/* counting single indirect zones */
 
-			for (int j=0; j < MINIX_NR_SINGLE; ++j) {
-				if (inode_disk_get(ip)->izones[i][j] != MINIX_BLOCK_NULL)
-					++nr_zones;
-				else
-					goto out;
+			/* count zones if block is not null */
+			if (inode_disk_get(ip)->i_zones[i] != MINIX_BLOCK_NULL) {
+
+				buf = bread(ip->dev,ip->i_zones[i]);
+				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
+					if (((block_t *)buf->data)[j] != MINIX_BLOCK_NULL) {
+						//uint_16t
+						++nr_zones;
+					} else {
+						/* quit both loops */
+						i = MINIX_NR_ZONES;
+						break;
+					}
+				}
 			}
-			
-		} else if (inode_disk_get(ip)->izones[i] != MINIX_BLOCK_NULL ) {
+
+
+
+		} else if (inode_disk_get(ip)->i_zones[i] != MINIX_BLOCK_NULL ) {
 			/* counting direct zones */
 			++nr_zones;
 		} else {
 			/* found MINIX_BLOCK_NULL so last zone was counted */
-			goto out;
+			break;
 		}
 	}
-out:
 
 	/* write stats in buf */
 	buf->st_dev = ip->dev;
@@ -636,7 +658,7 @@ error:
 }
 
 /**
- * The fs_stat() function returns information about the file 
+ * The fs_stat() function returns information about the file
  * named @p filename.
  */
 int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
