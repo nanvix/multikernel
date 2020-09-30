@@ -186,10 +186,11 @@ error:
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;
-	int nr_zones = 0;           /* Total number of zones        */
 	struct buffer *buf_data;    /* block buffer                 */
 	struct buffer *buf_data_di; /* block buffer double indirect */
 	struct d_inode *ino_data;   /* inode data                   */
+	block_t *zone;
+	int nr_zones = 0;           /* Total number of zones        */
 
 	/* Invalid filename. */
 	if (filename == NULL)
@@ -262,6 +263,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 						}
 					}
 				}
+
 			}
 
 		} else if (i == MINIX_ZONE_SINGLE) {
