@@ -26,6 +26,10 @@
 #define __NEED_MM_RMEM_STUB
 #define __NEED_MM_RCACHE
 
+#ifndef UPDATE_FREQ
+#define UPDATE_FREQ 10
+#endif
+
 #include <nanvix/runtime/mm.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
@@ -244,13 +248,13 @@ int nanvix_rcache_select_replacement_policy(int num)
 
 		case RCACHE_NFU:
 			cache.evict_fn = nanvix_rcache_nfu;
-			cache.update_frequency = 10;
+			cache.update_frequency = UPDATE_FREQ;
 			cache.nfu_update = true;
 			break;
 
 		case RCACHE_AGING:
 			cache.evict_fn = nanvix_rcache_aging;
-			cache.update_frequency = 10;
+			cache.update_frequency = UPDATE_FREQ;
 			cache.aging_update = true;
 			break;
 
@@ -318,7 +322,7 @@ void nanvix_rcache_reference_update(void)
 		else if (cache.aging_update == true)
 		{
 			for (int i = 0; i < RCACHE_LENGTH; i++)
-				cache.lines[i].age = (cache.lines[i].age >> 1) | cache.lines[i].refbit;
+				cache.lines[i].age = ((cache.lines[i].refbit << (sizeof(int)*8-1)) | (cache.lines[i].age >> 1));
 		}
 	}
 
@@ -355,7 +359,7 @@ void *nanvix_rcache_get(rpage_t pgnum)
 		/* Update entry.*/
 		cache.stats.nmisses++;
 
-		cache.lines[idx].age = ((cache.nfu_update == true) ? 0 : cache.stats.ngets);
+		cache.lines[idx].age = ((cache.nfu_update == true || cache.aging_update == true) ? 0 : cache.stats.ngets);
 		cache.lines[idx].pgnum = pgnum;
 	} else {
 		cache.stats.nhits++;
