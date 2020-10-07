@@ -592,22 +592,22 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 		if (i == MINIX_ZONE_DOUBLE) {
 			/* counting double indirect zones */
 
-			/* count zones if block is not null */
 			buf_data = bread(ip->dev,ino_data->i_zones[i]);
 
+			/* count zones if block is not null */
 			if (buf_data->data[i] != MINIX_BLOCK_NULL) {
+
 				for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
 
 					buf_data_di = bread(ip->dev,buf_data->data[j]);
-
 					/* count number of zones inside each indirect zone */
 					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
-
 						buf_data_dd = bread(ip->dev,buf_data_di->data[k]);
 
-						if (buf_data_dd->data[j] != MINIX_BLOCK_NULL) {
-							//uint_16t
+						if (buf_data_dd->data[k] != MINIX_BLOCK_NULL) {
+
 							++nr_zones;
+
 						} else {
 							/* quit all loops */
 							i = MINIX_NR_ZONES;

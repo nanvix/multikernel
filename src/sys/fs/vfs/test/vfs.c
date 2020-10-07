@@ -80,7 +80,7 @@ static void test_api_vfs_stat_file_not_exists(void)
 {
 	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
 	const char *filename = "inexistent";
-	
+
 	uassert(fs_stat(filename, buffer) == -ENOENT);
 }
 
@@ -91,7 +91,7 @@ static void test_api_vfs_stat_file_invalid(void)
 {
 	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
 	const char *filename = "";
-	
+
 	uassert(fs_stat(filename, buffer) == -EINVAL);
 }
 
@@ -102,7 +102,7 @@ static void test_api_vfs_stat_buffer_invalid(void)
 {
 	struct nanvix_stat *restrict buffer = NULL;
 	const char *filename = "disk";
-	
+
 	uassert(fs_stat(filename, buffer) == -1);
 }
 
