@@ -317,12 +317,18 @@ void nanvix_rcache_reference_update(void)
 		{
 			for (int i = 0; i < RCACHE_LENGTH; i++)
 				if (cache.lines[i].refbit == 1)
+				{
 					cache.lines[i].age++;
+					cache.lines[i].refbit = 0;
+				}
 		}
 		else if (cache.aging_update == true)
 		{
 			for (int i = 0; i < RCACHE_LENGTH; i++)
+			{
 				cache.lines[i].age = ((cache.lines[i].refbit << (sizeof(int)*8-1)) | (cache.lines[i].age >> 1));
+				cache.lines[i].refbit = 0;
+			}
 		}
 	}
 
@@ -440,11 +446,12 @@ int __nanvix_rcache_setup(void)
 	cache.stats.nmisses = 0;
 	cache.stats.nhits = 0;
 
+	cache.nfu_update = false;
+	cache.aging_update = false;
+
 	nanvix_rcache_select_replacement_policy(__RCACHE_DEFAULT_REPLACEMENT);
 
 	cache.initialized = 1;
-	cache.nfu_update = false;
-	cache.aging_update = false;
 
 	uprintf("[nanvix][rcache] page cache initialized");
 
