@@ -32,6 +32,7 @@
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
+#include <posix/stdlib.h>
 
 /**
  * @brief Connection Used in Tests
@@ -46,6 +47,18 @@ static char data[NANVIX_FS_BLOCK_SIZE];
 /*============================================================================*
  * API Tests                                                                  *
  *============================================================================*/
+
+/**
+ * @brief API Test: Get File Stats
+ */
+static void test_api_vfs_stat(void)
+{
+	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
+	const char *filename = "disk";
+
+	uassert(fs_stat(filename, buffer) >= 0);
+	uassert(buffer != NULL);
+}
 
 /**
  * @brief API Test: Open/Close a File
@@ -124,6 +137,7 @@ static struct
 	{ test_api_vfs_open_close, "[vfs][api] open/close" },
 	{ test_api_vfs_seek,       "[vfs][api] seek      " },
 	{ test_api_vfs_read_write, "[vfs][api] read/write" },
+	{ test_api_vfs_stat,       "[vfs][api] stat      " },
 	{ NULL,                     NULL                   },
 };
 
