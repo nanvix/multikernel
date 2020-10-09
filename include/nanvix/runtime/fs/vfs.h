@@ -26,6 +26,7 @@
 #define NANVIX_RUNTIME_FS_VFS_H_
 
 	#include <posix/sys/types.h>
+	#include <posix/sys/stat.h>
 
 	/**
 	 * @brief Initializes the VFS Service.
@@ -50,6 +51,18 @@
 	 * failure, a negative error code is returned instead.
 	 */
 	extern int nanvix_vfs_shutdown(void);
+
+	/**
+	 * @brief Gets File Stats
+	 *
+	 * @param filename Filename Name of the target file.
+	 * @param buffer   buffer to write stats to
+	 *
+	 * @returns Upon successful completion, the file descriptor of the
+	 * file is returned. Upon failure, a negative error code is
+	 * returned instead.
+	 */
+	extern int nanvix_vfs_stat(const char *filename, struct nanvix_stat *restrict buffer);
 
 	/**
 	 * @brief Opens a file.

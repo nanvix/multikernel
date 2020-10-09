@@ -47,7 +47,7 @@ static struct
 };
 
 /*============================================================================*
- * nanvix_stat()                                                              *
+ * nanvix_vfs_stat()                                                          *
  *============================================================================*/
 
 /**
@@ -93,7 +93,7 @@ static int do_nanvix_stat(const char *filename,struct nanvix_stat *restrict buf)
  *
  * @author Lucca Augusto
  */
-int nanvix_stat(const char *filename, struct nanvix_stat *restrict buf)
+int nanvix_vfs_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	/* Invalid server ID. */
 	if (!server.initialized)

@@ -29,6 +29,7 @@
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
+#include <posix/stdlib.h>
 #include "../test.h"
 
 #ifdef __NANVIX_HAS_VFS_SERVER
@@ -63,6 +64,23 @@ static void test_api_nanvix_vfs_open_close(void)
 
 	uassert((fd = nanvix_vfs_open(filename, O_RDWR)) >= 0);
 	uassert(nanvix_vfs_close(fd) == 0);
+}
+
+/*============================================================================*
+ * Stat                                                                       *
+ *============================================================================*/
+
+/**
+ * @brief API Test: Get File Stats
+ */
+static void test_api_nanvix_stat(void)
+{
+	int fd;
+	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat));
+	const char *filename = "disk";
+
+	uassert((fd = nanvix_vfs_stat(filename,buffer)) >= 0);
+
 }
 
 /*============================================================================*
