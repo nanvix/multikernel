@@ -29,6 +29,7 @@
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
+#include <posix/stdlib.h>
 #include "../test.h"
 
 #ifdef __NANVIX_HAS_VFS_SERVER
@@ -37,6 +38,31 @@
  * @brief Buffer for Read/Write Tests
  */
 static char data[NANVIX_FS_BLOCK_SIZE];
+
+/*============================================================================*
+ * Stat                                                                       *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Invalid stat
+ */
+static void test_fault_nanvix_vfs_stat_invalid(void)
+{
+	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
+
+	uassert(nanvix_vfs_stat(NULL, buffer) == -EINVAL);
+}
+
+/**
+ * @brief Fault Injection Test: Bad Open
+ */
+static void test_fault_nanvix_vfs_stat_bad(void)
+{
+	const char *filename = "foobar";
+	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
+
+	uassert(nanvix_vfs_stat(filename, buffer) == -ENOENT);
+}
 
 /*============================================================================*
  * Open                                                                       *
