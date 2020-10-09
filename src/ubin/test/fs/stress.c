@@ -30,6 +30,7 @@
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
+#include <posix/stdlib.h>
 #include "../test.h"
 
 #ifdef __NANVIX_HAS_VFS_SERVER
@@ -48,6 +49,26 @@
  * @brief Buffer for Read/Write Tests
  */
 static char data[NANVIX_FS_BLOCK_SIZE];
+
+/*============================================================================*
+ * Stat                                                                       *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Get File Stats
+ */
+static void test_stress_nanvix_vfs_stat(void)
+{
+	int fd;
+	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
+	const char *filename = "disk";
+
+	for (int i = 0; i < TEST_NITERATIONS; i++)
+	{
+		uassert((fd = nanvix_vfs_stat(filename, buffer)) >= 0);
+	}
+
+}
 
 /*============================================================================*
  * Open/Close                                                                 *
