@@ -240,6 +240,8 @@ struct test tests_vfs_fault[] = {
 	{ test_fault_nanvix_vfs_read_bad,      "[vfs][fault] bad read      " },
 	{ test_fault_nanvix_vfs_write_invalid, "[vfs][fault] invalid write " },
 	{ test_fault_nanvix_vfs_write_bad,     "[vfs][fault] bad write     " },
+	{ test_fault_nanvix_vfs_stat_invalid,  "[vfs][fault] invalid stat  " },
+	{ test_fault_nanvix_vfs_stat_bad,      "[vfs][fault] bad stat      " },
 	{ NULL,                                 NULL                         },
 };
 
