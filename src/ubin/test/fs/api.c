@@ -146,6 +146,7 @@ struct test tests_vfs_api[] = {
 	{ test_api_nanvix_vfs_open_close, "[vfs][api] open/close" },
 	{ test_api_nanvix_vfs_seek,       "[vfs][api] seek      " },
 	{ test_api_nanvix_vfs_read_write, "[vfs][api] read/write" },
+	{ test_api_nanvix_stat,           "[vfs][api] stat      " },
 	{ NULL,                            NULL                   },
 };
 

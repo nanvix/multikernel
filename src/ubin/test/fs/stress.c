@@ -170,7 +170,8 @@ struct test tests_vfs_stress[] = {
 	{ test_stress_nanvix_vfs_open_close, "[vfs][stress] open/close" },
 	{ test_stress_nanvix_vfs_seek,       "[vfs][stress] seek      " },
 	{ test_stress_nanvix_vfs_read_write, "[vfs][stress] read/write" },
-	{ NULL,                            NULL                   },
+	{ test_stress_nanvix_vfs_stat,       "[vfs][stress] stat      " },
+	{ NULL,                                  NULL                   },
 };
 
 #endif

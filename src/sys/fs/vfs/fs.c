@@ -233,7 +233,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/*TODO Update time related fields first */
 
 	/* Count number of blocks */
-	for (int i=0; i < MINIX_NR_ZONES; ++i) {
+	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
 		if (i == MINIX_ZONE_DOUBLE) {
 			/* counting double indirect zones */
 
