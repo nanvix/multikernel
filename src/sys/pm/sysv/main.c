@@ -778,8 +778,6 @@ static int do_sysv_server_startup(struct nanvix_semaphore *lock)
 	do_msg_init();
 	do_sem_init();
 
-	uprintf("[nanvix][sysv] minix System V created");
-
 	uprintf("[nanvix][sysv] server alive");
 	uprintf("[nanvix][sysv] attached to node %d", server.nodenum);
 	uprintf("[nanvix][sysv] listening to mailbox %d", server.inbox);
