@@ -88,7 +88,7 @@ int __runtime_setup(int ring)
 {
 	int tid;
 
-	tid = kthread_self();
+	tid = kthread_self() - KTHREAD_LEADER_TID;
 
 	/* Invalid runtime ring. */
 	if (ring < 0)
@@ -157,7 +157,7 @@ int __runtime_cleanup(void)
 {
 	int tid;
 
-	tid = kthread_self();
+	tid = kthread_self() - KTHREAD_LEADER_TID;
 
 	/* Initialize Ring 4. */
 	if (current_ring[tid] >= SPAWN_RING_5)
