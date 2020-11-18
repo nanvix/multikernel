@@ -30,6 +30,7 @@
 	#define __NEED_MAILBOX_SERVICE
 	#define __NEED_PORTAL_SERVICE
 	#define __NEED_SYSV_SERVICE
+	#define __NEED_RPC_SERVICE
 	#define __NEED_LIMITS_PM
 
 	#include <nanvix/runtime/stdikc.h>
@@ -37,6 +38,7 @@
 	#include <nanvix/runtime/pm/mailbox.h>
 	#include <nanvix/runtime/pm/portal.h>
 	#include <nanvix/runtime/pm/sysv.h>
+	#include <nanvix/runtime/pm/rpc.h>
 	#include <nanvix/limits/pm.h>
 
 	/**

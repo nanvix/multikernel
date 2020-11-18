@@ -105,6 +105,7 @@ int __runtime_setup(int ring)
 		uassert(__stdsync_setup() == 0);
 		uassert(__stdmailbox_setup() == 0);
 		uassert(__stdportal_setup() == 0);
+		uassert(__nanvix_rpc_setup() == 0);
 	}
 
 	/* Initialize Ring 1. */
@@ -196,6 +197,13 @@ int __runtime_cleanup(void)
 	}
 
 	/* Spawn Ring 0.*/
+#if 0
+	/**
+	 * This introduce a deadlock because the Dispatcher closes a mailbox used
+	 * by other services. We must introduce a dedicated port to RPC.
+	 */
+	uassert(__nanvix_rpc_cleanup() == 0);
+#endif
 	uassert(__stdportal_cleanup() == 0);
 	uassert(__stdmailbox_cleanup() == 0);
 	uassert(__stdsync_cleanup() == 0);
