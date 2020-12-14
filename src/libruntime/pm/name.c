@@ -129,25 +129,31 @@ int nanvix_name_lookup(const char *name)
  */
 int nanvix_name_link(int nodenum, const char *name)
 {
+	uprintf("entrou");
 	int ret;
 	struct name_message msg;
 
 	/* Initilize name client. */
 	if (!initialized)
-		return (-EAGAIN);
+		uprintf("!initialized");
+		//return (-EAGAIN);
 
 	/* Invalid NoC node ID. */
 	if (!proc_is_valid(nodenum))
-		return (-EINVAL);
+		uprintf("proc_is_invalid");
+		//return (-EINVAL);
 
 	/* Invalid name. */
 	if ((ret = nanvix_name_is_valid(name)) < 0)
-		return (ret);
+		uprintf("nanvix name is invalid");
+		//return (ret);
 
 	/* Build operation header. */
 	message_header_build(&msg.header, NAME_LINK);
 	ustrcpy(msg.op.link.name, name);
-
+	
+	int busy = 1000;
+	while (busy--);
 	if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
 		return (ret);
 

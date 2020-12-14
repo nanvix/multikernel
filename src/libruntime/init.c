@@ -31,6 +31,7 @@
 #include <nanvix/sys/excp.h>
 #include <nanvix/sys/page.h>
 #include <nanvix/sys/perf.h>
+#include <nanvix/sys/noc.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
 
@@ -87,7 +88,9 @@ static void *nanvix_exception_handler(void *args)
 int __runtime_setup(int ring)
 {
 	int tid;
-
+	int nodenum = knode_get_num();
+	kprintf("[microkernel] nodenum = %d", nodenum);
+	kprintf("[microkernel] cluster num = %d", kcluster_get_num());
 	tid = kthread_self();
 
 	/* Invalid runtime ring. */

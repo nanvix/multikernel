@@ -50,7 +50,7 @@
 	 */
 	/**@{*/
 	#define SPAWN_SERVER_0_NODE 0 /**< Spawn Server 0 */
-	#define SPAWN_SERVER_1_NODE 4 /**< Spawn Server 1 */
+	#define SPAWN_SERVER_1_NODE 1 /**< Spawn Server 1 */
 	/**@}*/
 
 	/**
@@ -59,7 +59,7 @@
 	/**@{*/
 	#define NAME_SERVER_NODE   0 /**< Name Server */
 	#define SYSV_SERVER_NODE   0 /**< RMem Server */
-	#define RMEM_SERVER_0_NODE 4 /**< RMem Server */
+	#define RMEM_SERVER_0_NODE 1 /**< RMem Server */
 	/**@}*/
 
 	/**

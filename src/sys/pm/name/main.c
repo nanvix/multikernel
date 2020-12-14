@@ -35,7 +35,7 @@
 #include <posix/errno.h>
 #include <posix/stdint.h>
 
-#define __DEBUG_NAME 0
+#define __DEBUG_NAME 1
 
 #if (__DEBUG_NAME)
 	static char debug_str[64];

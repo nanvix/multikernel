@@ -32,6 +32,7 @@
 #include <nanvix/sys/thread.h>
 #include <nanvix/sys/page.h>
 #include <nanvix/sys/perf.h>
+#include <nanvix/sys/noc.h>
 #include <nanvix/sys/semaphore.h>
 #include <nanvix/limits.h>
 #include <nanvix/types.h>
@@ -554,23 +555,29 @@ static int do_rmem_loop(void)
  */
 static int do_rmem_startup(struct nanvix_semaphore *lock)
 {
+	uprintf("[nanvix][rmem] erro 5");
 	int ret;
 	const char *servername;
 
 	/* Messages should be small enough. */
 	uassert(sizeof(struct rmem_message) <= NANVIX_MAILBOX_MESSAGE_SIZE);
+	uprintf("[nanvix][rmem] erro 6");
 
 	/* Bitmap word should be large enough. */
 	uassert(sizeof(rpage_t) >= sizeof(bitmap_t));
-
+	uprintf("[nanvix][rmem] erro 7");
+	
 	/* Physical memory should be big enough. */
 	uassert(RMEM_SIZE <=  UMEM_SIZE);
+	uprintf("[nanvix][rmem] erro 8");
 	uassert((RMEM_SIZE%PAGE_SIZE) == 0);
+	uprintf("[nanvix][rmem] erro 9");
 
 	/* Allocate physical memory. */
 	rmem.blocks = (char *) RMEM_START;
 	for (vaddr_t vaddr = RMEM_START; vaddr < RMEM_END; vaddr += PAGE_SIZE)
 		uassert(page_alloc(vaddr) == 0);
+		uprintf("[nanvix][rmem] erro 10 + i");
 
 	/* Clean bitmap. */
 	umemset(
@@ -578,6 +585,7 @@ static int do_rmem_startup(struct nanvix_semaphore *lock)
 		0,
 		(RMEM_NUM_BLOCKS/BITMAP_WORD_LENGTH)*sizeof(bitmap_t)
 	);
+	uprintf("[nanvix][rmem] erro 11");
 
 	/* Fist block is special. */
 	stats.nblocks++;
@@ -586,30 +594,45 @@ static int do_rmem_startup(struct nanvix_semaphore *lock)
 	/* Clean all blocks. */
 	for (unsigned long i = 0; i < RMEM_NUM_BLOCKS; i++)
 		umemset(&rmem.blocks[i*RMEM_BLOCK_SIZE], 0, RMEM_BLOCK_SIZE);
+	uprintf("[nanvix][rmem] erro 12");
 
 	nodenum = knode_get_num();
 
 	/* Assign input mailbox. */
 	inbox = stdinbox_get();
+	uprintf("[nanvix][rmem] erro 13");
 
 	/* Assign input portal. */
 	inportal = stdinportal_get();
+	uprintf("[nanvix][rmem] erro 14");
 
 	serverid = rmem_server_get_id();
+	uprintf("[nanvix][rmem] erro 15");
 
 	/* Link name. */
 	servername = rmem_server_get_name();
-	if ((ret = nanvix_name_link(nodenum, servername)) < 0)
+	uprintf("[nanvix][rmem] erro 16");
+	ret = nanvix_name_link(nodenum, servername);
+	uprintf("[ret = %d]", ret);
+	if (ret < 0)
+		{
+		uprintf("[ret = %d]", ret);
 		return (ret);
-
+	}
 	/* Unblock spawner. */
 	uprintf("[nanvix][rmem] server alive");
+	uprintf("[nanvix][rmem] erro 13.5");
 	uprintf("[nanvix][rmem] attached to node %d", knode_get_num());
+	uprintf("[nanvix][rmem] erro 14.5");
 	uprintf("[nanvix][rmem] listening to mailbox %d", inbox);
+	uprintf("[nanvix][rmem] erro 15.5");
 	uprintf("[nanvix][rmem] listening to portal %d", inportal);
+	uprintf("[nanvix][rmem] erro 16.5");
 	uprintf("[nanvix][rmem] memory size %d KB", RMEM_SIZE/KB);
+	uprintf("[nanvix][rmem] erro 17");
 
 	nanvix_semaphore_up(lock);
+	uprintf("[nanvix][rmem] erro 18");
 
 	return (0);
 }
@@ -642,11 +665,14 @@ static int do_rmem_shutdown(void)
 static int do_rmem_server(struct nanvix_semaphore *lock)
 {
 	int ret;
-
+	uprintf("[nanvix][rmem] erro 4");
+	
 	uprintf("[nanvix][rmem] booting up server");
 
+
 	if ((ret = do_rmem_startup(lock)) < 0)
-	{
+	{	
+		uprintf("[nanvix][rmem] erro 1");
 		uprintf("[nanvix][rmem] failed to startup server!");
 		goto error;
 	}
@@ -656,6 +682,7 @@ static int do_rmem_server(struct nanvix_semaphore *lock)
 
 	if ((ret = do_rmem_loop()) < 0)
 	{
+		uprintf("[nanvix][rmem] erro 2");
 		uprintf("[nanvix][rmem] failed to launch server!");
 		goto error;
 	}
@@ -664,6 +691,7 @@ static int do_rmem_server(struct nanvix_semaphore *lock)
 
 	if ((ret = do_rmem_shutdown()) < 0)
 	{
+		uprintf("[nanvix][rmem] erro 3");
 		uprintf("[nanvix][rmem] failed to shutdown server!");
 		goto error;
 	}
