@@ -21,56 +21,24 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE.
  */
+#ifndef NANVIX_TYPES_VFS_H_
+#define NANVIX_TYPES_VFS_H_
 
-#include <nanvix/runtime/runtime.h>
-#include <nanvix/pm.h>
-#include <nanvix/ulib.h>
-#include <posix/stdint.h>
-#include "test.h"
+	#include <nanvix/servers/vfs.h>
+	#include <posix/sys/types.h>
 
-/**
- * Horizontal line for tests.
- */
-const char *HLINE =
-	"------------------------------------------------------------------------";
+	/**
+	 * @brief In-Memory Inode
+	 */
+	struct inode
+	{
+		/* Must come first. */
+		struct resource resource;
+	
+		struct d_inode data; /**< Underlying Disk Inode  */
+		dev_t dev;           /**< Underlying Device      */
+		ino_t num;           /**< Inode Number           */
+		int count;           /**< Reference count        */
+	};
 
-/**
- * @brief Test Server
- */
-int __main2(int argc, const char *argv[])
-{
-	((void) argc);
-	((void) argv);
-
-	__runtime_setup(SPAWN_RING_FIRST);
-
-		/* Unblock spawners. */
-		uassert(stdsync_fence() == 0);
-		uprintf("[nanvix][test] server starting...");
-		uassert(stdsync_fence() == 0);
-		uassert(stdsync_fence() == 0);
-		uprintf("[nanvix][test] server alive");
-
-		__runtime_setup(SPAWN_RING_LAST);
-		/*
-		test_name();
-		test_rmem_stub();
-		test_rmem_cache();
-		test_rmem_manager();
-#ifdef __mppa256__
-		test_posix();
-#endif
-		test_sysv();
-		test_shm();
-		*/
-		test_vfs();
-
-		uprintf("[nanvix][test] shutting down server");
-		uassert(stdsync_fence() == 0);
-
-	nanvix_shutdown();
-
-	__runtime_cleanup();
-
-	return (0);
-}
+#endif /* NANVIX_TYPES_VFS_H_ */

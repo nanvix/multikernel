@@ -29,6 +29,7 @@
 #include <nanvix/servers/vfs.h>
 #include <nanvix/servers/vfs/bcache.h>
 #include <nanvix/servers/vfs/inode.h>
+#include <nanvix/types/vfs.h>
 #include <nanvix/dev.h>
 #include <nanvix/limits.h>
 #include <posix/sys/types.h>

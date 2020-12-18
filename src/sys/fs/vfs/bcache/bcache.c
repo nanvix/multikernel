@@ -94,7 +94,6 @@ int buffer_set_dirty(struct buffer *buf)
 	/* Bad buffer. */
 	if ((buf < &buffers[0]) || (buf >= &buffers[NANVIX_FS_NR_BUFFERS]))
 		return (-EINVAL);
-
 	resource_set_dirty(&buf->flags);
 
 	return (0);

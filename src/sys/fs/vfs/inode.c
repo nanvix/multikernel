@@ -26,6 +26,7 @@
 #define __VFS_SERVER
 
 #include <nanvix/servers/vfs.h>
+#include <nanvix/types/vfs.h>
 #include <nanvix/sys/perf.h>
 #include <nanvix/config.h>
 #include <nanvix/dev.h>
@@ -33,20 +34,6 @@
 #include <nanvix/ulib.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
-
-/**
- * @brief In-Memory Inode
- */
-struct inode
-{
-	/* Must come first. */
-	struct resource resource;
-
-	struct d_inode data; /**< Underlying Disk Inode  */
-	dev_t dev;           /**< Underlying Device      */
-	ino_t num;           /**< Inode Number           */
-	int count;           /**< Reference count        */
-};
 
 /**
  * @brief Table of Inodes
