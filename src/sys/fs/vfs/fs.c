@@ -120,16 +120,58 @@ static struct inode *do_creat(
 	int oflag
 )
 {
-	((void) name);
-	((void) mode);
-	((void) oflag);
+	int exists = 0;           /* file already exists   */
+	struct inode *ip;         /* inode                 */
+	struct d_inode *ino_data; /* underlying inode data */
+	struct file *f;           /* created file          */
 
-	curr_proc->errcode = -ENOENT;
+	ino_data = inode_disk_get(ip);
+
+	/* file already exists */
+	if ((ip = inode_name(&fs_root, name)) != NULL) {
+		exists = 1;
+		/* no permitions */
+		if (!(mode & ~(ino_data->i_mode))) {
+			goto error:
+		}
+	}
+
+	/* creates file */
+	else {
+		inode_alloc(&fs_root, mode, ino_data->uid, ino_data->gid);
+		minix_dirent_add(
+				inode_get_dev(ip),
+				fs_root.super->data,
+				fs_root.super->bmap,
+				ino_data,
+				name,
+				inode_get_num(ip)
+		);
+	}
+
+	if ((f = getfile()) == NULL) {
+		return (-ENFILE);
+	}
+
+	f->count = 1;
+
+	/* truncate file */
+	if (exists && (mode & O_TRUNC)) {
+		/* TODO: free all file blocks */
+	}
+
+	return ip;
+error:
+	inode_put(&fs_root, ip);
 	return (NULL);
+
 }
 
 /**
- * @todo TODO: Provide a detailed description for this function.
+ * @brief Opens a file
+ *
+ * @returns Upon successful completion, a inode is
+ * returned. Upon failure, NULL is returned instead.
  */
 static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 {
