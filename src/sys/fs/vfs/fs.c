@@ -113,6 +113,13 @@ static int getfildes(void)
 
 /**
  * @brief: Creates a file
+ *
+ * @param name: name of the file to be created
+ * @param mode: access mode flags
+ * @param oflag: creation flags
+ *
+ * @returns Upon successful completion an inode to the newly created file
+ * is returned. Upon failure, NULL is returned instead
  */
 static struct inode *do_creat(
 	const char *name,

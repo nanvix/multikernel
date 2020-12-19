@@ -135,6 +135,19 @@ static void test_api_nanvix_vfs_read_write(void)
 	uassert(nanvix_vfs_close(fd) == 0);
 }
 
+/**
+ * @brief API Test: Create a file
+ */
+static void test_api_nanvix_vfs_creat(void)
+{
+	int fd;
+	const char *filename = "new_file";
+
+	uassert((fd = nanvix_vfs_open(filename, O_CREAT)) >= 0);
+
+	uassert(nanvix_vfs_close(fd) == 0);
+}
+
 /*============================================================================*
  * API Tests                                                                  *
  *============================================================================*/
@@ -147,6 +160,7 @@ struct test tests_vfs_api[] = {
 	{ test_api_nanvix_vfs_seek,       "[vfs][api] seek      " },
 	{ test_api_nanvix_vfs_read_write, "[vfs][api] read/write" },
 	{ test_api_nanvix_stat,           "[vfs][api] stat      " },
+	{ test_api_nanvix_vfs_creat,      "[vfs][api] creat     " },
 	{ NULL,                            NULL                   },
 };
 
