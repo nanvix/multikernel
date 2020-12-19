@@ -112,7 +112,7 @@ static int getfildes(void)
  *============================================================================*/
 
 /**
- * @todo TODO: provide a detailed description for this function.
+ * @brief: Creates a file
  */
 static struct inode *do_creat(
 	const char *name,
@@ -125,23 +125,24 @@ static struct inode *do_creat(
 	struct d_inode *ino_data; /* underlying inode data */
 	struct file *f;           /* created file          */
 
-	ino_data = inode_disk_get(ip);
 
 	/* file already exists */
 	if ((ip = inode_name(&fs_root, name)) != NULL) {
 		exists = 1;
 		/* no permitions */
-		if (!(mode & ~(ino_data->i_mode))) {
-			goto error:
+		if (!(mode & ~(inode_disk_get(ip)->i_mode))) {
+			goto error;
 		}
 	}
 
 	/* creates file */
 	else {
-		inode_alloc(&fs_root, mode, ino_data->uid, ino_data->gid);
+		ino_data = inode_disk_get(ip);
+
+		inode_alloc(&fs_root, mode, ino_data->i_uid, ino_data->i_gid);
 		minix_dirent_add(
 				inode_get_dev(ip),
-				fs_root.super->data,
+				&fs_root.super->data,
 				fs_root.super->bmap,
 				ino_data,
 				name,
@@ -150,13 +151,14 @@ static struct inode *do_creat(
 	}
 
 	if ((f = getfile()) == NULL) {
-		return (-ENFILE);
+		// -ENFILE
+		return (NULL);
 	}
 
 	f->count = 1;
 
-	/* truncate file */
-	if (exists && (mode & O_TRUNC)) {
+	/* file already existed, truncate it */
+	if (exists && (oflag & O_TRUNC)) {
 		/* TODO: free all file blocks */
 	}
 
@@ -231,7 +233,6 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	struct buffer *buf_data;    /* block buffer                 */
 	struct buffer *buf_data_di; /* block buffer double indirect */
 	struct d_inode *ino_data;   /* inode data                   */
-	block_t *zone;
 	int nr_zones = 0;           /* Total number of zones        */
 
 	/* Invalid filename. */
