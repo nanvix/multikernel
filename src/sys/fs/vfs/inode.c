@@ -111,6 +111,26 @@ ino_t inode_get_num(const struct inode *ip)
 }
 
 /*============================================================================*
+ * inode_get_count()                                                          *
+ *============================================================================*/
+
+/**
+ * The inode_get_count() function gets the inode count of the inode pointed to
+ * by @p ip.
+ */
+int inode_get_count(const struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (MINIX_INODE_NULL);
+	}
+
+	return (ip->count);
+}
+
+/*============================================================================*
  * inode_get_dev()                                                            *
  *============================================================================*/
 
@@ -269,7 +289,7 @@ static int inode_free(struct filesystem *fs, struct inode *ip)
 	/* Bad inode. */
 	if (ip->count == 0)
 		return (curr_proc->errcode = -EBUSY);
-	
+
 	/* Release inode. */
 	if (ip->count-- == 1)
 	{

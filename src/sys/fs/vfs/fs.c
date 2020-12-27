@@ -27,14 +27,14 @@
 
 #include <nanvix/config.h>
 #include <nanvix/servers/vfs.h>
+#include <nanvix/servers/vfs/bcache.h>
+#include <nanvix/servers/vfs/inode.h>
 #include <nanvix/dev.h>
 #include <nanvix/limits.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
-#include "inode.c"
-#include "bcache/bcache.c"
 
 /**
  * Root file system.
@@ -108,6 +108,81 @@ static int getfildes(void)
 }
 
 /*============================================================================*
+ * fs_truncate()                                                                  *
+ *============================================================================*/
+
+/**
+ * @brief This function trucates the inode @p ip
+ * that exists under the filesystem @p fs
+ *
+ * @param fs: filesystem
+ * @param ip: inode to be truncated
+ *
+ * @author Lucca Augusto
+ */
+void do_trucate(struct filesystem *fs, struct inode *ip)
+{
+	struct d_inode *ino_data;     /* underlying d_inode */
+
+	ino_data = inode_disk_get(ip);
+
+	/* TODO: update timestamps */
+
+	/* Free direct zone. */
+	for (int j = 0; j < MINIX_NR_ZONES_DIRECT; j++)
+	{
+		minix_block_free_direct(&(fs->super->data), fs->super->bmap, j);
+		ino_data->i_zones[j] = MINIX_BLOCK_NULL;
+	}
+
+	/* Free singly indirect zones. */
+	for (int j = 0; j < MINIX_NR_ZONES_SINGLE; j++)
+	{
+		minix_block_free_indirect(&(fs->super->data), fs->super->bmap, j);
+		ino_data->i_zones[MINIX_ZONE_SINGLE + j] = MINIX_BLOCK_NULL;
+	}
+
+	/* Free double indirect zones. */
+	for (int j = 0; j < MINIX_NR_ZONES_DOUBLE; j++)
+	{
+		minix_block_free_dindirect(&(fs->super->data), fs->super->bmap, j);
+		ino_data->i_zones[MINIX_ZONE_DOUBLE + j] = MINIX_BLOCK_NULL;
+	}
+
+	ino_data->i_size = 0;
+	inode_touch(ip);
+}
+
+
+/**
+ * @brief See do_trucate
+ */
+int fs_trucate(struct filesystem *fs, struct inode *ip)
+{
+
+	/* Invalid file system */
+	if (fs == NULL)
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Invalid inode. */
+	if (ip == NULL)
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (fs->dev != inode_get_dev(ip))
+		return (curr_proc->errcode = -EINVAL);
+
+	/* Bad inode. */
+	if (inode_get_count(ip) == 0)
+		return (curr_proc->errcode = -EINVAL);
+
+	/* truncate inode. */
+	do_trucate(fs, ip);
+
+	return (0);
+}
+
+/*============================================================================*
  * fs_open()                                                                  *
  *============================================================================*/
 
@@ -136,8 +211,9 @@ static struct inode *do_creat(
 	/* file already exists */
 	if ((ip = inode_name(&fs_root, name)) != NULL) {
 		exists = 1;
-		/* no permitions */
-		if (!(mode & ~(inode_disk_get(ip)->i_mode))) {
+		/* no write permitions */
+		if (!(mode & (ino_data->imode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
+			curr_proc->errcode = -(EACCES);
 			goto error;
 		}
 	}
@@ -146,10 +222,16 @@ static struct inode *do_creat(
 	else {
 		ino_data = inode_disk_get(ip);
 
+		/* no write permissions to the directory */
+		if (!(mode & (ino_data->imode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
+			curr_proc->errcode = -(EACCES);
+			goto error;
+		}
+
 		inode_alloc(&fs_root, mode, ino_data->i_uid, ino_data->i_gid);
 		minix_dirent_add(
 				inode_get_dev(ip),
-				&fs_root.super->data,
+				&(fs_root.super->data),
 				fs_root.super->bmap,
 				ino_data,
 				name,
@@ -158,16 +240,15 @@ static struct inode *do_creat(
 	}
 
 	if ((f = getfile()) == NULL) {
-		// -ENFILE
+		curr_proc->errcode = -(ENFILE);
 		return (NULL);
 	}
 
 	f->count = 1;
 
 	/* file already existed, truncate it */
-	if (exists && (oflag & O_TRUNC)) {
-		/* TODO: free all file blocks */
-	}
+	if (exists && (oflag & O_TRUNC))
+		uassert(fs_trucate(&fs_root, ip) == 0);
 
 	return ip;
 error:
@@ -237,8 +318,8 @@ error:
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;
-	struct buffer *buf_data;    /* block buffer                 */
-	struct buffer *buf_data_di; /* block buffer double indirect */
+	//struct buffer *buf_data;    /* block buffer                 */
+	//struct buffer *buf_data_di; /* block buffer double indirect */
 	struct d_inode *ino_data;   /* inode data                   */
 	int nr_zones = 0;           /* Total number of zones        */
 
@@ -283,69 +364,69 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/* file stats */
 	/*TODO Update time related fields first */
 
-	/* Count number of blocks */
-	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
-		if (i == MINIX_ZONE_DOUBLE) {
-			/* counting double indirect zones */
+	///* Count number of blocks */
+	//for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
+	//	if (i == MINIX_ZONE_DOUBLE) {
+	//		/* counting double indirect zones */
 
-			buf_data = bread(ip->dev,ino_data->i_zones[i]);
+	//		buf_data = bread(ip->dev,ino_data->i_zones[i]);
 
-			/* count zones if block is not null */
-			if (buf_data->data[i] != MINIX_BLOCK_NULL) {
+	//		/* count zones if block is not null */
+	//		if (buf_data->data[i] != MINIX_BLOCK_NULL) {
 
-				/* traverse first indirect zone */
-				for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
+	//			/* traverse first indirect zone */
+	//			for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
 
-					buf_data_di = bread(ip->dev,buf_data->data[j]);
-					/* count number of zones inside each indirect zone */
-					/* traverse second indirect zone */
-					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
+	//				buf_data_di = bread(ip->dev,buf_data->data[j]);
+	//				/* count number of zones inside each indirect zone */
+	//				/* traverse second indirect zone */
+	//				for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
 
-						if (buf_data_di->data[k] != MINIX_BLOCK_NULL) {
+	//					if (buf_data_di->data[k] != MINIX_BLOCK_NULL) {
 
-							++nr_zones;
+	//						++nr_zones;
 
-						} else {
-							/* quit all loops */
-							i = MINIX_NR_ZONES;
-							j = MINIX_NR_DOUBLE;
-							break;
-						}
-					}
-				}
+	//					} else {
+	//						/* quit all loops */
+	//						i = MINIX_NR_ZONES;
+	//						j = MINIX_NR_DOUBLE;
+	//						break;
+	//					}
+	//				}
+	//			}
 
-			}
+	//		}
 
-		} else if (i == MINIX_ZONE_SINGLE) {
-			/* counting single indirect zones */
+	//	} else if (i == MINIX_ZONE_SINGLE) {
+	//		/* counting single indirect zones */
 
-			/* count zones if block is not null */
-			if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
+	//		/* count zones if block is not null */
+	//		if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
 
-				buf_data = bread(ip->dev,ino_data->i_zones[i]);
+	//			buf_data = bread(ip->dev,ino_data->i_zones[i]);
 
-				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
-					if (buf_data->data[j] != MINIX_BLOCK_NULL) {
-						++nr_zones;
-					} else {
-						/* quit both loops */
-						i = MINIX_NR_ZONES;
-						break;
-					}
-				}
-			}
-		} else if (ino_data->i_zones[i] != MINIX_BLOCK_NULL ) {
-			/* counting direct zones */
-			++nr_zones;
-		} else {
-			/* found MINIX_BLOCK_NULL so last zone was counted */
-			break;
-		}
-	}
+	//			for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
+	//				if (buf_data->data[j] != MINIX_BLOCK_NULL) {
+	//					++nr_zones;
+	//				} else {
+	//					/* quit both loops */
+	//					i = MINIX_NR_ZONES;
+	//					break;
+	//				}
+	//			}
+	//		}
+	//	} else if (ino_data->i_zones[i] != MINIX_BLOCK_NULL ) {
+	//		/* counting direct zones */
+	//		++nr_zones;
+	//	} else {
+	//		/* found MINIX_BLOCK_NULL so last zone was counted */
+	//		break;
+	//	}
+	//}
 
 	/* write stats in buf */
-	buf->st_dev = ip->dev;
-	buf->st_ino = ip->num;
+	buf->st_dev = inode_get_dev(ip);
+	buf->st_ino = inode_get_num(ip);
 	buf->st_mode = inode_disk_get(ip)->i_mode;
 	buf->st_nlink = inode_disk_get(ip)->i_nlinks;
 	buf->st_uid = inode_disk_get(ip)->i_uid;
