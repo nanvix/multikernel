@@ -212,7 +212,7 @@ static struct inode *do_creat(
 	if ((ip = inode_name(&fs_root, name)) != NULL) {
 		exists = 1;
 		/* no write permitions */
-		if (!(mode & (ino_data->imode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
+		if (!(mode & (inode_disk_get(ip)->i_mode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
 			curr_proc->errcode = -(EACCES);
 			goto error;
 		}
@@ -223,7 +223,7 @@ static struct inode *do_creat(
 		ino_data = inode_disk_get(ip);
 
 		/* no write permissions to the directory */
-		if (!(mode & (ino_data->imode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
+		if (!(mode & (ino_data->i_mode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
 			curr_proc->errcode = -(EACCES);
 			goto error;
 		}
