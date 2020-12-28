@@ -207,6 +207,11 @@ static struct inode *do_creat(
 	struct d_inode *ino_data; /* underlying inode data */
 	struct file *f;           /* created file          */
 
+	/* not asked to create file */
+	if (!(oflag & O_CREAT)) {
+		curr_proc->errcode = -(EACCES);
+		return (NULL);
+	}
 
 	/* file already exists */
 	if ((ip = inode_name(&fs_root, name)) != NULL) {
@@ -241,14 +246,16 @@ static struct inode *do_creat(
 
 	if ((f = getfile()) == NULL) {
 		curr_proc->errcode = -(ENFILE);
-		return (NULL);
+		goto error;
 	}
 
 	f->count = 1;
 
 	/* file already existed, truncate it */
-	if (exists && (oflag & O_TRUNC))
-		uassert(fs_trucate(&fs_root, ip) == 0);
+	if (exists && (oflag & O_TRUNC)) {
+		if (fs_trucate(&fs_root, ip) != 0)
+			goto error;
+	}
 
 	return ip;
 error:

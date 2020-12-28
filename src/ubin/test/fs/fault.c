@@ -91,6 +91,24 @@ static void test_fault_nanvix_vfs_open_bad(void)
 	uassert(nanvix_vfs_open(filename, O_WRONLY) == -ENOENT);
 }
 
+/**
+ * @brief Fault Injection Test: Invalid Creat
+ */
+static void test_fault_nanvix_vfs_creat_invalid(void)
+{
+	const char *newfilename = "new_file";
+	uassert(nanvix_vfs_open(newfilename, (O_CREAT | O_RDONLY)) == -EACCES);
+}
+
+/**
+ * @brief Fault Injection Test: Bad Creat
+ */
+static void test_fault_nanvix_vfs_creat_bad(void)
+{
+	const char *newfilename = "new_file";
+	uassert(nanvix_vfs_open(newfilename, O_WRONLY) == -EACCES);
+}
+
 /*============================================================================*
  * Close                                                                      *
  *============================================================================*/
@@ -232,6 +250,8 @@ static void test_fault_nanvix_vfs_write_bad(void)
 struct test tests_vfs_fault[] = {
 	{ test_fault_nanvix_vfs_open_invalid,  "[vfs][fault] invalid open  " },
 	{ test_fault_nanvix_vfs_open_bad,      "[vfs][fault] bad open      " },
+	{ test_fault_nanvix_vfs_creat_invalid, "[vfs][fault] invalid creat " },
+	{ test_fault_nanvix_vfs_creat_bad,     "[vfs][fault] bad creat     " },
 	{ test_fault_nanvix_vfs_close_invalid, "[vfs][fault] invalid close " },
 	{ test_fault_nanvix_vfs_close_bad,     "[vfs][fault] bad close     " },
 	{ test_fault_nanvix_vfs_seek_invalid,  "[vfs][fault] invalid seek  " },
