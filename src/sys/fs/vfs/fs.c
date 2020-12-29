@@ -203,13 +203,14 @@ static struct inode *do_creat(
 )
 {
 	int exists = 0;           /* file already exists   */
-	struct inode *ip;         /* inode                 */
-	struct d_inode *ino_data; /* underlying inode data */
 	struct file *f;           /* created file          */
+	struct inode *ip;         /* inode                 */
+	struct inode *curr_dir;   /* current directory     */
+	struct d_inode *ino_data; /* underlying inode data */
 
 	/* not asked to create file */
 	if (!(oflag & O_CREAT)) {
-		curr_proc->errcode = -(EACCES);
+		curr_proc->errcode = -(ENOENT);
 		return (NULL);
 	}
 
@@ -224,25 +225,27 @@ static struct inode *do_creat(
 	}
 
 	/* creates file */
-	else {
-		ino_data = inode_disk_get(ip);
 
-		/* no write permissions to the directory */
-		if (!(mode & (ino_data->i_mode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
-			curr_proc->errcode = -(EACCES);
-			goto error;
-		}
+	/* TODO: find current directory */
+	curr_dir = fs_root.root;
 
-		inode_alloc(&fs_root, mode, ino_data->i_uid, ino_data->i_gid);
-		minix_dirent_add(
-				inode_get_dev(ip),
-				&(fs_root.super->data),
-				fs_root.super->bmap,
-				ino_data,
-				name,
-				inode_get_num(ip)
-		);
+	/* no write permissions to the directory */
+	if (!(mode & (inode_disk_get(curr_dir)->i_mode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
+		curr_proc->errcode = -(EACCES);
+		return (NULL);
 	}
+
+	ino_data = inode_disk_get(ip);
+
+	inode_alloc(&fs_root, mode, ino_data->i_uid, ino_data->i_gid);
+	minix_dirent_add(
+			inode_get_dev(ip),
+			&(fs_root.super->data),
+			fs_root.super->bmap,
+			ino_data,
+			name,
+			inode_get_num(ip)
+			);
 
 	if ((f = getfile()) == NULL) {
 		curr_proc->errcode = -(ENFILE);

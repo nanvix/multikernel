@@ -98,6 +98,8 @@ static void test_fault_nanvix_vfs_creat_invalid(void)
 {
 	const char *newfilename = "new_file";
 	uassert(nanvix_vfs_open(newfilename, (O_CREAT | O_RDONLY)) == -EACCES);
+	uassert(nanvix_vfs_open(newfilename, (O_CREAT | 8)) == -EACCES);
+	uassert(nanvix_vfs_open(newfilename, (O_CREAT)) == -EACCES);
 }
 
 /**
@@ -106,7 +108,8 @@ static void test_fault_nanvix_vfs_creat_invalid(void)
 static void test_fault_nanvix_vfs_creat_bad(void)
 {
 	const char *newfilename = "new_file";
-	uassert(nanvix_vfs_open(newfilename, O_WRONLY) == -EACCES);
+	uassert(nanvix_vfs_open(newfilename, -O_CREAT) == -EACCES);
+	uassert(nanvix_vfs_open(newfilename, 0) == -ENOENT);
 }
 
 /*============================================================================*
