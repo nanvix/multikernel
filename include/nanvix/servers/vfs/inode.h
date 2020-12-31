@@ -44,6 +44,12 @@
 	int inode_get_count(const struct inode *ip);
 
 	/**
+	* The inode_set_count() function sets the inode count of the inode pointed to
+	* by @p ip to the value of @p c.
+	*/
+	int inode_set_count(struct inode *ip, const int c);
+
+	/**
 	 * The inode_get_num() function gets the number of the inode pointed to
 	 * by @p ip.
 	 */

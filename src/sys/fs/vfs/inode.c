@@ -131,6 +131,28 @@ int inode_get_count(const struct inode *ip)
 }
 
 /*============================================================================*
+ * inode_set_count()                                                          *
+ *============================================================================*/
+
+/**
+ * The inode_set_count() function sets the inode count of the inode pointed to
+ * by @p ip to the value of @p c.
+ */
+int inode_set_count(struct inode *ip, const int c)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (MINIX_INODE_NULL);
+	}
+
+	ip->count = c;
+
+	return (0);
+}
+
+/*============================================================================*
  * inode_get_dev()                                                            *
  *============================================================================*/
 
