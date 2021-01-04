@@ -102,6 +102,14 @@
 			} close;
 
 			/**
+			 * @brief Unlink
+			 */
+			struct
+			{
+				char *filename; /**< File path */
+			} unlink;
+
+			/**
 			 * @brief Seek
 			 */
 			struct

@@ -117,6 +117,15 @@
 	extern int fs_close(int fd);
 
 	/**
+ 	 * @brief Unlink a file from it's directory
+ 	 *
+ 	 * @param filename: path of the file to be unlinked
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+ 	 */
+	extern int fs_unlink(const char *filename);
+
+	/**
 	 * @brief Reads data from a file.
 	 *
 	 * @param fd  Target file descriptor.
