@@ -581,6 +581,28 @@ int fs_close(int fd)
 }
 
 /*============================================================================*
+ * fs_unlink()                                                                *
+ *============================================================================*/
+
+/**
+ * @brief Unlink a file from it's directory
+ *
+ * @param filename: path of the file to be unlinked
+ */
+int fs_unlink(const char *filename)
+{
+	struct inode *ip;       /* file inode */
+
+	if (filename == NULL)
+		return (-EINVAL);
+
+	if ((ip = inode_name(&fs_root, filename)) == NULL)
+		return (-EBADF);
+
+	return (0);
+}
+
+/*============================================================================*
  * fs_read()                                                                  *
  *============================================================================*/
 

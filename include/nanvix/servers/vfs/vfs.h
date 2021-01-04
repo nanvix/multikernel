@@ -88,6 +88,17 @@
 	extern int vfs_close(int connection, int fd);
 
 	/**
+ 	 * @brief Unlink a file from it's directory
+ 	 *
+	 * @param connection Target connection.
+ 	 * @param filename: path of the file to be unlinked
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+ 	 */
+	extern int vfs_unlink(int connection, const char *filename);
+
+	/**
 	 * @brief Repositions the read/write pointer of a file.
 	 *
 	 * @param connection Target connection.

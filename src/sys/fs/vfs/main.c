@@ -186,6 +186,43 @@ static int do_vfs_server_close(const struct vfs_message *request)
 }
 
 /*============================================================================*
+ * do_vfs_server_unlink()                                                     *
+ *============================================================================*/
+
+/**
+ * @brief Handles a unlink request.
+ *
+ * @param request Target request.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure,
+ * a negative error code is returned instead.
+ *
+ * @author Lucca Augusto
+ */
+static int do_vfs_server_unlink(const struct vfs_message *request)
+{
+	int ret;
+	const int port = request->header.mailbox_port;
+	const nanvix_pid_t pid = request->header.source;
+	const int connection = lookup(pid, port);
+
+	/* XXX: forwarding parameter checking to lower level function. */
+
+	ret = vfs_unlink(
+		connection,
+		request->op.unlink.filename
+	);
+
+	/* Operation failed. */
+	if (ret < 0)
+		return (ret);
+
+	disconnect(pid, port);
+
+	return (0);
+}
+
+/*============================================================================*
  * do_vfs_server_seek()                                                       *
  *============================================================================*/
 
@@ -444,6 +481,7 @@ static int do_vfs_server_loop(void)
 				break;
 
 			case VFS_UNLINK:
+				ret = do_vfs_server_unlink(&request);
 				reply = 1;
 				break;
 
