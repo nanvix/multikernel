@@ -725,8 +725,7 @@ int fs_unlink(const char *filename)
 
 	/* get file inode */
 	if ((fip = inode_name(&fs_root, filename)) == NULL) {
-		ret = (-ENOENT);
-		goto error;
+		return (-ENOENT);
 	}
 
 	/* unlinking current directory */
