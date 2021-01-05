@@ -591,15 +591,66 @@ int fs_close(int fd)
  */
 int fs_unlink(const char *filename)
 {
-	struct inode *ip;       /* file inode */
+	int ret;                /* return value           */
+	struct inode *fip;      /* file inode             */
+	struct inode *dip;      /* parent directory inode */
 
 	if (filename == NULL)
 		return (-EINVAL);
 
-	if ((ip = inode_name(&fs_root, filename)) == NULL)
+	/*TODO get parent directory inode */
+	dip = fs_root.root;
+
+	/* get file inode */
+	if ((fip = inode_name(&fs_root, filename)) == NULL) {
+		inode_put(&fs_root, dip);
 		return (-EBADF);
+	}
+
+	/* unlinking current directory */
+	if (inode_get_num(fip) == inode_get_num(curr_proc->pwd)) {
+		/* TODO */
+	}
+
+	/* unlink directory */
+	if (S_ISDIR(inode_disk_get(fip)->i_mode)) {
+
+		/* TODO check if not super user */
+		if (0) {
+			ret = (-EACCES);
+			goto error;
+		}
+
+		/* not empty */
+		if (inode_disk_get(fip)->i_size > 0) {
+			ret =  (-EBUSY);
+			goto error;
+		}
+	}
+
+
+	/* remove from region table */
+	if (inode_get_count(fip) == 1)
+		minix_dirent_remove(fs_root.dev, &(fs_root.super->data), fs_root.super->bmap, inode_disk_get(dip), filename);
+
+	/* decrease directory size */
+	inode_disk_get(dip)->i_size--;
+	inode_touch(dip);
+
+	/* zero inode number of unlinked file */
+	inode_zero_num(fip);
+	/* decrement file link count */
+	inode_decrease_count(fip);
+	inode_touch(fip);
+	inode_put(&fs_root, fip);
 
 	return (0);
+
+error:
+	inode_put(&fs_root, fip);
+	inode_put(&fs_root, dip);
+
+	return ret;
 }
 
 /*============================================================================*

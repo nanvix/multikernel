@@ -110,6 +110,34 @@ ino_t inode_get_num(const struct inode *ip)
 	return (ip->num);
 }
 
+
+/*============================================================================*
+ * inode_zero_num()                                                           *
+ *============================================================================*/
+
+/**
+ * The inode_zero_num() function zeroes the number of the inode pointed to
+ * by @p ip.
+ */
+void inode_zero_num(struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return;
+	}
+
+	/* Bad inode. */
+	if (ip->count == 0)
+	{
+		curr_proc->errcode = -EINVAL;
+		return;
+	}
+
+	ip->num = 0;
+}
+
 /*============================================================================*
  * inode_get_count()                                                          *
  *============================================================================*/
@@ -148,6 +176,42 @@ int inode_set_count(struct inode *ip, const int c)
 	}
 
 	ip->count = c;
+
+	return (0);
+}
+
+/**
+ * The inode_increase_count() function increases the inode count of the inode pointed to
+ * by @p ip by 1
+ */
+int inode_increase_count(struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (MINIX_INODE_NULL);
+	}
+
+	ip->count++;
+
+	return (0);
+}
+
+/**
+ * The inode_decrease_count() function decreases the inode count of the inode pointed to
+ * by @p ip by 1
+ */
+int inode_decrease_count(struct inode *ip)
+{
+	/* Invalid inode. */
+	if (ip == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return (MINIX_INODE_NULL);
+	}
+
+	ip->count--;
 
 	return (0);
 }

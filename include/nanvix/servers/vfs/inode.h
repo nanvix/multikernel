@@ -50,10 +50,28 @@
 	int inode_set_count(struct inode *ip, const int c);
 
 	/**
+ 	 * The inode_increase_count() function increases the inode count of the inode pointed to
+ 	 * by @p ip by 1
+ 	 */
+	int inode_increase_count(struct inode *ip);
+
+	/**
+ 	 * The inode_decrease_count() function decreases the inode count of the  inode pointed to
+ 	 * by @p ip by 1
+ 	 */
+	int inode_decrease_count(struct inode *ip);
+
+	/**
 	 * The inode_get_num() function gets the number of the inode pointed to
 	 * by @p ip.
 	 */
 	ino_t inode_get_num(const struct inode *ip);
+
+	/**
+	 * The inode_zero_num() function zeroes the number of the inode pointed to
+	 * by @p ip.
+	 */
+	void inode_zero_num(const struct inode *ip);
 
 	/**
 	 * The inode_get_dev() function gets the device number of the inode
