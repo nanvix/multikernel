@@ -60,6 +60,7 @@ include/nanvix/kernel/
 # Nanvix Library
 include/nanvix/runtime/barrier.h
 include/nanvix/runtime/stdikc.h
+include/nanvix/runtime/fence.h
 include/nanvix/sys/
 
 # C Library
