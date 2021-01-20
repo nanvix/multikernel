@@ -615,8 +615,8 @@ int fs_unlink(const char *filename)
 	/* unlink directory */
 	if (S_ISDIR(inode_disk_get(fip)->i_mode)) {
 
-		/* TODO check if not super user */
-		if (0) {
+		/* TODO use real uid of process owner */
+		if (!IS_SUPERUSER(1)) {
 			ret = (-EACCES);
 			goto error;
 		}
@@ -627,7 +627,6 @@ int fs_unlink(const char *filename)
 			goto error;
 		}
 	}
-
 
 	/* remove from region table */
 	if (inode_get_count(fip) == 1)
