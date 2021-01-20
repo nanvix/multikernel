@@ -87,6 +87,16 @@
 	extern int nanvix_vfs_close(int fd);
 
 	/**
+	 * @brief Unlinks a file.
+	 *
+	 * @param filename Target filename
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int nanvix_vfs_unlink(char *filename);
+
+	/**
 	 * @brief Repositions the read/write pointer of a file.
 	 *
 	 * @param fd     Target file descriptor.

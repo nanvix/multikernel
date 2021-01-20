@@ -85,7 +85,7 @@ static int do_nanvix_stat(const char *filename,struct nanvix_stat *restrict buf)
 		return (msg.op.ret.status);
 
 	return (msg.op.ret.fd);
-	
+
 }
 
 /**
@@ -240,6 +240,66 @@ int nanvix_vfs_close(int fd)
 		return (-EINVAL);
 
 	return (do_nanvix_vfs_close(fd));
+}
+
+/*============================================================================*
+ * nanvix_vfs_unlink()                                                        *
+ *============================================================================*/
+
+/**
+ * The do_nanvix_vfs_unlink() function unlinks the file referred by the
+ * file name @p filename.
+ *
+ * @author Lucca Augusto
+ */
+static int do_nanvix_vfs_unlink(char *filename)
+{
+	struct vfs_message msg;
+
+	/* Build message.*/
+	message_header_build(&msg.header, VFS_UNLINK);
+	msg.op.unlink.filename = filename;
+
+	/* Send operation. */
+	uassert(
+		nanvix_mailbox_write(
+			server.outbox,
+			&msg, sizeof(struct vfs_message)
+		) == 0
+	);
+
+	/* Receive reply. */
+	uassert(
+		kmailbox_read(
+			stdinbox_get(),
+			&msg,
+			sizeof(struct vfs_message)
+		) == sizeof(struct vfs_message)
+	);
+
+	/* Operation failed. */
+	if (msg.header.opcode == VFS_FAIL)
+		return (msg.op.ret.status);
+
+	return (0);
+}
+
+/**
+ * @see do_nanvix_vfs_unlink().
+ *
+ * @author Lucca Augusto
+ */
+int nanvix_vfs_unlink(char *filename)
+{
+	/* Invalid server ID. */
+	if (!server.initialized)
+		return (-EAGAIN);
+
+	/* Invalid file name. */
+	if (filename == NULL)
+		return (-EINVAL);
+
+	return (do_nanvix_vfs_unlink(filename));
 }
 
 /*============================================================================*

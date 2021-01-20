@@ -603,13 +603,14 @@ int fs_unlink(const char *filename)
 
 	/* get file inode */
 	if ((fip = inode_name(&fs_root, filename)) == NULL) {
-		inode_put(&fs_root, dip);
-		return (-EBADF);
+		ret = (-ENOENT);
+		goto error;
 	}
 
 	/* unlinking current directory */
 	if (inode_get_num(fip) == inode_get_num(curr_proc->pwd)) {
-		/* TODO */
+		ret = (-EINVAL);
+		goto error;
 	}
 
 	/* unlink directory */
