@@ -45,6 +45,11 @@
 	 */
 	#define NANVIX_ROOT_GID 0
 
+	/**
+	 * @brief Port number of Name Resolution Snooper
+	 */
+	#define NANVIX_NAME_SNOOPER_PORT_NUM 2
+
 /*============================================================================*
  * Virtual File System                                                        *
  *============================================================================*/
@@ -84,6 +89,6 @@
 	/**
 	 * @brief Port number of Page Cache Snooper
 	 */
-	#define NANVIX_SHM_SNOOPER_PORT_NUM 2
+	#define NANVIX_SHM_SNOOPER_PORT_NUM 3
 
 #endif /* NANVIX_CONFIG_H_ */

@@ -84,6 +84,49 @@
 	extern int nanvix_name_unlink(const char *name);
 
 	/**
+	 * @brief Links a process name and registers it in the local resolution table.
+	 *
+	 * @param nodenum NoC node ID of the process to link.
+	 * @param name   Name of the process to link.
+	 *
+	 * @returns Upon successful completion 0 is returned.
+	 * Upon failure, a negative error code is returned instead.
+	 *
+	 * @note This function also calls nanvix_name_link to assure that @p name
+	 * exists in the remote name server and is visible for the other nodes.
+	 * The name_link routine is called assuming that @p name corresponds to a
+	 * locally present process, passing the local node number as one of the
+	 * arguments.
+	 */
+	extern int nanvix_name_register(int port_nr, const char *name);
+
+	/**
+	 * @brief Converts a name into its logical address inside the system.
+	 *
+	 * @param name Target name.
+	 * @param port Returned port holder.
+	 *
+	 * @returns Upon successful completion the NoC node ID whose name is @p
+	 * name is returned with @p port containing the port number of the default
+	 * inbox associated. Upon failure, a negative error code is returned
+	 * instead.
+	 */
+	extern int nanvix_name_address_lookup(const char *name, int *port);
+
+	/**
+	 * @brief Unlink a process name.
+	 *
+	 * @param name Name of the process to unlink.
+	 *
+	 * @returns Upon successful completion zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 *
+	 * @note This function also calls nanvix_name_unlink to remove @p name
+	 * from the translation table of the remote server.
+	 */
+	extern int nanvix_name_unregister(const char *name);
+
+	/**
 	 * @brief Updates the timestamp of a process.
 	 *
 	 * @returns Upons successful completion, zero is returned. Upon

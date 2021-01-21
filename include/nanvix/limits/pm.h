@@ -43,6 +43,11 @@
 	#define NANVIX_PNAME_MAX 256
 
 	/**
+	 * @brief Maximun number of names locally stored.
+	 */
+	#define NANVIX_LOCAL_PNAME_MAX 16
+
+	/**
 	 * @name Limits on Naming Service
 	 */
 	/**@{*/
