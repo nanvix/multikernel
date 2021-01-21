@@ -298,6 +298,7 @@ int nanvix_name_heartbeat(void)
 PUBLIC int nanvix_name_address_lookup(const char *name, int *port)
 {
 	int ret; /* Function return and remote_node during routine execution. */
+	int nodenum;
 	int outbox;
 	struct name_message msg;
 
@@ -317,10 +318,14 @@ PUBLIC int nanvix_name_address_lookup(const char *name, int *port)
 	if ((ret = nanvix_name_lookup(name)) < 0)
 		return (ret);
 
+	nodenum = ret;
+
 	/* @p name is a local process. */
-	if (ret == knode_get_num())
+	if (nodenum == knode_get_num())
 	{
-		*port = _local_address_lookup(name);
+		if ((*port = _local_address_lookup(name)) < 0)
+			ret = (-ENOENT);
+
 		return (ret);
 	}
 
@@ -334,7 +339,7 @@ PUBLIC int nanvix_name_address_lookup(const char *name, int *port)
 	 */
 
 	/* Opens an outbox to the remote name client. */
-	if ((outbox = kmailbox_open(ret, NANVIX_NAME_SNOOPER_PORT_NUM)) < 0)
+	if ((outbox = kmailbox_open(nodenum, NANVIX_NAME_SNOOPER_PORT_NUM)) < 0)
 		return (outbox);
 
 	/* Build operation header. */
@@ -349,6 +354,7 @@ PUBLIC int nanvix_name_address_lookup(const char *name, int *port)
 
 	/* Retrieves the port number returned by the remote client. */
 	*port = msg.op.ret.nodenum;
+	ret = nodenum;
 
 end:
 	uassert(kmailbox_close(outbox) == 0);
@@ -363,7 +369,7 @@ end:
 /**
  * @todo TODO: provide a long description for this function.
  */
-PUBLIC int nanvix_name_register(int port_nr, const char *name)
+PUBLIC int nanvix_name_register(const char *name, int port_nr)
 {
 	int ret; /* Function return. */
 

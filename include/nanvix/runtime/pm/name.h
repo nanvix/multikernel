@@ -98,7 +98,7 @@
 	 * locally present process, passing the local node number as one of the
 	 * arguments.
 	 */
-	extern int nanvix_name_register(int port_nr, const char *name);
+	extern int nanvix_name_register(const char *name, int port_nr);
 
 	/**
 	 * @brief Converts a name into its logical address inside the system.
