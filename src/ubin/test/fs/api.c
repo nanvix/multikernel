@@ -148,6 +148,18 @@ static void test_api_nanvix_vfs_creat(void)
 	uassert(nanvix_vfs_close(fd) == 0);
 }
 
+/**
+ * @brief API Test: Delete a file
+ */
+static void test_api_nanvix_vfs_unlink(void)
+{
+	char *filename = "new_file";
+
+	uassert((nanvix_vfs_open(filename, O_RDWR | O_CREAT)) >= 0);
+
+	uassert(nanvix_vfs_unlink(filename) == 0);
+}
+
 /*============================================================================*
  * API Tests                                                                  *
  *============================================================================*/
@@ -161,6 +173,7 @@ struct test tests_vfs_api[] = {
 	{ test_api_nanvix_vfs_read_write, "[vfs][api] read/write" },
 	{ test_api_nanvix_stat,           "[vfs][api] stat      " },
 	{ test_api_nanvix_vfs_creat,      "[vfs][api] creat     " },
+	{ test_api_nanvix_vfs_unlink,     "[vfs][api] unlink    " },
 	{ NULL,                            NULL                   },
 };
 

@@ -139,6 +139,28 @@ static void test_fault_nanvix_vfs_close_bad(void)
 }
 
 /*============================================================================*
+ * UNLINK                                                                     *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Invalid Unlink
+ */
+static void test_fault_nanvix_vfs_unlink_invalid(void)
+{
+	uassert(nanvix_vfs_unlink(NULL) == -EINVAL);
+	uassert(nanvix_vfs_unlink("some_file") == -ENOENT);
+}
+
+/**
+ * @brief Fault Injection Test: Bad Unlink
+ */
+static void test_fault_nanvix_vfs_unlink_bad(void)
+{
+	uassert(nanvix_vfs_unlink("") == -ENOENT);
+	uassert(nanvix_vfs_unlink("/") == -EINVAL);
+}
+
+/*============================================================================*
  * Seek                                                                       *
  *============================================================================*/
 
@@ -265,6 +287,8 @@ struct test tests_vfs_fault[] = {
 	{ test_fault_nanvix_vfs_write_bad,     "[vfs][fault] bad write     " },
 	{ test_fault_nanvix_vfs_stat_invalid,  "[vfs][fault] invalid stat  " },
 	{ test_fault_nanvix_vfs_stat_bad,      "[vfs][fault] bad stat      " },
+	{ test_fault_nanvix_vfs_unlink_invalid,"[vfs][fault] invalid unlink" },
+	{ test_fault_nanvix_vfs_unlink_bad,    "[vfs][fault] bad unlink    " },
 	{ NULL,                                 NULL                         },
 };
 
