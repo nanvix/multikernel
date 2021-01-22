@@ -102,6 +102,30 @@ static void test_stress_nanvix_vfs_open_close(void)
 }
 
 /*============================================================================*
+ * Creat/Unlink                                                               *
+ *============================================================================*/
+
+/**
+ * @brief Stress Test: Creat/Unlink a File
+ */
+static void test_stress_nanvix_vfs_creat_unlink(void)
+{
+	char *filename = "stress_file";
+
+	for (int i = 0; i < NANVIX_OPEN_MAX; i++)
+	{
+		uassert(nanvix_vfs_open(filename, (O_WRONLY | O_CREAT)) >= 0);
+		uassert(nanvix_vfs_unlink(filename) == 0);
+	}
+
+	for (int i = 0; i < NANVIX_OPEN_MAX; i++)
+	{
+		uassert(nanvix_vfs_open(filename, (O_RDWR | O_CREAT)) >= 0);
+		uassert(nanvix_vfs_unlink(filename) == 0);
+	}
+}
+
+/*============================================================================*
  * Seek                                                                       *
  *============================================================================*/
 
@@ -167,11 +191,12 @@ static void test_stress_nanvix_vfs_read_write(void)
  * @brief Virtual File System Tests
  */
 struct test tests_vfs_stress[] = {
-	{ test_stress_nanvix_vfs_open_close, "[vfs][stress] open/close" },
-	{ test_stress_nanvix_vfs_seek,       "[vfs][stress] seek      " },
-	{ test_stress_nanvix_vfs_read_write, "[vfs][stress] read/write" },
-	{ test_stress_nanvix_vfs_stat,       "[vfs][stress] stat      " },
-	{ NULL,                                  NULL                   },
+	{ test_stress_nanvix_vfs_open_close,   "[vfs][stress] open/close    " },
+	{ test_stress_nanvix_vfs_seek,         "[vfs][stress] seek          " },
+	{ test_stress_nanvix_vfs_read_write,   "[vfs][stress] read/write    " },
+	{ test_stress_nanvix_vfs_stat,         "[vfs][stress] stat          " },
+	{ test_stress_nanvix_vfs_creat_unlink, "[vfs][stress] creat/unlink  " },
+	{ NULL,                                NULL                           },
 };
 
 #endif
