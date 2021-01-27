@@ -62,6 +62,8 @@ static void test_fault_nanvix_vfs_stat_bad(void)
 	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
 
 	uassert(nanvix_vfs_stat(filename, buffer) == -ENOENT);
+
+	ufree(buffer);
 }
 
 /*============================================================================*

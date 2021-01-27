@@ -27,14 +27,14 @@
 
 #include <nanvix/config.h>
 #include <nanvix/servers/vfs.h>
+#include <nanvix/servers/vfs/bcache.h>
+#include <nanvix/servers/vfs/inode.h>
 #include <nanvix/dev.h>
 #include <nanvix/limits.h>
 #include <posix/sys/types.h>
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
-#include "inode.c"
-#include "bcache/bcache.c"
 
 /**
  * Root file system.
@@ -180,15 +180,116 @@ error:
 	return (NULL);
 }
 
+
 /**
- * @todo TODO: Provide a detailed description for this function.
+ * @brief Counts number of blocks a file occupies
+ *
+ * @param ip File inode
+ */
+int file_block_count(struct inode *ip)
+{
+	int nr_blocks = 0;          /* block count                  */
+	char *buf_data;             /* buffer data                  */
+	char *buf_data_di;          /* buffer data indirect         */
+	struct buffer *blk_buf;     /* block buffer                 */
+	struct buffer *blk_buf_di;  /* block buffer double indirect */
+	struct d_inode *ino_data;   /* inode data                   */
+
+	/* invalid inode */
+	if (ip == NULL) {
+		return -EINVAL;
+	}
+
+	uprintf("ENTORU\n");
+ 	ino_data = inode_disk_get(ip);
+
+	/* Count number of blocks */
+	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
+		uprintf("CHECKING ZONE %d\n", i);
+		if (i == MINIX_ZONE_DOUBLE) {
+			uprintf("DOUBLE INDIRECT\n");
+			/* counting double indirect zones */
+
+			blk_buf = bread(inode_get_dev(ip), ino_data->i_zones[i]);
+			buf_data = buffer_get_data(blk_buf);
+
+			/* traverse first indirect zone */
+			for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
+
+				uprintf("DOUBLE INDIRECT FIRST INDIRECT # %d\n", j);
+				/* count zones if block is not null */
+				if (buf_data[j] != MINIX_BLOCK_NULL) {
+
+					blk_buf_di = bread(inode_get_dev(ip),buf_data[j]);
+					buf_data_di = buffer_get_data(blk_buf_di);
+					/* count number of zones inside each indirect zone */
+
+					/* traverse second indirect zone */
+					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
+						uprintf("DOUBLE INDIRECT SECOND INDIRECT #%d\n", k);
+
+						if (buf_data_di[k] != MINIX_BLOCK_NULL) {
+
+							++nr_blocks;
+
+						} else {
+							/* quit all loops */
+							i = MINIX_NR_ZONES;
+							j = MINIX_NR_DOUBLE;
+							break;
+						}
+					}
+				} else {
+					/* quit all loops */
+					j = MINIX_NR_DOUBLE;
+					break;
+				}
+
+			}
+
+		} else if (i == MINIX_ZONE_SINGLE) {
+			/* counting single indirect zones */
+			uprintf("SINGLE INDIRECT\n");
+
+			/* count zones if block is not null */
+			if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
+
+				blk_buf = bread(inode_get_dev(ip),ino_data->i_zones[i]);
+				buf_data = buffer_get_data(blk_buf);
+
+				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
+					uprintf("SINGLE INDIRECT #%d\n", j);
+					if (buf_data[j] != MINIX_BLOCK_NULL) {
+						++nr_blocks;
+					} else {
+						/* quit both loops */
+						i = MINIX_NR_ZONES;
+						break;
+					}
+				}
+			}
+
+		} else if (ino_data->i_zones[i] != MINIX_BLOCK_NULL ) {
+			/* counting direct zones */
+			++nr_blocks;
+		} else {
+			/* found MINIX_BLOCK_NULL so last zone was counted */
+			break;
+		}
+	}
+
+	return nr_blocks;
+}
+
+/**
+ * @brief Get stats about a file
+ * The do_stat function retrieves information about the file @p filename
+ * and writes it to the stat buffer @p buf.
+ * @returns 0 in case it succeeds, a negative error code instead.
  */
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
-	struct inode *ip;
-	int nr_zones = 0;           /* Total number of zones        */
-	struct buffer *buf_data;    /* block buffer                 */ 
-	struct buffer *buf_data_di; /* block buffer double indirect */ 
+	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
 
 	/* Invalid filename. */
@@ -206,7 +307,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 		goto error;
 	}
 
- 	ino_data = inode_disk_get(ip);
+	ino_data = inode_disk_get(ip);
 
 	/* Block special file. */
 	if (S_ISBLK(ino_data->i_mode))
@@ -232,82 +333,19 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/* file stats */
 	/*TODO Update time related fields first */
 
-	/* Count number of blocks */
-	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
-		if (i == MINIX_ZONE_DOUBLE) {
-			/* counting double indirect zones */
-
-			buf_data = bread(ip->dev,ino_data->i_zones[i]);
-
-			/* count zones if block is not null */
-			if (buf_data->data[i] != MINIX_BLOCK_NULL) {
-
-				/* traverse first indirect zone */
-				for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
-
-					buf_data_di = bread(ip->dev,buf_data->data[j]);
-					/* count number of zones inside each indirect zone */
-					/* traverse second indirect zone */
-					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
-
-						if (buf_data_di->data[k] != MINIX_BLOCK_NULL) {
-
-							++nr_zones;
-
-						} else {
-							/* quit all loops */
-							i = MINIX_NR_ZONES;
-							j = MINIX_NR_DOUBLE;
-							break;
-						}
-					}
-				}
-				
-			}
-
-		} else if (i == MINIX_ZONE_SINGLE) {
-			/* counting single indirect zones */
-
-			/* count zones if block is not null */
-			if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
-
-				buf_data = bread(ip->dev,ino_data->i_zones[i]);
-
-				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
-					if (buf_data->data[j] != MINIX_BLOCK_NULL) {
-						++nr_zones;
-					} else {
-						/* quit both loops */
-						i = MINIX_NR_ZONES;
-						break;
-					}
-				}
-			}
-
-			
-
-		} else if (ino_data->i_zones[i] != MINIX_BLOCK_NULL ) {
-			/* counting direct zones */
-			++nr_zones;
-		} else {
-			/* found MINIX_BLOCK_NULL so last zone was counted */
-			break;
-		}
-	}
-
 	/* write stats in buf */
-	buf->st_dev = ip->dev;
-	buf->st_ino = ip->num;
-	buf->st_mode = inode_disk_get(ip)->i_mode;
-	buf->st_nlink = inode_disk_get(ip)->i_nlinks;
-	buf->st_uid = inode_disk_get(ip)->i_uid;
-	buf->st_gid = inode_disk_get(ip)->i_gid;
+	buf->st_dev = inode_get_dev(ip);
+	buf->st_ino = inode_get_num(ip);
+	buf->st_mode = ino_data->i_mode;
+	buf->st_nlink = ino_data->i_nlinks;
+	buf->st_uid = ino_data->i_uid;
+	buf->st_gid = ino_data->i_gid;
 	buf->st_rdev = 0; /* character or block special */
-	buf->st_size = inode_disk_get(ip)->i_size;
+	buf->st_size = ino_data->i_size;
 	buf->st_blksize = NANVIX_FS_BLOCK_SIZE;
-	buf->st_blocks = nr_zones;
+	buf->st_blocks = file_block_count(ip);
 
-
+	inode_put(&fs_root, ip);
 	return 0;
 
 error:
@@ -316,7 +354,7 @@ error:
 }
 
 /**
- * The fs_stat() function returns information about the file 
+ * The fs_stat() function returns information about the file
  * named @p filename.
  */
 int fs_stat(const char *filename, struct nanvix_stat *restrict buf)

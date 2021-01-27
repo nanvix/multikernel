@@ -75,12 +75,11 @@ static void test_api_nanvix_vfs_open_close(void)
  */
 static void test_api_nanvix_stat(void)
 {
-	int fd;
 	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat));
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_stat(filename,buffer)) >= 0);
-
+	uassert((nanvix_vfs_stat(filename,buffer)) >= 0);
+	ufree(buffer);
 }
 
 /*============================================================================*

@@ -269,7 +269,7 @@ static int inode_free(struct filesystem *fs, struct inode *ip)
 	/* Bad inode. */
 	if (ip->count == 0)
 		return (curr_proc->errcode = -EBUSY);
-	
+
 	/* Release inode. */
 	if (ip->count-- == 1)
 	{
