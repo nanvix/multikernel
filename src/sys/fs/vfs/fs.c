@@ -662,7 +662,9 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 	/* Count number of blocks */
 	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
+		uprintf("CHECKING ZONE %d\n", i);
 		if (i == MINIX_ZONE_DOUBLE) {
+			uprintf("DOUBLE INDIRECT\n");
 			/* counting double indirect zones */
 
 			/* count zones if block is not null */
@@ -675,6 +677,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 					/* count number of zones inside each indirect zone */
 					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
+						uprintf("DOUBLE INDIRECT SECOND INDIRECT #%d\n", k);
 
 						buf_data_dd = bread(ip->dev,buf_data_di->data[k]);
 
@@ -688,17 +691,23 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 							break;
 						}
 					}
+				} else {
+					/* quit all loops */
+					j = MINIX_NR_DOUBLE;
+					break;
 				}
 
 			}
 
 		} else if (i == MINIX_ZONE_SINGLE) {
 			/* counting single indirect zones */
+			uprintf("SINGLE INDIRECT\n");
 
 			/* count zones if block is not null */
 			if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
 
-				buf_data = bread(ip->dev,ino_data->i_zones[i]);
+				blk_buf = bread(inode_get_dev(ip),ino_data->i_zones[i]);
+				buf_data = buffer_get_data(blk_buf);
 
 				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
 					if (buf_data->data[j] != MINIX_BLOCK_NULL) {
@@ -714,12 +723,67 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 		} else if (inode_disk_get(ip)->izones[i] != MINIX_BLOCK_NULL ) {
 			/* counting direct zones */
-			++nr_zones;
+			++nr_blocks;
 		} else {
 			/* found MINIX_BLOCK_NULL so last zone was counted */
 			break;
 		}
 	}
+
+	return nr_blocks;
+}
+
+/**
+ * @brief Get stats about a file
+ * The do_stat function retrieves information about the file @p filename
+ * and writes it to the stat buffer @p buf.
+ * @returns 0 in case it succeeds, a negative error code instead.
+ */
+static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
+{
+	struct inode *ip;           /* file inode                   */
+	struct d_inode *ino_data;   /* inode data                   */
+
+	/* Invalid filename. */
+	if (filename == NULL)
+	{
+		curr_proc->errcode = -EINVAL;
+		return -EINVAL;
+	}
+
+	/* Search file. */
+	if ((ip = inode_name(&fs_root, filename)) == NULL)
+	{
+		/* File doesn't exist*/
+		curr_proc->errcode = -ENOENT;
+		goto error;
+	}
+
+	ino_data = inode_disk_get(ip);
+
+	/* Block special file. */
+	if (S_ISBLK(ino_data->i_mode))
+	{
+		if (bdev_open(ino_data->i_zones[0]) < 0)
+			goto error;
+	}
+
+	/* Regular file. */
+	else if (S_ISREG(ino_data->i_mode))
+	{
+		curr_proc->errcode = -ENOTSUP;
+		goto error;
+	}
+
+	/* Directory. */
+	else if (S_ISDIR(ino_data->i_mode))
+	{
+		curr_proc->errcode = -ENOTSUP;
+		goto error;
+	}
+
+	/* file stats */
+	/*TODO Update time related fields first */
 
 	/* write stats in buf */
 	buf->st_dev = inode_get_dev(ip);
