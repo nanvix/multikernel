@@ -83,6 +83,13 @@
 	extern void fs_shutdown(void);
 
 	/**
+	 * @brief Counts number of blocks a file occupies
+	 *
+	 * @param ip File inode
+	 */
+	extern int file_block_count(struct inode *ip);
+
+	/**
 	 * @brief Gets Stats about a file
 	 *
 	 * @param filename Filename Name of the target file.

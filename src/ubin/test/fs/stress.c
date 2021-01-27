@@ -68,6 +68,7 @@ static void test_stress_nanvix_vfs_stat(void)
 		uassert((fd = nanvix_vfs_stat(filename, buffer)) >= 0);
 	}
 
+	ufree(buffer);
 }
 
 /*============================================================================*
