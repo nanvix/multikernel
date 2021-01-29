@@ -35,6 +35,7 @@
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
+#include <posix/stdlib.h>
 
 /**
  * Root file system.
@@ -434,6 +435,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
+	struct nanvix_stat aux_buf; /* auxiliar buffer              */
 
 	/* Invalid filename. */
 	if (filename == NULL)
@@ -477,16 +479,18 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/*TODO Update time related fields first */
 
 	/* write stats in buf */
-	buf->st_dev = inode_get_dev(ip);
-	buf->st_ino = inode_get_num(ip);
-	buf->st_mode = ino_data->i_mode;
-	buf->st_nlink = ino_data->i_nlinks;
-	buf->st_uid = ino_data->i_uid;
-	buf->st_gid = ino_data->i_gid;
-	buf->st_rdev = 0; /* character or block special */
-	buf->st_size = ino_data->i_size;
-	buf->st_blksize = NANVIX_FS_BLOCK_SIZE;
-	buf->st_blocks = file_block_count(ip);
+	aux_buf.st_dev = inode_get_dev(ip);
+	aux_buf.st_ino = inode_get_num(ip);
+	aux_buf.st_mode = ino_data->i_mode;
+	aux_buf.st_nlink = ino_data->i_nlinks;
+	aux_buf.st_uid = ino_data->i_uid;
+	aux_buf.st_gid = ino_data->i_gid;
+	aux_buf.st_rdev = 0; /* TODO: character or block special */
+	aux_buf.st_size = ino_data->i_size;
+	aux_buf.st_blksize = NANVIX_FS_BLOCK_SIZE;
+	aux_buf.st_blocks = file_block_count(ip);
+
+	umemcpy(buf, &aux_buf, sizeof(struct nanvix_stat));
 
 	inode_put(&fs_root, ip);
 	return 0;
