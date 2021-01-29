@@ -60,15 +60,13 @@ static char data[NANVIX_FS_BLOCK_SIZE];
 static void test_stress_nanvix_vfs_stat(void)
 {
 	int fd;
-	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
+	struct nanvix_stat buffer;
 	const char *filename = "disk";
 
 	for (int i = 0; i < TEST_NITERATIONS; i++)
 	{
-		uassert((fd = nanvix_vfs_stat(filename, buffer)) >= 0);
+		uassert((fd = nanvix_vfs_stat(filename, &buffer)) >= 0);
 	}
-
-	ufree(buffer);
 }
 
 /*============================================================================*
