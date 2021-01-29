@@ -616,6 +616,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
+	struct nanvix_stat aux_buf; /* auxiliar buffer              */
 
 	/* Invalid filename. */
 	if (filename == NULL)
