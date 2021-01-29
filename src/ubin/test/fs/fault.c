@@ -48,9 +48,9 @@ static char data[NANVIX_FS_BLOCK_SIZE];
  */
 static void test_fault_nanvix_vfs_stat_invalid(void)
 {
-	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
+	struct nanvix_stat buffer;
 
-	uassert(nanvix_vfs_stat(NULL, buffer) == -EINVAL);
+	uassert(nanvix_vfs_stat(NULL, &buffer) == -EINVAL);
 }
 
 /**
@@ -59,11 +59,9 @@ static void test_fault_nanvix_vfs_stat_invalid(void)
 static void test_fault_nanvix_vfs_stat_bad(void)
 {
 	const char *filename = "foobar";
-	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
+	struct nanvix_stat buffer;
 
-	uassert(nanvix_vfs_stat(filename, buffer) == -ENOENT);
-
-	ufree(buffer);
+	uassert(nanvix_vfs_stat(filename, &buffer) == -ENOENT);
 }
 
 /*============================================================================*

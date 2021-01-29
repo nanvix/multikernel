@@ -61,7 +61,6 @@ static int do_nanvix_stat(const char *filename,struct nanvix_stat *restrict buf)
 	/* Build message.*/
 	message_header_build(&msg.header, VFS_STAT);
 	ustrncpy(msg.op.stat.filename, filename, NANVIX_NAME_MAX);
-	msg.op.stat.buf = buf;
 
 	/* Send operation. */
 	uassert(
@@ -84,8 +83,11 @@ static int do_nanvix_stat(const char *filename,struct nanvix_stat *restrict buf)
 	if (msg.header.opcode == VFS_FAIL)
 		return (msg.op.ret.status);
 
+	/* write answer to buffer */
+	umemcpy(buf, msg.op.stat.buf, sizeof(struct nanvix_stat));
+
 	return (msg.op.ret.fd);
-	
+
 }
 
 /**

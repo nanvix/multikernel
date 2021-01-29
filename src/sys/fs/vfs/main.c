@@ -35,6 +35,7 @@
 #include <nanvix/fs.h>
 #include <nanvix/types.h>
 #include <nanvix/ulib.h>
+#include <posix/stdlib.h>
 
 /* Import definitions. */
 extern void vfs_test(void);
@@ -56,6 +57,10 @@ static struct
  * @brief Buffer for Read/Write Requests
  */
 static char buffer[NANVIX_FS_BLOCK_SIZE];
+
+/**
+ * @brief Buffer for Stat Requests*/
+static struct nanvix_stat stat_buffer;
 
 /*============================================================================*
  * do_vfs_server_stat()                                                       *
@@ -87,7 +92,7 @@ static int do_vfs_server_stat(
 	ret = vfs_stat(
 		connection,
 		request->op.stat.filename,
-		request->op.stat.buf
+		&stat_buffer
 	);
 
 	/* Operation failed. */

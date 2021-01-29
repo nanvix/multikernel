@@ -35,6 +35,7 @@
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
+#include <posix/stdlib.h>
 
 /**
  * Root file system.
@@ -200,14 +201,11 @@ int file_block_count(struct inode *ip)
 		return -EINVAL;
 	}
 
-	uprintf("ENTORU\n");
  	ino_data = inode_disk_get(ip);
 
 	/* Count number of blocks */
 	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
-		uprintf("CHECKING ZONE %d\n", i);
 		if (i == MINIX_ZONE_DOUBLE) {
-			uprintf("DOUBLE INDIRECT\n");
 			/* counting double indirect zones */
 
 			blk_buf = bread(inode_get_dev(ip), ino_data->i_zones[i]);
@@ -216,7 +214,6 @@ int file_block_count(struct inode *ip)
 			/* traverse first indirect zone */
 			for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
 
-				uprintf("DOUBLE INDIRECT FIRST INDIRECT # %d\n", j);
 				/* count zones if block is not null */
 				if (buf_data[j] != MINIX_BLOCK_NULL) {
 
@@ -226,7 +223,6 @@ int file_block_count(struct inode *ip)
 
 					/* traverse second indirect zone */
 					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
-						uprintf("DOUBLE INDIRECT SECOND INDIRECT #%d\n", k);
 
 						if (buf_data_di[k] != MINIX_BLOCK_NULL) {
 
@@ -249,7 +245,6 @@ int file_block_count(struct inode *ip)
 
 		} else if (i == MINIX_ZONE_SINGLE) {
 			/* counting single indirect zones */
-			uprintf("SINGLE INDIRECT\n");
 
 			/* count zones if block is not null */
 			if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
@@ -258,7 +253,6 @@ int file_block_count(struct inode *ip)
 				buf_data = buffer_get_data(blk_buf);
 
 				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
-					uprintf("SINGLE INDIRECT #%d\n", j);
 					if (buf_data[j] != MINIX_BLOCK_NULL) {
 						++nr_blocks;
 					} else {
@@ -291,6 +285,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
+	struct nanvix_stat aux_buf; /* auxiliar buffer              */
 
 	/* Invalid filename. */
 	if (filename == NULL)
@@ -334,16 +329,18 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/*TODO Update time related fields first */
 
 	/* write stats in buf */
-	buf->st_dev = inode_get_dev(ip);
-	buf->st_ino = inode_get_num(ip);
-	buf->st_mode = ino_data->i_mode;
-	buf->st_nlink = ino_data->i_nlinks;
-	buf->st_uid = ino_data->i_uid;
-	buf->st_gid = ino_data->i_gid;
-	buf->st_rdev = 0; /* character or block special */
-	buf->st_size = ino_data->i_size;
-	buf->st_blksize = NANVIX_FS_BLOCK_SIZE;
-	buf->st_blocks = file_block_count(ip);
+	aux_buf.st_dev = inode_get_dev(ip);
+	aux_buf.st_ino = inode_get_num(ip);
+	aux_buf.st_mode = ino_data->i_mode;
+	aux_buf.st_nlink = ino_data->i_nlinks;
+	aux_buf.st_uid = ino_data->i_uid;
+	aux_buf.st_gid = ino_data->i_gid;
+	aux_buf.st_rdev = 0; /* TODO: character or block special */
+	aux_buf.st_size = ino_data->i_size;
+	aux_buf.st_blksize = NANVIX_FS_BLOCK_SIZE;
+	aux_buf.st_blocks = file_block_count(ip);
+
+	umemcpy(buf, &aux_buf, sizeof(struct nanvix_stat));
 
 	inode_put(&fs_root, ip);
 	return 0;
