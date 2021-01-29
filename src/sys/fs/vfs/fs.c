@@ -662,9 +662,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 	/* Count number of blocks */
 	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
-		uprintf("CHECKING ZONE %d\n", i);
 		if (i == MINIX_ZONE_DOUBLE) {
-			uprintf("DOUBLE INDIRECT\n");
 			/* counting double indirect zones */
 
 			/* count zones if block is not null */
@@ -677,7 +675,6 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 					/* count number of zones inside each indirect zone */
 					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
-						uprintf("DOUBLE INDIRECT SECOND INDIRECT #%d\n", k);
 
 						buf_data_dd = bread(ip->dev,buf_data_di->data[k]);
 
@@ -701,7 +698,6 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 		} else if (i == MINIX_ZONE_SINGLE) {
 			/* counting single indirect zones */
-			uprintf("SINGLE INDIRECT\n");
 
 			/* count zones if block is not null */
 			if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
@@ -743,6 +739,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
+	struct nanvix_stat aux_buf; /* auxiliar buffer              */
 
 	/* Invalid filename. */
 	if (filename == NULL)
