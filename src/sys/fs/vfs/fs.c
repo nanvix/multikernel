@@ -233,7 +233,7 @@ static struct inode *do_creat( const char *name, int oflag, mode_t mode)
 	struct inode *ip;         /* inode                 */
 	struct inode *curr_dir;   /* current directory     */
 
-	/* not asked to create file */
+	/* not asked to create file or no permissions to write*/
 	if (!(oflag & O_CREAT)) {
 		curr_proc->errcode = -(ENOENT);
 		return (NULL);
@@ -344,7 +344,6 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 
 		if ((ip = do_creat(filename, oflag, mode)) == NULL)
 			return (NULL);
-
 		return (ip);
 	}
 

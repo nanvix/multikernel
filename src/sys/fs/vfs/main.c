@@ -123,11 +123,16 @@ static int do_vfs_server_open(
 )
 {
 	int ret;
+	mode_t mode;
 	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
 	const int connection = connect(pid, port);
 
 	/* XXX: forward parameter checking to lower level function. */
+
+	/* default mode for creating new files */
+	/* TODO: Is this the real default mode? */
+	mode = S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFBLK;
 
 	ret = vfs_open(
 		connection,
