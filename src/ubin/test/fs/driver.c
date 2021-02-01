@@ -38,6 +38,13 @@ void test_vfs(void)
 {
 #ifdef __NANVIX_HAS_VFS_SERVER
 
+	/* Run api tests. */
+	for (int i = 0; tests_vfs_api[i].test_fn != NULL; i++)
+	{
+		uprintf("[nanvix][test][vfs][api] %s", tests_vfs_api[i].name);
+		tests_vfs_api[i].test_fn();
+	}
+
 	/* Run fault tests. */
 	for (int i = 0; tests_vfs_fault[i].test_fn != NULL; i++)
 	{

@@ -198,19 +198,23 @@ int fs_trucate(struct filesystem *fs, struct inode *ip)
  */
 static struct inode *do_creat(
 	const char *name,
-	mode_t mode,
-	int oflag
+	int oflag,
+	mode_t mode
 )
 {
 	int exists = 0;           /* file already exists   */
 	struct file *f;           /* created file          */
 	struct inode *ip;         /* inode                 */
 	struct inode *curr_dir;   /* current directory     */
-	struct d_inode *ino_data; /* underlying inode data */
 
-	/* not asked to create file */
+	/* not asked to create file or no permissions to write*/
 	if (!(oflag & O_CREAT)) {
 		curr_proc->errcode = -(ENOENT);
+		return (NULL);
+	}
+
+	if (!(oflag & (O_WRONLY | O_RDWR))) {
+		curr_proc->errcode = -(EACCES);
 		return (NULL);
 	}
 
@@ -235,14 +239,17 @@ static struct inode *do_creat(
 		return (NULL);
 	}
 
-	ino_data = inode_disk_get(ip);
+	/* alocate inode if it doesn't exist */
+	/* TODO: pass uid and gid instead of 0 */
+	if (!exists && (ip = inode_alloc(&fs_root, mode, 0, 0)) == NULL) {
+		return (NULL);
+	}
 
-	inode_alloc(&fs_root, mode, ino_data->i_uid, ino_data->i_gid);
 	minix_dirent_add(
 			inode_get_dev(ip),
 			&(fs_root.super->data),
 			fs_root.super->bmap,
-			ino_data,
+			inode_disk_get(ip),
 			name,
 			inode_get_num(ip)
 			);
@@ -256,8 +263,9 @@ static struct inode *do_creat(
 
 	/* file already existed, truncate it */
 	if (exists && (oflag & O_TRUNC)) {
-		if (fs_trucate(&fs_root, ip) != 0)
+		if (fs_trucate(&fs_root, ip) != 0) {
 			goto error;
+		}
 	}
 
 	return ip;
@@ -284,13 +292,12 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 		return (NULL);
 	}
 
-	/* Search file. */
+	/* Search file and create it if flag has O_CREAT bit. */
 	if ((ip = inode_name(&fs_root, filename)) == NULL)
 	{
-		/* Create it. */
-		if ((ip = do_creat(filename, mode, oflag)) == NULL)
+		if ((oflag & O_CREAT) &&
+				(ip = do_creat(filename, oflag, mode)) == NULL)
 			return (NULL);
-
 		return (ip);
 	}
 

@@ -143,7 +143,7 @@ static void test_api_nanvix_vfs_creat(void)
 	int fd;
 	const char *filename = "new_file";
 
-	uassert((fd = nanvix_vfs_open(filename, O_CREAT)) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, (O_CREAT | O_WRONLY))) >= 0);
 
 	uassert(nanvix_vfs_close(fd) == 0);
 }
