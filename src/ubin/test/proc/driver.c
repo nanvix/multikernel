@@ -22,39 +22,28 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_RUNTIME_PM_H_
-#define NANVIX_RUNTIME_PM_H_
+#include "../test.h"
 
-	/* Must come first. */
-	#define __NEED_NAME_SERVICE
-	#define __NEED_MAILBOX_SERVICE
-	#define __NEED_PORTAL_SERVICE
-	#define __NEED_SYSV_SERVICE
-	#define __NEED_LIMITS_PM
+/* Import definitions. */
+extern struct test tests_proc_api[];
+extern struct test tests_proc_fault[];
 
-	#include <nanvix/runtime/stdikc.h>
-	#include <nanvix/runtime/pm/name.h>
-	#include <nanvix/runtime/pm/mailbox.h>
-	#include <nanvix/runtime/pm/portal.h>
-	#include <nanvix/runtime/pm/sysv.h>
-	#include <nanvix/runtime/pm/proc.h>
-	#include <nanvix/limits/pm.h>
+/**
+* @brief Test launcher
+*/
+void test_proc(void)
+{
+	/* run API tests */
+	for (int i = 0; tests_proc_api[i].test_fn != NULL; i++)
+	{
+		uprintf("[nanvix][test][proc][api] %s", tests_proc_api[i].name);
+		tests_proc_api[i].test_fn();
+	}
 
-	/**
-	 * @brief Gets the name of the process.
-	 *
-	 * @returns The name of the calling process.
-	 */
-	extern const char *nanvix_getpname(void);
-
-	/**
-	 * @brief Sets the name of the process.
-	 *
-	 * @param pname Process name.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int nanvix_setpname(const char *pname);
-
-#endif /* NANVIX_RUNTIME_PM_H_ */
+	/* run fault tests */
+	for (int i = 0; tests_proc_fault[i].test_fn != NULL; i++)
+	{
+		uprintf("[nanvix][test][proc][fault] %s", tests_proc_fault[i].name);
+		tests_proc_fault[i].test_fn();
+	}
+}

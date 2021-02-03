@@ -52,6 +52,7 @@ int __main2(int argc, const char *argv[])
 		uprintf("[nanvix][test] server alive");
 
 		__runtime_setup(SPAWN_RING_LAST);
+		test_proc();
 		test_name();
 		test_rmem_stub();
 		test_rmem_cache();

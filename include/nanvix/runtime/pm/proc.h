@@ -22,39 +22,35 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_RUNTIME_PM_H_
-#define NANVIX_RUNTIME_PM_H_
 
-	/* Must come first. */
-	#define __NEED_NAME_SERVICE
-	#define __NEED_MAILBOX_SERVICE
-	#define __NEED_PORTAL_SERVICE
-	#define __NEED_SYSV_SERVICE
-	#define __NEED_LIMITS_PM
-
-	#include <nanvix/runtime/stdikc.h>
-	#include <nanvix/runtime/pm/name.h>
-	#include <nanvix/runtime/pm/mailbox.h>
-	#include <nanvix/runtime/pm/portal.h>
-	#include <nanvix/runtime/pm/sysv.h>
-	#include <nanvix/runtime/pm/proc.h>
-	#include <nanvix/limits/pm.h>
+#ifndef NANVIX_RUNTIME_PM_PROC_H_
+#define NANVIX_RUNTIME_PM_PROC_H_
 
 	/**
-	 * @brief Gets the name of the process.
-	 *
-	 * @returns The name of the calling process.
+	 * @brief Set process id
 	 */
-	extern const char *nanvix_getpname(void);
+	extern pid_t nanvix_setpid(void);
 
 	/**
-	 * @brief Sets the name of the process.
+	 * @brief Returns process id
+	 */
+	extern pid_t nanvix_getpid(void);
+
+	/**
+	 * @brief Returns process group id
+	 */
+	extern pid_t nanvix_getpgid(pid_t pid);
+
+	/**
+	 * @brief Set a process group id
 	 *
-	 * @param pname Process name.
+	 * @param pid Target process id. If pid equals zero, the calling process id is used
+	 * @param pgid Target process group id. If pid equals zero, a new group is
+	 * created
 	 *
-	 * @returns Upon successful completion, zero is returned. Upon
+	 * @return Upon successful completion, zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
-	extern int nanvix_setpname(const char *pname);
+	extern int nanvix_setpgid(pid_t pid, pid_t pgid);
 
-#endif /* NANVIX_RUNTIME_PM_H_ */
+#endif /* NANVIX_RUNTIME_PM_PROC_H_ */

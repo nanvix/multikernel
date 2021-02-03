@@ -42,13 +42,17 @@
 	 * @brief Operation types for Name Server.
 	 */
 	/**@{*/
-	#define NAME_EXIT    0 /**< Exit request.            */
-	#define NAME_LOOKUP  1 /**< lookup a name.           */
-	#define NAME_LINK    2 /**< Add a new name.          */
-	#define NAME_UNLINK  3 /**< Remove a name.           */
-	#define NAME_SUCCESS 4 /**< Success acknowledgement. */
-	#define NAME_ALIVE   5 /**< Client alive.            */
-	#define NAME_FAIL    6 /**< Failure acknowledgement. */
+	#define NAME_EXIT    0  /**< Exit request.            */
+	#define NAME_LOOKUP  1  /**< lookup a name.           */
+	#define NAME_LINK    2  /**< Add a new name.          */
+	#define NAME_UNLINK  3  /**< Remove a name.           */
+	#define NAME_SUCCESS 4  /**< Success acknowledgement. */
+	#define NAME_ALIVE   5  /**< Client alive.            */
+	#define NAME_FAIL    6  /**< Failure acknowledgement. */
+	#define NAME_GETPID  7  /**< Get process id           */
+	#define NAME_GETPGID 8  /**< Get process group id     */
+	#define NAME_SETPGID 9  /**< Set process group id     */
+	#define NAME_SETPID  10 /**< Set process id           */
 	/**@}*/
 
 	/**
@@ -87,12 +91,24 @@
 
 			struct
 			{
+				pid_t pid;  /**< Process id       */
+				pid_t pgid; /**< Process group id */
+			} setpgid;
+
+			struct
+			{
+				pid_t pid;  /**< Process id */
+			} getpgid;
+
+			struct
+			{
 
 			} exit;
 
 			struct
 			{
 				int nodenum; /**< NoC node.   */
+				pid_t pid;   /**< Process id  */
 				int errcode; /**< Error code. */
 			} ret;
 		} op;
@@ -124,7 +140,7 @@
 		/* Name too long. */
 		if ((ustrlen(name) >= (NANVIX_PROC_NAME_MAX - 1)))
 			return (-ENAMETOOLONG);
-		
+
 		return (0);
 	}
 

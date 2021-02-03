@@ -52,6 +52,8 @@ int __main2(int argc, const char *argv[])
 		__runtime_setup(SPAWN_RING_LAST);
 
 		uassert(nanvix_setpname(pname) == 0);
+		uassert(nanvix_setpid() == 0);
+		uassert(nanvix_setpgid(0, 0) == 0);
 		uassert(stdsync_fence() == 0);
 
 		__main3(argc, argv);
@@ -65,4 +67,3 @@ int __main2(int argc, const char *argv[])
 
 	return (0);
 }
-

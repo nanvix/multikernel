@@ -224,6 +224,137 @@ int nanvix_name_heartbeat(void)
 }
 
 /*============================================================================*
+ * nanvix_setpid()                                                            *
+ *============================================================================*/
+
+/**
+ * @brief Set process id
+ */
+pid_t nanvix_setpid(void)
+{
+	struct name_message msg;
+	int ret;
+
+	message_header_build(&msg.header, NAME_SETPID);
+
+	if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message)))
+		!= sizeof(struct name_message))
+		return (ret);
+
+	if ((ret = kmailbox_read(stdinbox_get(), &msg, sizeof(struct name_message)))
+		!= sizeof(struct name_message))
+		return (ret);
+
+	if (msg.header.opcode == NAME_SUCCESS)
+		return (0);
+
+	return (msg.op.ret.errcode);
+}
+
+/*============================================================================*
+ * nanvix_getpid()                                                            *
+ *============================================================================*/
+
+/**
+ * @brief Returns process id
+ */
+pid_t nanvix_getpid(void)
+{
+	struct name_message msg;
+	int ret;
+
+	if (!initialized)
+		return (-EAGAIN);
+
+	message_header_build(&msg.header, NAME_GETPID);
+
+	if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message)))
+		!= sizeof(struct name_message))
+		return (ret);
+
+	if ((ret = kmailbox_read(stdinbox_get(), &msg, sizeof(struct name_message))
+		!= sizeof(struct name_message)))
+		return (ret);
+
+	if (msg.header.opcode == NAME_SUCCESS)
+		return (msg.op.ret.pid);
+
+	return (msg.op.ret.errcode);
+}
+
+/*============================================================================*
+ * nanvix_getpgid()                                                           *
+ *============================================================================*/
+
+/**
+ * @brief Returns process group id
+ */
+pid_t nanvix_getpgid(pid_t pid)
+{
+	struct name_message msg;
+	int ret;
+
+	if (!initialized)
+		return (-EINVAL);
+
+	message_header_build(&msg.header, NAME_GETPGID);
+	msg.op.getpgid.pid = pid;
+
+	if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message)))
+		!= sizeof(struct name_message))
+		return (ret);
+
+	if ((ret = kmailbox_read(stdinbox_get(), &msg, sizeof(struct name_message)))
+		!= sizeof(struct name_message))
+		return (ret);
+
+	if (msg.header.opcode == NAME_SUCCESS)
+		return (msg.op.ret.pid);
+
+	return (msg.op.ret.errcode);
+}
+
+/*============================================================================*
+ * nanvix_setpgid()                                                           *
+ *============================================================================*/
+
+/**
+ * @brief Set a process group id
+ *
+ * @param pid Target process id. If pid equals zero, the calling process id is used
+ * @param pgid Target process group id. If pgid equals zero, a new group is
+ * created
+ *
+ * @return Upon successful completion, zero is returned. Upon
+ * failure, a negative error code is returned instead.
+ */
+int nanvix_setpgid(pid_t pid, pid_t pgid)
+{
+	struct name_message msg;
+	int ret;
+
+	if (!initialized)
+		return (-EINVAL);
+
+	message_header_build(&msg.header, NAME_SETPGID);
+	msg.op.setpgid.pid = pid;
+	msg.op.setpgid.pgid = pgid;
+
+	if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message)))
+		!= sizeof(struct name_message))
+		return (ret);
+
+	if ((ret = kmailbox_read(stdinbox_get(), &msg, sizeof(struct name_message)))
+		!= sizeof(struct name_message))
+		return (ret);
+
+	if (msg.header.opcode == NAME_SUCCESS)
+		return (0);
+
+	return (msg.op.ret.errcode);
+}
+
+/*============================================================================*
  * nanvix_name_shutdown()                                                     *
  *============================================================================*/
 

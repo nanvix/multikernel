@@ -43,6 +43,11 @@
 	#define NANVIX_PNAME_MAX 256
 
 	/**
+	 * @brief Maximum number of process groups
+	 */
+	#define NANVIX_GROUP_MAX 32
+
+	/**
 	 * @name Limits on Naming Service
 	 */
 	/**@{*/

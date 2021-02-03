@@ -30,6 +30,7 @@
 #include <nanvix/runtime/stdikc.h>
 #include <nanvix/servers/message.h>
 #include <nanvix/servers/name.h>
+#include <nanvix/servers/groups.h>
 #include <nanvix/sys/semaphore.h>
 #include <nanvix/ulib.h>
 #include <posix/errno.h>
@@ -55,6 +56,16 @@ static int nr_registration = 0;
 static int inbox = -1;
 
 /**
+ * @brief Process id counter
+ */
+static pid_t pid_counter = 1;
+
+/**
+ * @brief Process group table
+ */
+static struct gp groups[NANVIX_GROUP_MAX];
+
+/**
  * @brief Lookup table of process names.
  */
 static struct {
@@ -63,6 +74,8 @@ static struct {
 	char name[NANVIX_PROC_NAME_MAX]; /**< Process name.             */
 	uint64_t timestamp;              /**< Timestamp for heartbeats. */
 	int refcount;                    /**< Link reference counter.   */
+	pid_t pid;                       /**< Process id.               */
+	struct gp gp;                    /**< Process group             */
 } procs[NANVIX_PNAME_MAX];
 
 /**
@@ -84,6 +97,11 @@ static struct
  */
 static void do_name_init(struct nanvix_semaphore *lock)
 {
+	for (int i = 0; i < NANVIX_GROUP_MAX; i++)
+	{
+		groups[i].gid = -1;
+	}
+
 	/* Initialize lookup table. */
 	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
 	{
@@ -91,6 +109,8 @@ static void do_name_init(struct nanvix_semaphore *lock)
 		procs[i].port_nr   = -1;
 		procs[i].timestamp =  0;
 		procs[i].refcount  =  0;
+		procs[i].pid       = -1;
+		procs[i].gp.gid    = -1;
 	}
 
 	procs[0].nodenum  = knode_get_num();
@@ -333,6 +353,167 @@ static int do_name_heartbeat(const struct name_message *request)
 }
 
 /*===================================================================*
+ * do_name_getpid()                                                  *
+ *===================================================================*/
+
+/**
+ * @brief Returns process id
+ */
+static pid_t do_name_getpid
+(const struct name_message *request, struct name_message *response)
+{
+	int nodenum;
+
+	nodenum = request->header.source;
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
+	{
+		if (procs[i].nodenum == nodenum)
+		{
+			if (response)
+				response->op.ret.pid = procs[i].pid;
+			return (procs[i].pid);
+		}
+	}
+	return (-1);
+}
+
+/*===================================================================*
+ * do_name_getpgid()                                                 *
+ *===================================================================*/
+
+/**
+ * @brief Returns process group id
+ */
+static pid_t do_name_getpgid
+(const struct name_message *request, struct name_message *response)
+{
+	pid_t pid;
+
+	pid  = request->op.getpgid.pid;
+
+	/* pid becomes the calling process id */
+	if (!pid)
+		pid = do_name_getpid(request, NULL);
+
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
+	{
+		if (procs[i].pid == pid)
+		{
+			if (response)
+				response->op.ret.pid = procs[i].gp.gid;
+			return (0);
+		}
+	}
+
+	return (-EINVAL);
+}
+
+/*===================================================================*
+ * do_name_setpgid()                                                     *
+ *===================================================================*/
+
+/**
+ * @brief Set a process group id
+ *
+ * @return Upon successful completion, zero is returned. Upon
+ * failure, a negative error code is returned instead.
+ */
+static int do_name_setpgid(const struct name_message *request)
+{
+	struct gp group;
+	int new;
+	pid_t pid, pgid;
+
+
+	pid = request->op.setpgid.pid;
+	pgid = request->op.setpgid.pgid;
+	new = 0;
+
+	/* invalid arguments */
+	if (pgid < 0 || pid < 0)
+		return (-EINVAL);
+
+	/* find group */
+	for (int i = 0; i < NANVIX_GROUP_MAX; i++)
+	{
+		/* group not found */
+		if (groups[i].gid == -1)
+		{
+			if (pgid && (pid != pgid))
+				return (-EPERM);
+			else
+			{
+				/* create a new group */
+				new = i;
+				break;
+			}
+		}
+		else if (groups[i].gid == pgid)
+		{
+			group = groups[i];
+			break;
+		}
+	}
+
+	/* pid becomes the calling process id */
+	if (!pid)
+		pid = do_name_getpid(request, NULL);
+
+	/* set process group id*/
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
+	{
+		if (procs[i].pid == pid)
+		{
+			if (procs[i].gp.gid == procs[i].pid)
+				return (-EPERM);
+			if (new || groups[0].gid == -1)
+			{
+				group.gid = pid;
+				groups[new] = group;
+			}
+			procs[i].gp = group;
+			return (0);
+		}
+	}
+	return (-ESRCH);
+}
+
+/*===================================================================*
+ * do_name_setpid()                                                  *
+ *===================================================================*/
+
+/**
+ * @brief Set process id
+ */
+static int do_name_setpid(const struct name_message *request)
+{
+	int nodenum;
+
+	nodenum = request->header.source;
+
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
+	{
+		if (procs[i].nodenum == nodenum)
+		{
+			procs[i].pid = pid_counter++;
+			procs[i].nodenum = nodenum;
+			return (0);
+		}
+	}
+
+	for (int i = 0; i < NANVIX_PNAME_MAX; i++)
+	{
+		if (procs[i].nodenum < 0 && procs[i].pid < 0)
+		{
+			procs[i].pid = pid_counter++;
+			procs[i].nodenum = nodenum;
+			return (0);
+		}
+	}
+
+	return (-1);
+}
+/*===================================================================*
  * name_server()                                                     *
  *===================================================================*/
 
@@ -393,6 +574,26 @@ int do_name_server(struct nanvix_semaphore *lock)
 
 			case NAME_ALIVE:
 				uassert((ret = do_name_heartbeat(&request)) == 0);
+				break;
+
+			case NAME_GETPID:
+				ret = do_name_getpid(&request, &response);
+				reply = 1;
+				break;
+
+			case NAME_GETPGID:
+				ret = do_name_getpgid(&request, &response);
+				reply = 1;
+				break;
+
+			case NAME_SETPGID:
+				ret = do_name_setpgid(&request);
+				reply = 1;
+				break;
+
+			case NAME_SETPID:
+				ret = do_name_setpid(&request);
+				reply = 1;
 				break;
 
 			case NAME_EXIT:

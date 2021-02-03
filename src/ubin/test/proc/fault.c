@@ -22,39 +22,39 @@
  * SOFTWARE.
  */
 
-#ifndef NANVIX_RUNTIME_PM_H_
-#define NANVIX_RUNTIME_PM_H_
+#include <nanvix/runtime/pm.h>
+#include "../test.h"
 
-	/* Must come first. */
-	#define __NEED_NAME_SERVICE
-	#define __NEED_MAILBOX_SERVICE
-	#define __NEED_PORTAL_SERVICE
-	#define __NEED_SYSV_SERVICE
-	#define __NEED_LIMITS_PM
+/**
+ * @brief Fault test: invalid pid.
+ */
+static void test_proc_fault_invalid_pid(void)
+{
+	pid_t pgid;
 
-	#include <nanvix/runtime/stdikc.h>
-	#include <nanvix/runtime/pm/name.h>
-	#include <nanvix/runtime/pm/mailbox.h>
-	#include <nanvix/runtime/pm/portal.h>
-	#include <nanvix/runtime/pm/sysv.h>
-	#include <nanvix/runtime/pm/proc.h>
-	#include <nanvix/limits/pm.h>
+	TEST_ASSERT((pgid = nanvix_getpgid(0)) > 0);
+	TEST_ASSERT(nanvix_setpgid(-1, 0) < 0);
+	TEST_ASSERT(nanvix_setpgid(10, 0) < 0);
+	TEST_ASSERT(nanvix_setpgid(10, pgid) < 0);
+}
+/**
+ * @brief Fault test: invalid group id.
+ */
+static void test_proc_fault_invalid_gid(void)
+{
+	pid_t pid;
 
-	/**
-	 * @brief Gets the name of the process.
-	 *
-	 * @returns The name of the calling process.
-	 */
-	extern const char *nanvix_getpname(void);
+	TEST_ASSERT((pid = nanvix_getpid()) > 0);
+	TEST_ASSERT(nanvix_setpgid(0, -1) < 0);
+	TEST_ASSERT(nanvix_setpgid(0, 10) < 0);
+	TEST_ASSERT(nanvix_setpgid(pid, 10) < 0);
+}
 
-	/**
-	 * @brief Sets the name of the process.
-	 *
-	 * @param pname Process name.
-	 *
-	 * @returns Upon successful completion, zero is returned. Upon
-	 * failure, a negative error code is returned instead.
-	 */
-	extern int nanvix_setpname(const char *pname);
-
-#endif /* NANVIX_RUNTIME_PM_H_ */
+/**
+ * @brief Unit tests.
+ */
+struct test tests_proc_fault[] = {
+	{ test_proc_fault_invalid_pid,        "invalid pid"      },
+	{ test_proc_fault_invalid_gid,        "invalid group"    },
+	{ NULL,                   NULL            }
+};

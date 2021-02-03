@@ -82,6 +82,11 @@
 	extern void test_vfs(void);
 
 	/**
+	 * @brief Launches regression tests on process/group id manager.
+	 */
+	extern void test_proc(void);
+
+	/**
 	 * @brief Horizontal line for tests.
 	 */
 	extern const char *HLINE;
