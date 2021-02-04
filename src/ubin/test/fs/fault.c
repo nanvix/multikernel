@@ -148,6 +148,12 @@ static void test_fault_nanvix_vfs_unlink_invalid(void)
 {
 	uassert(nanvix_vfs_unlink("/") == -EINVAL);
 	uassert(nanvix_vfs_unlink("some_file") == -ENOENT);
+
+	uassert((fd1 = nanvix_vfs_open(filename, (O_CREAT | O_RDONLY))) >= 0);
+	uassert((fd2 = nanvix_vfs_open(filename, (O_CREAT | O_RDONLY))) >= 0);
+	uassert(nanvix_vfs_unlink(filename) == -EBUSY);
+	uassert(nanvix_vfs_close(fd1) == 0);
+	uassert(nanvix_vfs_close(fd2) == 0);
 }
 
 /**
