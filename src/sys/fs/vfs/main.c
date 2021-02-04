@@ -204,7 +204,15 @@ static int do_vfs_server_unlink(const struct vfs_message *request)
 	int ret;
 	const int port = request->header.mailbox_port;
 	const nanvix_pid_t pid = request->header.source;
-	const int connection = lookup(pid, port);
+	int aux_conn = lookup(pid, port);
+
+	/* file not open, open it */
+	if ( aux_conn <= 0) {
+		aux_conn = connect(pid, port);
+	}
+
+	const int connection = aux_conn;
+
 
 	/* XXX: forwarding parameter checking to lower level function. */
 

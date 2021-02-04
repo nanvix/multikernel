@@ -252,13 +252,13 @@ int nanvix_vfs_close(int fd)
  *
  * @author Lucca Augusto
  */
-static int do_nanvix_vfs_unlink(char *filename)
+static int do_nanvix_vfs_unlink(const char *filename)
 {
 	struct vfs_message msg;
 
 	/* Build message.*/
 	message_header_build(&msg.header, VFS_UNLINK);
-	msg.op.unlink.filename = filename;
+	ustrncpy(msg.op.unlink.filename, filename, NANVIX_NAME_MAX);
 
 	/* Send operation. */
 	uassert(
@@ -289,7 +289,7 @@ static int do_nanvix_vfs_unlink(char *filename)
  *
  * @author Lucca Augusto
  */
-int nanvix_vfs_unlink(char *filename)
+int nanvix_vfs_unlink(const char *filename)
 {
 	/* Invalid server ID. */
 	if (!server.initialized)

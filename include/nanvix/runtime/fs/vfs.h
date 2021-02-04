@@ -94,7 +94,7 @@
 	 * @returns Upon successful completion, zero is returned. Upon
 	 * failure, a negative error code is returned instead.
 	 */
-	extern int nanvix_vfs_unlink(char *filename);
+	extern int nanvix_vfs_unlink(const char *filename);
 
 	/**
 	 * @brief Repositions the read/write pointer of a file.

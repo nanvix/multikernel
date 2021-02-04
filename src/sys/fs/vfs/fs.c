@@ -598,7 +598,7 @@ int fs_unlink(const char *filename)
 	if (filename == NULL)
 		return (-EINVAL);
 
-	/*TODO get parent directory inode */
+	/*TODO get parent directory inode (parse path) */
 	dip = fs_root.root;
 
 	/* get file inode */
@@ -624,14 +624,19 @@ int fs_unlink(const char *filename)
 
 		/* not empty */
 		if (inode_disk_get(fip)->i_size > 0) {
-			ret =  (-EBUSY);
+			ret = (-EBUSY);
 			goto error;
 		}
 	}
 
+	/* file opened by other process */
+	if (inode_get_count(fip) > 1) {
+		ret = (-EBUSY);
+		goto error;
+	}
+
 	/* remove from region table */
-	if (inode_get_count(fip) == 1)
-		minix_dirent_remove(fs_root.dev, &(fs_root.super->data), fs_root.super->bmap, inode_disk_get(dip), filename);
+	minix_dirent_remove(fs_root.dev, &(fs_root.super->data), fs_root.super->bmap, inode_disk_get(dip), filename);
 
 	/* decrease directory size */
 	inode_disk_get(dip)->i_size--;
