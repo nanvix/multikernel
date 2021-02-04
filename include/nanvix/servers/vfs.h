@@ -106,7 +106,7 @@
 			 */
 			struct
 			{
-				char *filename; /**< File path */
+				char filename[NANVIX_NAME_MAX]; /**< File path */
 			} unlink;
 
 			/**
