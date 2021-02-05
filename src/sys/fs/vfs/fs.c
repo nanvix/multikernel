@@ -283,22 +283,21 @@ int file_block_count(struct inode *ip)
  */
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
+
+	int ret;                    /* return value                 */
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
-	struct nanvix_stat aux_buf; /* auxiliar buffer              */
+	nanvix_dev_t rdev = 0;      /* dev id if special file       */
 
 	/* Invalid filename. */
 	if (filename == NULL)
-	{
-		curr_proc->errcode = -EINVAL;
-		return -EINVAL;
-	}
+		return (curr_proc->errcode = -EINVAL);
 
 	/* Search file. */
 	if ((ip = inode_name(&fs_root, filename)) == NULL)
 	{
 		/* File doesn't exist*/
-		curr_proc->errcode = -ENOENT;
+		ret = (curr_proc->errcode = -ENOENT);
 		goto error;
 	}
 
@@ -307,21 +306,25 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/* Block special file. */
 	if (S_ISBLK(ino_data->i_mode))
 	{
-		if (bdev_open(ino_data->i_zones[0]) < 0)
+		rdev = inode_get_dev(ip);
+		if (bdev_open(ino_data->i_zones[0]) < 0) {
+			ret = -1;
 			goto error;
+		}
 	}
+
 
 	/* Regular file. */
 	else if (S_ISREG(ino_data->i_mode))
 	{
-		curr_proc->errcode = -ENOTSUP;
+		ret = (curr_proc->errcode = -ENOTSUP);
 		goto error;
 	}
 
 	/* Directory. */
 	else if (S_ISDIR(ino_data->i_mode))
 	{
-		curr_proc->errcode = -ENOTSUP;
+		ret = (curr_proc->errcode = -ENOTSUP);
 		goto error;
 	}
 
@@ -329,25 +332,23 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	/*TODO Update time related fields first */
 
 	/* write stats in buf */
-	aux_buf.st_dev = inode_get_dev(ip);
-	aux_buf.st_ino = inode_get_num(ip);
-	aux_buf.st_mode = ino_data->i_mode;
-	aux_buf.st_nlink = ino_data->i_nlinks;
-	aux_buf.st_uid = ino_data->i_uid;
-	aux_buf.st_gid = ino_data->i_gid;
-	aux_buf.st_rdev = 0; /* TODO: character or block special */
-	aux_buf.st_size = ino_data->i_size;
-	aux_buf.st_blksize = NANVIX_FS_BLOCK_SIZE;
-	aux_buf.st_blocks = file_block_count(ip);
-
-	umemcpy(buf, &aux_buf, sizeof(struct nanvix_stat));
+	buf->st_dev = inode_get_dev(ip);
+	buf->st_ino = inode_get_num(ip);
+	buf->st_mode = ino_data->i_mode;
+	buf->st_nlink = ino_data->i_nlinks;
+	buf->st_uid = ino_data->i_uid;
+	buf->st_gid = ino_data->i_gid;
+	buf->st_rdev = rdev;
+	buf->st_size = ino_data->i_size;
+	buf->st_blksize = NANVIX_FS_BLOCK_SIZE;
+	buf->st_blocks = file_block_count(ip);
 
 	inode_put(&fs_root, ip);
 	return 0;
 
 error:
 	inode_put(&fs_root, ip);
-	return -1;
+	return ret;
 }
 
 /**
@@ -356,8 +357,9 @@ error:
  */
 int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
-	int fd;           /* File Descriptor  */
-	struct file *f;   /* File             */
+	int fd;           /* File Descriptor      */
+	int ret;          /* do_stat return value */
+	struct file *f;   /* File                 */
 
 	/* Get a free file descriptor. */
 	if ((fd = getfildes()) < 0)
@@ -373,8 +375,9 @@ int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 	f->count = 1;
 
 	/* Get file stat. */
-	if (do_stat(filename, buf) != 0)
+	if ((ret = do_stat(filename, buf)) != 0)
 	{
+		curr_proc->errcode = ret;
 		f->count = 0;
 		return curr_proc->errcode;
 	}

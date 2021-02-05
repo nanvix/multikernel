@@ -90,7 +90,7 @@
 			struct
 			{
 				char filename[NANVIX_NAME_MAX]; /**< File Name  */
-				struct nanvix_stat *buf;        /**< Stats buf */
+				struct nanvix_stat buf;         /**< Stats buf */
 			} stat;
 
 			/**
