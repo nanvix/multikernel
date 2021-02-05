@@ -54,7 +54,7 @@ static struct
  * @brief The do_nanvix_stat() function gets metadata about the file specified
  * by @p filename.
  */
-static int do_nanvix_stat(const char *filename,struct nanvix_stat *restrict buf)
+static int do_nanvix_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct vfs_message msg;
 
@@ -84,10 +84,9 @@ static int do_nanvix_stat(const char *filename,struct nanvix_stat *restrict buf)
 		return (msg.op.ret.status);
 
 	/* write answer to buffer */
-	umemcpy(buf, msg.op.stat.buf, sizeof(struct nanvix_stat));
+	umemcpy(buf, &msg.op.stat.buf, sizeof(struct nanvix_stat));
 
 	return (msg.op.ret.fd);
-
 }
 
 /**

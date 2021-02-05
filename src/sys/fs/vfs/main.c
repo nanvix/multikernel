@@ -58,10 +58,6 @@ static struct
  */
 static char buffer[NANVIX_FS_BLOCK_SIZE];
 
-/**
- * @brief Buffer for Stat Requests*/
-static struct nanvix_stat stat_buffer;
-
 /*============================================================================*
  * do_vfs_server_stat()                                                       *
  *============================================================================*/
@@ -92,9 +88,8 @@ static int do_vfs_server_stat(
 	ret = vfs_stat(
 		connection,
 		request->op.stat.filename,
-		&stat_buffer
+		&response->op.stat.buf
 	);
-
 	/* Operation failed. */
 	if (ret < 0)
 	{
