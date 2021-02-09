@@ -148,4 +148,15 @@
 	 */
 	int nanvix_mailbox_unlink(int mbxid);
 
+	/**
+	 * @brief Returns the port number of a mailbox.
+	 *
+	 * @bpara mbxid ID of the target mailbox.
+	 *
+	 * @returns Upon successful completion the port number where the
+	 * target mailbox is hooked up is returned. Upon failure, a negative
+	 * error code is returned instead.
+	 */
+	extern int nanvix_mailbox_get_port(int mbxid);
+
 #endif /* NANVIX_RUNTIME_MAILBOX_H_ */

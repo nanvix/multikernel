@@ -320,7 +320,7 @@ int nanvix_mailbox_set_remote(int mbxid, int remote, int port)
 	if (!WITHIN(port, 0, (MAILBOX_ANY_PORT + 1)))
 		return (-EINVAL);
 
-	ret = kmailbox_ioctl(mailboxes[mbxid].fd, KMAILBOX_IOCTL_SET_REMOTE, remote, port);
+	ret = kmailbox_set_remote(mailboxes[mbxid].fd, remote, port);
 
 	return (ret);
 }
@@ -451,6 +451,30 @@ int nanvix_mailbox_get_inbox(void)
 	local = knode_get_num();
 
 	return (inboxes[local]);
+}
+
+/*============================================================================*
+ * nanvix_mailbox_get_port()                                                  *
+ *============================================================================*/
+
+/**
+ * @todo TODO: Provide a detailed description for this function.
+ */
+int nanvix_mailbox_get_port(int mbxid)
+{
+	/* Invalid mailbox ID.*/
+	if (!nanvix_mailbox_is_valid(mbxid))
+		return (-EINVAL);
+
+	/*  Bad mailbox. */
+	if (!resource_is_used(&mailboxes[mbxid].resource))
+		return (-EINVAL);
+
+	/*  Bad mailbox. */
+	if (!resource_is_wronly(&mailboxes[mbxid].resource))
+		return (-EINVAL);
+
+	return (kcomm_get_port(mailboxes[mbxid].fd, COMM_TYPE_MAILBOX));
 }
 
 /*============================================================================*
