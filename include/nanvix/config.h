@@ -48,7 +48,7 @@
 	/**
 	 * @brief Port number of Name Resolution Snooper
 	 */
-	#define NANVIX_NAME_SNOOPER_PORT_NUM 2
+	#define NANVIX_NAME_SNOOPER_PORT_NUM 4
 
 /*============================================================================*
  * Virtual File System                                                        *

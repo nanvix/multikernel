@@ -43,12 +43,13 @@
 	 */
 	/**@{*/
 	#define NAME_EXIT    0 /**< Exit request.            */
-	#define NAME_LOOKUP  1 /**< lookup a name.           */
+	#define NAME_LOOKUP  1 /**< Lookup a name.           */
 	#define NAME_LINK    2 /**< Add a new name.          */
 	#define NAME_UNLINK  3 /**< Remove a name.           */
 	#define NAME_SUCCESS 4 /**< Success acknowledgement. */
 	#define NAME_ALIVE   5 /**< Client alive.            */
 	#define NAME_FAIL    6 /**< Failure acknowledgement. */
+	#define NAME_ADDR    7 /**< Address lookup.          */
 	/**@}*/
 
 	/**
@@ -65,7 +66,6 @@
 			struct
 			{
 				char name[NANVIX_PROC_NAME_MAX]; /**< Portal name. */
-
 			} lookup;
 
 			struct
@@ -89,6 +89,12 @@
 			{
 
 			} exit;
+
+			struct
+			{
+				char name[NANVIX_PROC_NAME_MAX];
+				uint16_t port_nr;
+			} addr_ans; /**< Address lookup answer. */
 
 			struct
 			{

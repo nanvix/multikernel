@@ -143,6 +143,7 @@ int __runtime_setup(int ring)
 	{
 		uprintf("[nanvix][thread %d] initalizing ring 5", tid);
 		uassert(kthread_create(&exception_handler_tid, &nanvix_exception_handler, NULL) == 0);
+		uassert(__nanvix_name_daemon_init() == 0);
 	}
 
 	current_ring[tid] = ring;

@@ -44,6 +44,14 @@
 	extern int __nanvix_name_setup(void);
 
 	/**
+	 * @brief Initializes the Name Service client daemon.
+	 *
+	 * @returns Upon successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern int __nanvix_name_daemon_init(void);
+
+	/**
 	 * @brief Shuts down the Name Service client.
 	 *
 	 * @returns Upon successful completion, zero is returned. Upon
