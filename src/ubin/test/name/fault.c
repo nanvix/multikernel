@@ -157,6 +157,146 @@ static void test_name_invalid_lookup(void)
 	TEST_ASSERT(nanvix_name_lookup("") < 0);
 }
 
+/*============================================================================*
+ * Fault Injection Test: Invalid Register                                     *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Name Register Invalid Arguments
+ */
+static void test_name_invalid_register(void)
+{
+	char name[NANVIX_PROC_NAME_MAX + 1];
+
+	umemset(name, 1, NANVIX_PROC_NAME_MAX + 1);
+
+	/* Invalid names. */
+	TEST_ASSERT(nanvix_name_register(name, 0) < 0);
+	TEST_ASSERT(nanvix_name_register(NULL, 0) < 0);
+	TEST_ASSERT(nanvix_name_register("", 0) < 0);
+
+	/* Invalid port_nr argument. */
+	TEST_ASSERT(nanvix_name_register("cool-name", -1) < 0);
+	TEST_ASSERT(nanvix_name_register("cool-name", 1000) < 0);
+}
+
+/*============================================================================*
+ * Fault Injection Test: Double Register                                      *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Double Name Register
+ */
+static void test_name_double_register(void)
+{
+	TEST_ASSERT(nanvix_name_register("cool-name", 0) == 0);
+	TEST_ASSERT(nanvix_name_register("cool-name", 0) < 0);
+	TEST_ASSERT(nanvix_name_unregister("cool-name") == 0);
+}
+
+/*============================================================================*
+ * Fault Injection Test: Invalid Unregister                                   *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Name Unregister Invalid Arguments
+ */
+static void test_name_invalid_unregister(void)
+{
+	char name[NANVIX_PROC_NAME_MAX + 1];
+
+	umemset(name, 1, NANVIX_PROC_NAME_MAX + 1);
+
+	/* Invalid names. */
+	TEST_ASSERT(nanvix_name_unregister(name) < 0);
+	TEST_ASSERT(nanvix_name_unregister(NULL) < 0);
+	TEST_ASSERT(nanvix_name_unregister("") < 0);
+}
+
+/*============================================================================*
+ * Fault Injection Test: Bad Unregister                                       *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Name Unregister a not registered name
+ */
+static void test_name_bad_unregister(void)
+{
+	TEST_ASSERT(nanvix_name_register("cool-name", 0) == 0);
+	TEST_ASSERT(nanvix_name_unregister("another-name") < 0);
+	TEST_ASSERT(nanvix_name_unregister("cool-name") == 0);
+}
+
+/*============================================================================*
+ * Fault Injection Test: Double Unregister                                    *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Double Name Unregister
+ */
+static void test_name_double_unregister(void)
+{
+	TEST_ASSERT(nanvix_name_register("cool-name", 0) == 0);
+	TEST_ASSERT(nanvix_name_unregister("cool-name") == 0);
+	TEST_ASSERT(nanvix_name_unregister("cool-name") < 0);
+}
+
+/*============================================================================*
+ * Fault Injection Test: Invalid Address Lookup                               *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Address Lookup Invalid Arguments
+ */
+static void test_name_invalid_address_lookup(void)
+{
+	char name[NANVIX_PROC_NAME_MAX + 1];
+	int port_nr;
+
+	umemset(name, 1, NANVIX_PROC_NAME_MAX + 1);
+
+	/* Lookup invalid names. */
+	TEST_ASSERT(nanvix_name_address_lookup(name, &port_nr) < 0);
+	TEST_ASSERT(nanvix_name_address_lookup(NULL, &port_nr) < 0);
+	TEST_ASSERT(nanvix_name_address_lookup("", &port_nr) < 0);
+
+	/* Bad port_nr argument. */
+	TEST_ASSERT(nanvix_name_address_lookup("cool-name", NULL) < 0);
+}
+
+/*============================================================================*
+ * Fault Injection Test: Bad Address Lookup                                   *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Not Linked Name
+ */
+static void test_name_bad_address_lookup(void)
+{
+	int port_nr;
+
+	/* Lookup missing name. */
+	TEST_ASSERT(nanvix_name_address_lookup("missing_name", &port_nr) < 0);
+}
+
+/*============================================================================*
+ * Fault Injection Test: Bad Address Lookup 2                                 *
+ *============================================================================*/
+
+/**
+ * @brief Fault Injection Test: Not Registered Name
+ */
+static void test_name_bad_address_lookup2(void)
+{
+	int port_nr;
+
+	TEST_ASSERT(nanvix_name_link(knode_get_num(), "cool_name") == 0);
+
+	/* Lookup name linked instead registered. */
+	TEST_ASSERT(nanvix_name_address_lookup("cool_name", &port_nr) < 0);
+
+	TEST_ASSERT(nanvix_name_unlink("cool_name") == 0);
+}
 
 /*============================================================================*
  * Fault Injection Driver Table                                               *
@@ -166,12 +306,20 @@ static void test_name_invalid_lookup(void)
  * @brief Unit tests.
  */
 struct test tests_name_fault[] = {
-	{ test_name_invalid_link,   "invalid link"   },
-	{ test_name_bad_link,       "bad link"       },
-	{ test_name_invalid_unlink, "invalid unlink" },
-	{ test_name_bad_unlink,     "bad unlink"     },
-	{ test_name_double_unlink,  "double unlink"  },
-	{ test_name_invalid_lookup, "invalid lookup" },
-	{ test_name_bad_lookup,     "bad lookup"     },
-	{ NULL,                      NULL            },
+	{ test_name_invalid_link,           "invalid link"         },
+	{ test_name_bad_link,               "bad link"             },
+	{ test_name_invalid_unlink,         "invalid unlink"       },
+	{ test_name_bad_unlink,             "bad unlink"           },
+	{ test_name_double_unlink,          "double unlink"        },
+	{ test_name_invalid_lookup,         "invalid lookup"       },
+	{ test_name_bad_lookup,             "bad lookup"           },
+	{ test_name_invalid_register,       "invalid register"     },
+	{ test_name_double_register,        "double register"      },
+	{ test_name_invalid_unregister,     "invalid unregister"   },
+	{ test_name_bad_unregister,         "bad unregister"       },
+	{ test_name_double_unregister,      "double unregister"    },
+	{ test_name_invalid_address_lookup, "invalid addr lookup"  },
+	{ test_name_bad_address_lookup,     "bad address lookup"   },
+	{ test_name_bad_address_lookup2,    "bad address lookup 2" },
+	{ NULL,                              NULL                  },
 };
