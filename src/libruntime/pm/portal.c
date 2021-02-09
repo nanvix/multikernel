@@ -196,7 +196,7 @@ int nanvix_portal_create(const char *name)
 		return (-EINVAL);
 
 	/* Runtime not initialized. */
-	if ((portalid = get_inportal()) < 0)
+	if ((portalid = stdinportal_get()) < 0)
 		return (-EAGAIN);
 
 	/* Allocate portal. */
@@ -214,6 +214,7 @@ int nanvix_portal_create(const char *name)
 	portals[id].owner = nodenum;
 	ustrcpy(portals[id].name, name);
 
+	inportals[core_get_id()] = id;
 	resource_set_rdonly(&portals[id].resource);
 
 	return (id);
