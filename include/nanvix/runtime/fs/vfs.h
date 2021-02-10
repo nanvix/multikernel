@@ -74,7 +74,7 @@
 	 * opened file is returned. Upon failure, a negative error code is
 	 * returned instead.
 	 */
-	extern int nanvix_vfs_open(const char *filename, int oflag);
+	extern int nanvix_vfs_open(const char *filename, int oflag, mode_t mode);
 
 	/**
 	 * @brief Closes a file.
