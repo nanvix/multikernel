@@ -82,6 +82,7 @@
 			{
 				char filename[NANVIX_NAME_MAX]; /**< File Name  */
 				int oflag;                      /**< Open Flags */
+				mode_t mode;                    /**< Mode Flags */
 			} open;
 
 			/**

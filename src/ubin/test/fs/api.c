@@ -56,13 +56,13 @@ static void test_api_nanvix_vfs_open_close(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDONLY)) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
 	uassert(nanvix_vfs_close(fd) == 0);
 
-	uassert((fd = nanvix_vfs_open(filename, O_WRONLY)) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_WRONLY, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
 	uassert(nanvix_vfs_close(fd) == 0);
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDWR)) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDWR, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
 	uassert(nanvix_vfs_close(fd) == 0);
 }
 
@@ -95,7 +95,7 @@ static void test_api_nanvix_vfs_seek(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDWR)) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDWR, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
 
 		uassert(nanvix_vfs_seek(fd, NANVIX_FS_BLOCK_SIZE, SEEK_CUR) >= 0);
 		uassert(nanvix_vfs_seek(fd, 0, SEEK_END) >= 0);
@@ -116,7 +116,7 @@ static void test_api_nanvix_vfs_read_write(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDWR)) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDWR, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
 
 		/* Write */
 		umemset(data, 1, NANVIX_FS_BLOCK_SIZE);
@@ -143,7 +143,7 @@ static void test_api_nanvix_vfs_creat(void)
 	int fd;
 	const char *filename = "new_file";
 
-	uassert((fd = nanvix_vfs_open(filename, (O_CREAT | O_WRONLY))) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, (O_CREAT | O_WRONLY), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
 
 	uassert(nanvix_vfs_close(fd) == 0);
 }
@@ -155,7 +155,7 @@ static void test_api_nanvix_vfs_unlink(void)
 {
 	char *filename = "new_file";
 
-	uassert((nanvix_vfs_open(filename, O_RDWR | O_CREAT)) >= 0);
+	uassert((nanvix_vfs_open(filename, O_RDWR | O_CREAT, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
 
 	uassert(nanvix_vfs_unlink(filename) == 0);
 }

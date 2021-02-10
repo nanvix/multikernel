@@ -123,7 +123,7 @@ int nanvix_vfs_stat(const char *filename, struct nanvix_stat *restrict buf)
  * - O_WRONLY opens a file for write-only.
  * - O_RDWR opens a file for both read and write.
  */
-static int do_nanvix_vfs_open(const char *filename, int oflag)
+static int do_nanvix_vfs_open(const char *filename, int oflag, mode_t mode)
 {
 	struct vfs_message msg;
 
@@ -131,6 +131,7 @@ static int do_nanvix_vfs_open(const char *filename, int oflag)
 	message_header_build(&msg.header, VFS_OPEN);
 	ustrncpy(msg.op.open.filename, filename, NANVIX_NAME_MAX);
 	msg.op.open.oflag = oflag;
+	msg.op.open.mode = mode;
 
 	/* Send operation. */
 	uassert(
@@ -161,7 +162,7 @@ static int do_nanvix_vfs_open(const char *filename, int oflag)
  *
  * @author Pedro Henrique Penna
  */
-int nanvix_vfs_open(const char *filename, int oflag)
+int nanvix_vfs_open(const char *filename, int oflag, mode_t mode)
 {
 	/* Invalid server ID. */
 	if (!server.initialized)
@@ -179,7 +180,7 @@ int nanvix_vfs_open(const char *filename, int oflag)
 	if (!ACCMODE_RDONLY(oflag) && !ACCMODE_WRONLY(oflag) && !ACCMODE_RDWR(oflag))
 		return (-EINVAL);
 
-	return (do_nanvix_vfs_open(filename, oflag));
+	return (do_nanvix_vfs_open(filename, oflag, mode));
 }
 
 /*============================================================================*
