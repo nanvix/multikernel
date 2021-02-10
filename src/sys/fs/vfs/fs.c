@@ -344,7 +344,6 @@ int file_block_count(struct inode *ip)
 	struct buffer *blk_buf;     /* block buffer                 */
 	struct buffer *blk_buf_di;  /* block buffer double indirect */
 	struct d_inode *ino_data;   /* inode data                   */
-	int nr_zones = 0;           /* Total number of zones        */
 
 	/* invalid inode */
 	if (ip == NULL) {
