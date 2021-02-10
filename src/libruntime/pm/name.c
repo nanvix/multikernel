@@ -762,7 +762,7 @@ int __nanvix_name_setup(void)
 	if ((server = kmailbox_open(NAME_SERVER_NODE, NAME_SERVER_PORT_NUM)) < 0)
 		return (-1);
 
-	uassert(nanvix_mutex_init(&_name_lock) == 0);
+	uassert(nanvix_mutex_init(&_name_lock, NULL) == 0);
 
 	initialized = true;
 
@@ -789,7 +789,7 @@ int __nanvix_name_daemon_init(void)
 	 * emmit address_lookups and only in these cases these structures may become
 	 * necessary.
 	 */
-	uassert(nanvix_mutex_init(&_local_lock) == 0);
+	uassert(nanvix_mutex_init(&_local_lock, NULL) == 0);
 
 	uassert(nanvix_cond_init(&_local_condvar) == 0);
 
