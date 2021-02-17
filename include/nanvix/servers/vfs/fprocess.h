@@ -40,6 +40,7 @@
 	struct fprocess
 	{
 		int errcode;                          /**< Error Code        */
+		mode_t umask;                   /**< Default umask     */
 		struct inode *pwd;                    /**< Working Directory */
 		struct inode *root;                   /**< Root Directory    */
 		struct file *ofiles[NANVIX_OPEN_MAX]; /**< Opened Files      */

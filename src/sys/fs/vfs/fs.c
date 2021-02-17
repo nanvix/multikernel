@@ -58,6 +58,36 @@ static struct file filetab[NANVIX_NR_FILES];
 	(x)->inode = NULL;      \
 }
 
+
+/**
+ * @brief Checks file access permissions
+ * TODO use real uid and gid instead of superuser
+ */
+mode_t has_permissions(mode_t mode, nanvix_uid_t uid, nanvix_gid_t gid, struct fprocess *proc, mode_t mask)
+{
+	((void) proc);
+	mode &= mask;
+
+	/* Super user */
+	if (IS_SUPERUSER(NANVIX_ROOT_UID))
+		mode &= (S_IRWXU | S_IRWXG | S_IRWXO);
+
+	/* owner user */
+	else if (NANVIX_ROOT_UID == uid)
+		mode &= (S_IRUSR | S_IWUSR | S_IXUSR);
+
+	/* group */
+	else if (NANVIX_ROOT_GID == gid)
+		mode &= (S_IRGRP | S_IWGRP | S_IXGRP);
+
+	/* Others */
+	else
+		mode &= (S_IRWXO);
+
+	return (mode);
+}
+
+
 /*============================================================================*
  * getfile()                                                                  *
  *============================================================================*/
@@ -197,70 +227,83 @@ int fs_trucate(struct filesystem *fs, struct inode *ip)
  * @returns Upon successful completion an inode to the newly created file
  * is returned. Upon failure, NULL is returned instead
  */
-static struct inode *do_creat(
-	const char *name,
-	int oflag,
-	mode_t mode
-)
+static struct inode *do_creat( const char *name, int oflag, mode_t mode)
 {
 	int exists = 0;           /* file already exists   */
-	struct file *f;           /* created file          */
+	int dadd_err = 0;         /* dirent add error code */
 	struct inode *ip;         /* inode                 */
 	struct inode *curr_dir;   /* current directory     */
 
-	/* not asked to create file or no permissions to write*/
+	/* not asked to create file */
 	if (!(oflag & O_CREAT)) {
 		curr_proc->errcode = -(ENOENT);
 		return (NULL);
 	}
 
-	if (!(oflag & (O_WRONLY | O_RDWR))) {
-		curr_proc->errcode = -(EACCES);
+	if (mode <= 0) {
+		curr_proc->errcode = -(EINVAL);
 		return (NULL);
 	}
+
+	mode &= ~(curr_proc->umask);
+	mode |= S_IFREG;
 
 	/* file already exists */
 	if ((ip = inode_name(&fs_root, name)) != NULL) {
 		exists = 1;
 		/* no write permitions */
-		if (!(mode & (inode_disk_get(ip)->i_mode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
+		/* TODO: use real uid and gid */
+		if (!(has_permissions(mode, NANVIX_ROOT_UID, NANVIX_ROOT_GID, curr_proc, (S_IWUSR | S_IWGRP | S_IWOTH)))) {
 			curr_proc->errcode = -(EACCES);
+			goto error;
+		}
+
+		/* directory */
+		if (S_ISDIR(inode_disk_get(ip)->i_mode)) {
+			curr_proc->errcode = -(EINVAL);
 			goto error;
 		}
 	}
 
-	/* creates file */
+	/* file does not exist */
+	else {
+		/* TODO: find current directory */
+		curr_dir = curr_proc->pwd;
 
-	/* TODO: find current directory */
-	curr_dir = fs_root.root;
+		/* no write permissions to the directory */
+		/* TODO: use real uid and gid */
+		if (!(has_permissions(inode_disk_get(curr_dir)->i_mode,
+						NANVIX_ROOT_UID,
+						NANVIX_ROOT_GID,
+						curr_proc,
+						(S_IWUSR | S_IWGRP | S_IWOTH))
+			 ))
+		{
+			curr_proc->errcode = -(EACCES);
+			return (NULL);
+		}
 
-	/* no write permissions to the directory */
-	if (!(mode & (inode_disk_get(curr_dir)->i_mode & (S_IWUSR | S_IWGRP | S_IWOTH)))) {
-		curr_proc->errcode = -(EACCES);
-		return (NULL);
+		/* alocate inode and create dirent */
+
+		/* TODO: pass uid and gid instead of superuser */
+		if ((ip = inode_alloc(&fs_root, mode, NANVIX_ROOT_UID, NANVIX_ROOT_GID)) == NULL)
+			/* errcode set by inode_alloc */
+			return (NULL);
+
+		dadd_err = minix_dirent_add( inode_get_dev(ip),
+						&(fs_root.super->data),
+						fs_root.super->bmap,
+						inode_disk_get(curr_dir),
+						name,
+						inode_get_num(ip)
+					);
+
+		if (dadd_err < 0) {
+			curr_proc->errcode = (dadd_err);
+			goto error;
+		}
+
 	}
-
-	/* alocate inode if it doesn't exist */
-	/* TODO: pass uid and gid instead of 0 */
-	if (!exists && (ip = inode_alloc(&fs_root, mode, 0, 0)) == NULL) {
-		return (NULL);
-	}
-
-	minix_dirent_add(
-			inode_get_dev(ip),
-			&(fs_root.super->data),
-			fs_root.super->bmap,
-			inode_disk_get(ip),
-			name,
-			inode_get_num(ip)
-			);
-
-	if ((f = getfile()) == NULL) {
-		curr_proc->errcode = -(ENFILE);
-		goto error;
-	}
-
-	f->count = 1;
 
 	/* file already existed, truncate it */
 	if (exists && (oflag & O_TRUNC)) {
@@ -287,7 +330,7 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 	struct inode *ip;
 
 	/* Invalid filename. */
-	if (filename == NULL)
+	if (filename == NULL || *filename == '\0')
 	{
 		curr_proc->errcode = -EINVAL;
 		return (NULL);
@@ -296,10 +339,11 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 	/* Search file and create it if flag has O_CREAT bit. */
 	if ((ip = inode_name(&fs_root, filename)) == NULL)
 	{
-		if ((oflag & O_CREAT) &&
-				(ip = do_creat(filename, oflag, mode)) == NULL)
-			return (NULL);
-		return (ip);
+			if ((ip = do_creat(filename, oflag, mode)) == NULL)
+				/* errcode set by do_creat */
+				return (NULL);
+
+			return (ip);
 	}
 
 	/* Block special file. */
@@ -312,8 +356,7 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 	/* Regular file. */
 	else if (S_ISREG(inode_disk_get(ip)->i_mode))
 	{
-		curr_proc->errcode = -ENOTSUP;
-		goto error;
+		inode_increase_count(ip);
 	}
 
 	/* Directory. */
@@ -665,7 +708,7 @@ int fs_unlink(const char *filename)
 	if (S_ISDIR(inode_disk_get(fip)->i_mode)) {
 
 		/* TODO use real uid of process owner */
-		if (!IS_SUPERUSER(1)) {
+		if (!IS_SUPERUSER(NANVIX_ROOT_UID)) {
 			ret = (-EACCES);
 			goto error;
 		}

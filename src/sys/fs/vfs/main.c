@@ -213,7 +213,6 @@ static int do_vfs_server_unlink(const struct vfs_message *request)
 
 	const int connection = aux_conn;
 
-
 	/* XXX: forwarding parameter checking to lower level function. */
 
 	ret = vfs_unlink(

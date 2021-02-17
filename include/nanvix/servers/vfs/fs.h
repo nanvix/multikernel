@@ -35,6 +35,7 @@
 	#include <nanvix/hal/resource.h>
 	#include <posix/sys/types.h>
 	#include "minix.h"
+	#include "fprocess.h"
 
 	/**
 	 * @brief In-Memory Superblock
@@ -71,6 +72,11 @@
 		struct inode *root;       /**< Root Directory    */
 		struct superblock *super; /**< Superblock        */
 	};
+
+	/**
+	 * @brief Checks file access permissions
+	 */
+	extern mode_t has_permissions(mode_t mode, nanvix_uid_t uid, nanvix_gid_t gid, struct fprocess *proc, mode_t mask);
 
 	/**
 	 * @brief Initializes the file system.

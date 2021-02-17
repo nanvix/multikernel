@@ -567,6 +567,39 @@ struct inode *inode_alloc(
  *============================================================================*/
 
 /**
+ * @brief Gets the first path part and stores it in @p dirname
+ */
+char *dirname(const char *path, char *dirname)
+{
+	const char *pa;    /* path pointer    */
+	char *dp;          /* dirname pointer */
+
+	if (path == NULL)
+		return (NULL);
+
+	pa = path;
+	dp = dirname;
+
+	/* ignore beggining '/' */
+	while (*pa == '/')
+		pa++;
+
+	/* read until next '/' or end of string */
+	while (*pa != '/' && *pa != '\0') {
+
+		/* name too long */
+		if ((dp - dirname) > NANVIX_NAME_MAX)
+			return (NULL);
+
+		*dp++ = *pa++;
+	}
+
+	*dp = '\0';
+
+	return dirname;
+}
+
+/**
  * The inode_name() function lookups an inode by the name pointed to by
  * @p name. The root directory of @p fs is used as start point for the
  * search.
@@ -576,9 +609,14 @@ struct inode *inode_alloc(
  */
 struct inode *inode_name(struct filesystem *fs, const char *name)
 {
-	struct inode *dinode;   /* Directory's inode.     */
-	off_t off;              /* Offset of Target Inode */
-	struct d_dirent dirent; /* Directory Entry        */
+	struct inode *dinode;   /* Directory's inode.       */
+	off_t off;              /* Offset of Target Inode   */
+	struct d_dirent dirent; /* Directory Entry          */
+	const char *remainder;  /* Path remainder string    */
+	char *needle;           /* searched directory entry */
+	char filename[NANVIX_NAME_MAX + 1];
+
+	remainder = name;
 
 	/* Invalid file system */
 	if (fs == NULL)
@@ -594,27 +632,63 @@ struct inode *inode_name(struct filesystem *fs, const char *name)
 		return (NULL);
 	}
 
-	dinode = curr_proc->root;
+	/* root directory */
+	if ((ustrncmp(name, "/", NANVIX_NAME_MAX)) == 0)
+		return fs->root;
 
-	/* Failed to get directory. */
-	if (dinode == NULL)
-	{
-		curr_proc->errcode = -EINVAL;
-		return (NULL);
-	}
+	/* absolute path */
+	if (*remainder == '/')
+		dinode = fs->root;
 
-	/* Search file. */
-	if ((off = minix_dirent_search(fs->dev, &fs->super->data, fs->super->bmap, inode_disk_get(dinode), name, 0)) < 0)
-	{
-		curr_proc->errcode = -ENOENT;
-		return (NULL);
-	}
+	/* relative path */
+	else
+		dinode = curr_proc->pwd;
 
-	/* Read Directory entry */
-	if (bdev_read(fs->dev, (char *) &dirent, sizeof(struct d_dirent), off) < 0)
-	{
-		curr_proc->errcode = -EIO;
-		return (NULL);
+	while (*remainder != '\0') {
+		/* Failed to get directory. */
+		if (dinode == NULL)
+		{
+			curr_proc->errcode = -EINVAL;
+			return (NULL);
+		}
+
+		/* TODO: Use real uid and gid */
+		if (!(has_permissions(inode_disk_get(dinode)->i_mode,
+						NANVIX_ROOT_UID,
+						NANVIX_ROOT_GID,
+						curr_proc,
+						(S_IRUSR | S_IRGRP | S_IROTH))
+					)) {
+			curr_proc->errcode = -EACCES;
+			return (NULL);
+		}
+
+		/* skip beggining '/' */
+		if (*remainder == '/')
+			remainder++;
+
+		/* get the dirname of the path */
+		if ((needle = dirname(remainder, filename)) == NULL)
+			return (NULL);
+
+		/* Search file. */
+		if ((off = minix_dirent_search(fs->dev, &fs->super->data, fs->super->bmap, inode_disk_get(dinode), needle, 0)) < 0)
+		{
+			curr_proc->errcode = -ENOENT;
+			return (NULL);
+		}
+
+		/* Read Directory entry */
+		if (bdev_read(fs->dev, (char *) &dirent, sizeof(struct d_dirent), off) < 0)
+		{
+			curr_proc->errcode = -EIO;
+			return (NULL);
+		}
+
+		dinode = inode_get(&fs_root, dirent.d_ino);
+		/* move to the next directory in path */
+		while (*remainder != '/' && *remainder != '\0')
+			remainder++;
 	}
 
 	return (inode_get(&fs_root, dirent.d_ino));

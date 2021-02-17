@@ -54,7 +54,7 @@ static void test_fault_nanvix_vfs_stat_invalid(void)
 }
 
 /**
- * @brief Fault Injection Test: Bad Open
+ * @brief Fault Injection Test: Bad Stat
  */
 static void test_fault_nanvix_vfs_stat_bad(void)
 {
@@ -76,9 +76,11 @@ static void test_fault_nanvix_vfs_open_invalid(void)
 	const char *filename = "disk";
 	const char *longname =
 		"this file name is so long that should trigger an error";
+	const char *emptyname = "";
 
-	uassert(nanvix_vfs_open(filename, -1, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG)) == -EINVAL);
-	uassert(nanvix_vfs_open(longname, O_WRONLY, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG)) == -ENAMETOOLONG);
+	uassert(nanvix_vfs_open(filename, -1, 0) == -EINVAL);
+	uassert(nanvix_vfs_open(emptyname, O_WRONLY, 0) == -EINVAL);
+	uassert(nanvix_vfs_open(longname, O_WRONLY, 0) == -ENAMETOOLONG);
 }
 
 /**
@@ -88,7 +90,7 @@ static void test_fault_nanvix_vfs_open_bad(void)
 {
 	const char *filename = "foobar";
 
-	uassert(nanvix_vfs_open(filename, O_WRONLY, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG)) == -ENOENT);
+	uassert(nanvix_vfs_open(filename, O_WRONLY, 0) == -ENOENT);
 }
 
 /**
@@ -96,10 +98,8 @@ static void test_fault_nanvix_vfs_open_bad(void)
  */
 static void test_fault_nanvix_vfs_creat_invalid(void)
 {
-	const char *newfilename = "new_file";
-	uassert(nanvix_vfs_open(newfilename, (O_CREAT | O_RDONLY), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG)) == -EACCES);
-	uassert(nanvix_vfs_open(newfilename, (O_CREAT | 8), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG)) == -EACCES);
-	uassert(nanvix_vfs_open(newfilename, (O_CREAT), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG)) == -EACCES);
+	const char *newfilename = "invalid_file";
+	uassert(nanvix_vfs_open(newfilename, (O_CREAT | O_WRONLY), 0) == -EINVAL);
 }
 
 /**
@@ -107,9 +107,8 @@ static void test_fault_nanvix_vfs_creat_invalid(void)
  */
 static void test_fault_nanvix_vfs_creat_bad(void)
 {
-	const char *newfilename = "new_file";
-	uassert(nanvix_vfs_open(newfilename, -O_CREAT, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG)) == -EACCES);
-	uassert(nanvix_vfs_open(newfilename, 0, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG)) == -ENOENT);
+	const char *newfilename = "bad_file";
+	uassert(nanvix_vfs_open(newfilename, 0, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) == -ENOENT);
 }
 
 /*============================================================================*
@@ -133,7 +132,7 @@ static void test_fault_nanvix_vfs_close_bad(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, 0)) >= 0);
 	uassert(nanvix_vfs_close(fd + 1) == -EBADF);
 	uassert(nanvix_vfs_close(fd) == 0);
 }
@@ -151,11 +150,12 @@ static void test_fault_nanvix_vfs_unlink_invalid(void)
 	int fd2;
 	const char *filename = "filename";
 
+	uassert(nanvix_vfs_unlink("/") == -EINVAL);
 	uassert(nanvix_vfs_unlink(NULL) == -EINVAL);
 	uassert(nanvix_vfs_unlink("some_file") == -ENOENT);
 
-	uassert((fd1 = nanvix_vfs_open(filename, (O_CREAT | O_RDONLY), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
-	uassert((fd2 = nanvix_vfs_open(filename, (O_CREAT | O_RDONLY), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
+	uassert((fd1 = nanvix_vfs_open(filename, (O_CREAT | O_RDONLY), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) >= 0);
+	uassert((fd2 = nanvix_vfs_open(filename, (O_CREAT | O_RDONLY), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) >= 0);
 	uassert(nanvix_vfs_unlink(filename) == -EBUSY);
 	uassert(nanvix_vfs_close(fd1) == 0);
 	uassert(nanvix_vfs_close(fd2) == 0);
@@ -181,7 +181,7 @@ static void test_fault_nanvix_vfs_seek_invalid(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDWR, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDWR, 0)) >= 0);
 
 		uassert(nanvix_vfs_seek(-1, NANVIX_FS_BLOCK_SIZE, SEEK_SET) == -EINVAL);
 		uassert(nanvix_vfs_seek(NANVIX_NR_FILES, NANVIX_FS_BLOCK_SIZE, SEEK_SET) == -EINVAL);
@@ -199,7 +199,7 @@ static void test_fault_nanvix_vfs_seek_bad(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, 0)) >= 0);
 	uassert(nanvix_vfs_seek(fd + 1, NANVIX_FS_BLOCK_SIZE, SEEK_SET) == -EBADF);
 	uassert(nanvix_vfs_close(fd) == 0);
 }
@@ -216,7 +216,7 @@ static void test_fault_nanvix_vfs_read_invalid(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDWR, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDWR, 0)) >= 0);
 
 		uassert(nanvix_vfs_read(-1, data, NANVIX_FS_BLOCK_SIZE) == -EINVAL);
 		uassert(nanvix_vfs_read(NANVIX_NR_FILES, data, NANVIX_FS_BLOCK_SIZE) == -EINVAL);
@@ -234,7 +234,7 @@ static void test_fault_nanvix_vfs_read_bad(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, 0)) >= 0);
 	uassert(nanvix_vfs_read(fd + 1, data, NANVIX_FS_BLOCK_SIZE) == -EBADF);
 	uassert(nanvix_vfs_close(fd) == 0);
 }
@@ -251,7 +251,7 @@ static void test_fault_nanvix_vfs_write_invalid(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDWR, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDWR, 0)) >= 0);
 
 		uassert(nanvix_vfs_write(-1, data, NANVIX_FS_BLOCK_SIZE) == -EINVAL);
 		uassert(nanvix_vfs_write(NANVIX_NR_FILES, data, NANVIX_FS_BLOCK_SIZE) == -EINVAL);
@@ -269,7 +269,7 @@ static void test_fault_nanvix_vfs_write_bad(void)
 	int fd;
 	const char *filename = "disk";
 
-	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH | S_IFREG))) >= 0);
+	uassert((fd = nanvix_vfs_open(filename, O_RDONLY, 0)) >= 0);
 	uassert(nanvix_vfs_write(fd + 1, data, NANVIX_FS_BLOCK_SIZE) == -EBADF);
 	uassert(nanvix_vfs_close(fd) == 0);
 }
