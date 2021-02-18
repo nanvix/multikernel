@@ -65,8 +65,10 @@ static void test_api_sem_up_down(void)
 	uassert((semid = do_sem_get(100, IPC_CREAT)) >= 0);
 
 	sembuf.sem_op = 1;
+	sembuf.sem_flg = 0;
 	uassert(do_sem_operate(pid, semid, &sembuf) == 0);
 	sembuf.sem_op = -1;
+	sembuf.sem_flg = 0;
 	uassert(do_sem_operate(pid, semid, &sembuf) == 0);
 
 	uassert(do_sem_close(semid) == 0);

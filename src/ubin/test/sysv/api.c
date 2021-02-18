@@ -119,12 +119,15 @@ static void test_api_sem_up_down(void)
 	uassert((semid = __nanvix_semget(100, IPC_CREAT | IPC_EXCL)) >= 0);
 
 		sembuf.sem_op = 1;
+		sembuf.sem_flg = 0;
 		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 		sembuf.sem_op = -1;
+		sembuf.sem_flg = 0;
 		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 		sembuf.sem_op = 0;
+		sembuf.sem_flg = 0;
 		uassert(__nanvix_semop(semid, &sembuf, 1) == 0);
 
 		sembuf.sem_op = -1;
