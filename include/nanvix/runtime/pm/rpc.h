@@ -31,6 +31,16 @@
 
 	#include <nanvix/kernel/config.h>
 
+#if 0
+	/**
+	 * @name Operation types for Name Server.
+	 */
+	/**@{*/
+	#define RPC_NORMAL  0 /**< Resquest an ACK from acceptance.        */
+	#define RPC_ONE_WAY 1 /**< Do not resquest an ACK from acceptance. */
+	/**@}*/
+#endif
+
 	/**
 	 * @brief Initializes the Name Service client.
 	 *
