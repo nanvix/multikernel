@@ -140,6 +140,8 @@ static int nanvix_rpc_dispatcher(struct task_args * args)
 	struct task * rpc;
 	struct rpc_message req;
 
+	return (0);
+
 	UNUSED(args);
 
 	uassert(inbox = stdinbox_get() >= 1);

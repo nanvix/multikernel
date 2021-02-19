@@ -105,7 +105,10 @@ int __runtime_setup(int ring)
 		uassert(__stdsync_setup() == 0);
 		uassert(__stdmailbox_setup() == 0);
 		uassert(__stdportal_setup() == 0);
+
+#if 0 /* Comm. using task broken the RPC. */
 		uassert(__nanvix_rpc_setup() == 0);
+#endif
 	}
 
 	/* Initialize Ring 1. */
