@@ -152,9 +152,6 @@ static void test_api_nanvix_vfs_creat(void)
 static void test_api_nanvix_vfs_unlink(void)
 {
 	char *filename = "new_file";
-
-	uassert((nanvix_vfs_open(filename, (O_RDWR | O_CREAT), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) >= 0);
-
 	uassert(nanvix_vfs_unlink(filename) == 0);
 }
 

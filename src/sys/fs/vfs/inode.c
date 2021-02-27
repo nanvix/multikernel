@@ -112,14 +112,14 @@ ino_t inode_get_num(const struct inode *ip)
 
 
 /*============================================================================*
- * inode_zero_num()                                                           *
+ * inode_null()                                                           *
  *============================================================================*/
 
 /**
- * The inode_zero_num() function zeroes the number of the inode pointed to
+ * The inode_null() function zeroes the number of the inode pointed to
  * by @p ip.
  */
-void inode_zero_num(struct inode *ip)
+void inode_null(struct inode *ip)
 {
 	/* Invalid inode. */
 	if (ip == NULL)
@@ -135,7 +135,7 @@ void inode_zero_num(struct inode *ip)
 		return;
 	}
 
-	ip->num = 0;
+	ip->num = MINIX_INODE_NULL;
 }
 
 /*============================================================================*
@@ -634,16 +634,17 @@ struct inode *inode_name(struct filesystem *fs, const char *name)
 
 	/* root directory */
 	if ((ustrncmp(name, "/", NANVIX_NAME_MAX)) == 0)
-		return fs->root;
+		return inode_get(fs, MINIX_INODE_ROOT);
 
 	/* absolute path */
 	if (*remainder == '/')
-		dinode = fs->root;
+		dinode = inode_get(fs, MINIX_INODE_ROOT);
 
 	/* relative path */
 	else
-		dinode = curr_proc->pwd;
+		dinode = inode_get(fs, inode_get_num(curr_proc->pwd));
 
+	/* parse path */
 	while (*remainder != '\0') {
 		/* Failed to get directory. */
 		if (dinode == NULL)
@@ -653,10 +654,10 @@ struct inode *inode_name(struct filesystem *fs, const char *name)
 		}
 
 		/* TODO: Use real uid and gid */
-		if (!(has_permissions(inode_disk_get(dinode)->i_mode,
+		if (!(has_permissions(
+						inode_disk_get(dinode)->i_mode,
 						NANVIX_ROOT_UID,
 						NANVIX_ROOT_GID,
-						curr_proc,
 						(S_IRUSR | S_IRGRP | S_IROTH))
 					)) {
 			curr_proc->errcode = -EACCES;
@@ -664,7 +665,7 @@ struct inode *inode_name(struct filesystem *fs, const char *name)
 		}
 
 		/* skip beggining '/' */
-		if (*remainder == '/')
+		while (*remainder == '/')
 			remainder++;
 
 		/* get the dirname of the path */

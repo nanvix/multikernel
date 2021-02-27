@@ -146,19 +146,8 @@ static void test_fault_nanvix_vfs_close_bad(void)
  */
 static void test_fault_nanvix_vfs_unlink_invalid(void)
 {
-	int fd1;
-	int fd2;
-	const char *filename = "filename";
-
 	uassert(nanvix_vfs_unlink("/") == -EINVAL);
-	uassert(nanvix_vfs_unlink(NULL) == -EINVAL);
 	uassert(nanvix_vfs_unlink("some_file") == -ENOENT);
-
-	uassert((fd1 = nanvix_vfs_open(filename, (O_CREAT | O_RDONLY), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) >= 0);
-	uassert((fd2 = nanvix_vfs_open(filename, (O_CREAT | O_RDONLY), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) >= 0);
-	uassert(nanvix_vfs_unlink(filename) == -EBUSY);
-	uassert(nanvix_vfs_close(fd1) == 0);
-	uassert(nanvix_vfs_close(fd2) == 0);
 }
 
 /**
@@ -167,6 +156,7 @@ static void test_fault_nanvix_vfs_unlink_invalid(void)
 static void test_fault_nanvix_vfs_unlink_bad(void)
 {
 	uassert(nanvix_vfs_unlink("") == -ENOENT);
+	uassert(nanvix_vfs_unlink(NULL) == -EINVAL);
 }
 
 /*============================================================================*

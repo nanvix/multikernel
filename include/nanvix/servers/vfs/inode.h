@@ -68,10 +68,10 @@
 	ino_t inode_get_num(const struct inode *ip);
 
 	/**
-	 * The inode_zero_num() function zeroes the number of the inode pointed to
+	 * The inode_null() function zeroes the number of the inode pointed to
 	 * by @p ip.
 	 */
-	void inode_zero_num(const struct inode *ip);
+	void inode_null(const struct inode *ip);
 
 	/**
 	 * The inode_get_dev() function gets the device number of the inode

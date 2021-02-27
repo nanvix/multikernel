@@ -63,9 +63,8 @@ static struct file filetab[NANVIX_NR_FILES];
  * @brief Checks file access permissions
  * TODO use real uid and gid instead of superuser
  */
-mode_t has_permissions(mode_t mode, nanvix_uid_t uid, nanvix_gid_t gid, struct fprocess *proc, mode_t mask)
+mode_t has_permissions(mode_t mode, nanvix_uid_t uid, nanvix_gid_t gid, mode_t mask)
 {
-	((void) proc);
 	mode &= mask;
 
 	/* Super user */
@@ -253,7 +252,7 @@ static struct inode *do_creat( const char *name, int oflag, mode_t mode)
 		exists = 1;
 		/* no write permitions */
 		/* TODO: use real uid and gid */
-		if (!(has_permissions(mode, NANVIX_ROOT_UID, NANVIX_ROOT_GID, curr_proc, (S_IWUSR | S_IWGRP | S_IWOTH)))) {
+		if (!(has_permissions(mode, NANVIX_ROOT_UID, NANVIX_ROOT_GID, (S_IWUSR | S_IWGRP | S_IWOTH)))) {
 			curr_proc->errcode = -(EACCES);
 			goto error;
 		}
@@ -275,7 +274,6 @@ static struct inode *do_creat( const char *name, int oflag, mode_t mode)
 		if (!(has_permissions(inode_disk_get(curr_dir)->i_mode,
 						NANVIX_ROOT_UID,
 						NANVIX_ROOT_GID,
-						curr_proc,
 						(S_IWUSR | S_IWGRP | S_IWOTH))
 			 ))
 		{
@@ -655,7 +653,7 @@ int fs_close(int fd)
 	else if (S_ISREG(inode_disk_get(ip)->i_mode)) {
 		/* Inode is used by others */
 		if (inode_get_count(ip) > 1) {
-			inode_set_count(ip, inode_get_count(ip) - 1);
+			inode_decrease_count(ip);
 			return (0);
 		}
 	}
@@ -675,6 +673,45 @@ int fs_close(int fd)
  * fs_unlink()                                                                *
  *============================================================================*/
 
+int do_unlink(const char *filename, struct inode *fip)
+{
+	int ret = 0;       /* return value    */
+	struct inode *dip; /* directory inode */
+
+	/*TODO get parent directory inode */
+	dip = inode_get(&fs_root, inode_get_num(curr_proc->pwd));
+
+	/* remove from region table */
+	ret = minix_dirent_remove(
+			fs_root.dev,
+			&(fs_root.super->data),
+			fs_root.super->bmap,
+			inode_disk_get(dip),
+			filename
+		);
+
+
+	if (ret < 0)
+		goto error;
+
+	/* decrement file link count */
+	inode_null(fip);
+	inode_decrease_count(fip);
+
+	inode_touch(dip);
+
+	inode_put(&fs_root, dip);
+	inode_put(&fs_root, fip);
+
+	return (0);
+
+error:
+	inode_put(&fs_root, dip);
+	inode_put(&fs_root, fip);
+
+	return ret;
+}
+
 /**
  * @brief Unlink a file from it's directory
  *
@@ -682,15 +719,11 @@ int fs_close(int fd)
  */
 int fs_unlink(const char *filename)
 {
-	int ret;                /* return value           */
+	int ret = 0;            /* return value           */
 	struct inode *fip;      /* file inode             */
-	struct inode *dip;      /* parent directory inode */
 
 	if (filename == NULL)
 		return (-EINVAL);
-
-	/*TODO get parent directory inode (parse path) */
-	dip = fs_root.root;
 
 	/* get file inode */
 	if ((fip = inode_name(&fs_root, filename)) == NULL) {
@@ -714,39 +747,22 @@ int fs_unlink(const char *filename)
 		}
 
 		/* not empty */
-		if (inode_disk_get(fip)->i_size > 0) {
+		if (inode_disk_get(fip)->i_size) {
 			ret = (-EBUSY);
 			goto error;
 		}
 	}
 
-	/* file opened by other process */
-	if (inode_get_count(fip) > 1) {
-		ret = (-EBUSY);
+	if ((ret = do_unlink(filename, fip)) != 0)
 		goto error;
-	}
 
-	/* remove from region table */
-	minix_dirent_remove(fs_root.dev, &(fs_root.super->data), fs_root.super->bmap, inode_disk_get(dip), filename);
-
-	/* decrease directory size */
-	inode_disk_get(dip)->i_size--;
-	inode_touch(dip);
-
-	/* zero inode number of unlinked file */
-	inode_zero_num(fip);
-	/* decrement file link count */
-	inode_decrease_count(fip);
 	inode_touch(fip);
 	inode_put(&fs_root, fip);
 
 	return (0);
-
 error:
 	inode_put(&fs_root, fip);
-	inode_put(&fs_root, dip);
-
-	return ret;
+	return (ret);
 }
 
 /*============================================================================*
@@ -967,6 +983,13 @@ int fs_mount(struct filesystem *fs, dev_t dev)
 		goto error0;
 
 	/* Get reference root inode. */
+	if ((fs->root = inode_get(fs, MINIX_INODE_ROOT)) == NULL)
+	{
+		curr_proc->errcode = -ENOMEM;
+		goto error1;
+	}
+
+	/* double get on root to keep it available */
 	if ((fs->root = inode_get(fs, MINIX_INODE_ROOT)) == NULL)
 	{
 		curr_proc->errcode = -ENOMEM;

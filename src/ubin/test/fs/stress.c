@@ -114,7 +114,6 @@ static void test_stress_nanvix_vfs_creat_unlink(void)
 	for (int i = 0; i < NANVIX_OPEN_MAX; i++)
 	{
 		uassert(nanvix_vfs_open(filename, (O_WRONLY | O_CREAT), (S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH)) >= 0);
-		uprintf("%d", i);
 		uassert(nanvix_vfs_unlink(filename) == 0);
 	}
 
