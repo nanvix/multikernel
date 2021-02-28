@@ -337,12 +337,17 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 	/* Search file and create it if flag has O_CREAT bit. */
 	if ((ip = inode_name(&fs_root, filename)) == NULL)
 	{
-			if ((ip = do_creat(filename, oflag, mode)) == NULL)
-				/* errcode set by do_creat */
-				return (NULL);
+		if (!(oflag & O_CREAT)) {
+			curr_proc->errcode = -ENOENT;
+			return (NULL);
+		}
 
-			return (ip);
+		if ((ip = do_creat(filename, oflag, mode)) == NULL)
+			return (NULL);
+
+		return (ip);
 	}
+
 
 	/* Block special file. */
 	if (S_ISBLK(inode_disk_get(ip)->i_mode))
@@ -354,7 +359,8 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 	/* Regular file. */
 	else if (S_ISREG(inode_disk_get(ip)->i_mode))
 	{
-		inode_increase_count(ip);
+		curr_proc->errcode = -ENOTSUP;
+		goto error;
 	}
 
 	/* Directory. */
@@ -371,6 +377,50 @@ error:
 	return (NULL);
 }
 
+/**
+ * The fs_open() function opens the file named @p filename. The @p
+ * oflag parameter is used to set the opening flags, and @p mode is used
+ * to defined the access mode for the file, if the @p O_CREAT flag is
+ * passed.
+ */
+int fs_open(const char *filename, int oflag, mode_t mode)
+{
+	int fd;           /* File Descriptor  */
+	struct file *f;   /* File             */
+	struct inode *i;  /* Underlying Inode */
+
+	/* Get a free file descriptor. */
+	if ((fd = getfildes()) < 0)
+		return (-EMFILE);
+
+	/* Grab a free entry in the file table. */
+	if ((f = getfile()) == NULL)
+		return (-ENFILE);
+
+	/* Increment reference count before actually opening
+	 * the file because we can sleep below and another process
+	 * may want to use this file table entry also.  */
+	f->count = 1;
+
+	/* Open file. */
+	if ((i = do_open(filename, oflag, mode)) == NULL)
+	{
+		f->count = -1;
+		return (curr_proc->errcode);
+	}
+
+	/* Initialize file. */
+	f->oflag = oflag;
+	f->pos = 0;
+	f->inode = i;
+
+	curr_proc->ofiles[fd] = f;
+	return (fd);
+}
+
+/*============================================================================*
+ * fs_stat()                                                                  *
+ *============================================================================*/
 
 /**
  * @brief Counts number of blocks a file occupies
@@ -574,47 +624,6 @@ int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 	return 0;
 }
 
-/**
- * The fs_open() function opens the file named @p filename. The @p
- * oflag parameter is used to set the opening flags, and @p mode is used
- * to defined the access mode for the file, if the @p O_CREAT flag is
- * passed.
- */
-int fs_open(const char *filename, int oflag, mode_t mode)
-{
-	int fd;           /* File Descriptor  */
-	struct file *f;   /* File             */
-	struct inode *i;  /* Underlying Inode */
-
-	/* Get a free file descriptor. */
-	if ((fd = getfildes()) < 0)
-		return (-EMFILE);
-
-	/* Grab a free entry in the file table. */
-	if ((f = getfile()) == NULL)
-		return (-ENFILE);
-
-	/* Increment reference count before actually opening
-	 * the file because we can sleep below and another process
-	 * may want to use this file table entry also.  */
-	f->count = 1;
-
-	/* Open file. */
-	if ((i = do_open(filename, oflag, mode)) == NULL)
-	{
-		f->count = 0;
-		return (curr_proc->errcode);
-	}
-
-	/* Initialize file. */
-	f->oflag = oflag;
-	f->pos = 0;
-	f->inode = i;
-
-	curr_proc->ofiles[fd] = f;
-
-	return (fd);
-}
 
 /*============================================================================*
  * fs_close()                                                                 *
