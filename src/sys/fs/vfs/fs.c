@@ -524,7 +524,6 @@ int file_block_count(struct inode *ip)
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 
-	int ret;                    /* return value                 */
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
 	nanvix_dev_t rdev = 0;      /* dev id if special file       */
@@ -537,8 +536,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	if ((ip = inode_name(&fs_root, filename)) == NULL)
 	{
 		/* File doesn't exist*/
-		ret = (curr_proc->errcode = -ENOENT);
-		goto error;
+		return (curr_proc->errcode = -ENOENT);
 	}
 
 	ino_data = inode_disk_get(ip);
@@ -547,24 +545,21 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	if (S_ISBLK(ino_data->i_mode))
 	{
 		rdev = inode_get_dev(ip);
-		if (bdev_open(ino_data->i_zones[0]) < 0) {
-			ret = -1;
+		if (bdev_open(ino_data->i_zones[0]) < 0)
 			goto error;
-		}
 	}
-
 
 	/* Regular file. */
 	else if (S_ISREG(ino_data->i_mode))
 	{
-		ret = (curr_proc->errcode = -ENOTSUP);
+		curr_proc->errcode = -ENOTSUP;
 		goto error;
 	}
 
 	/* Directory. */
 	else if (S_ISDIR(ino_data->i_mode))
 	{
-		ret = (curr_proc->errcode = -ENOTSUP);
+		curr_proc->errcode = -ENOTSUP;
 		goto error;
 	}
 
@@ -588,7 +583,7 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 error:
 	inode_put(&fs_root, ip);
-	return ret;
+	return curr_proc->errcode;
 }
 
 /**
