@@ -125,6 +125,18 @@ static void test_api_vfs_open_close(void)
 }
 
 /**
+ * @brief API Test: Create/Unlink a File
+ */
+static void test_api_vfs_creat_unlink(void)
+{
+	int fd;
+	const char *filename = "new_file";
+
+	uassert((fd = vfs_open(CONNECTION, filename, (O_RDONLY | O_CREAT), (S_IRWXU | S_RGRP | S_ROTH))) >= 0);
+	uassert(vfs_unlink(CONNECTION, filename) == 0);
+}
+
+/**
  * @brief API Test: Seek Read/Write Pointer of a File
  */
 static void test_api_vfs_seek(void)
@@ -184,6 +196,7 @@ static struct
 	{ test_api_vfs_seek,                 "[vfs][api] seek                " },
 	{ test_api_vfs_read_write,           "[vfs][api] read/write          " },
 	{ test_api_vfs_stat,                 "[vfs][api] stat                " },
+	{ test_api_vfs_creat_unlink,         "[vfs][api] create/unlink       " },
 	{ test_api_vfs_stat_file_not_exists, "[vfs][api] stat no file        " },
 	{ test_api_vfs_stat_file_invalid,    "[vfs][api] stat invalid file   " },
 	{ test_api_vfs_stat_buffer_invalid,  "[vfs][api] stat invalid buffer " },
