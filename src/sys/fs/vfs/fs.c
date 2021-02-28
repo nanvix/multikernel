@@ -644,10 +644,8 @@ int fs_close(int fd)
 	curr_proc->ofiles[fd] = NULL;
 
 	/* File is opened by others. */
-	if (f->count > 1) {
-		f->count--;
+	if (f->count-- > 1)
 		return (0);
-	}
 
 	ip = f->inode;
 
