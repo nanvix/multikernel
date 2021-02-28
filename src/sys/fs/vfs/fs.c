@@ -523,7 +523,6 @@ int file_block_count(struct inode *ip)
  */
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
-
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
 	nanvix_dev_t rdev = 0;      /* dev id if special file       */

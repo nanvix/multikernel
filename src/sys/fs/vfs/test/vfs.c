@@ -32,7 +32,6 @@
 #include <posix/errno.h>
 #include <posix/fcntl.h>
 #include <posix/unistd.h>
-#include <posix/stdlib.h>
 
 /**
  * @brief Connection Used in Tests
@@ -47,64 +46,6 @@ static char data[NANVIX_FS_BLOCK_SIZE];
 /*============================================================================*
  * API Tests                                                                  *
  *============================================================================*/
-
-/**
- * @brief API Test: Get File Stats
- */
-static void test_api_vfs_stat(void)
-{
-	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
-	const char *filename = "disk";
-
-	uassert(fs_stat(filename, buffer) >= 0);
-	uassert(buffer != NULL);
-
-	/* TODO: test time related fields */
-	/* test if data is actually there */
-	uassert(buffer->st_dev > 0);
-	uassert(buffer->st_ino > 0);
-	uassert(buffer->st_mode > 0);
-	uassert(buffer->st_nlink > 0);
-	uassert(buffer->st_uid > 0);
-	uassert(buffer->st_gid > 0);
-	uassert(buffer->st_rdev > 0);
-	uassert(buffer->st_size > 0);
-	uassert(buffer->st_blksize > 0);
-	uassert(buffer->st_blocks > 0);
-}
-
-/**
- * @brief API Test: Get Stats of Inexisting File
- */
-static void test_api_vfs_stat_file_not_exists(void)
-{
-	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
-	const char *filename = "inexistent";
-
-	uassert(fs_stat(filename, buffer) == -ENOENT);
-}
-
-/**
- * @brief API Test: Get Stats of Invalid File
- */
-static void test_api_vfs_stat_file_invalid(void)
-{
-	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
-	const char *filename = "";
-
-	uassert(fs_stat(filename, buffer) == -EINVAL);
-}
-
-/**
- * @brief API Test: Get Stats Using Invalid Buffer
- */
-static void test_api_vfs_stat_buffer_invalid(void)
-{
-	struct nanvix_stat *restrict buffer = NULL;
-	const char *filename = "disk";
-
-	uassert(fs_stat(filename, buffer) == -1);
-}
 
 /**
  * @brief API Test: Open/Close a File
@@ -168,6 +109,17 @@ static void test_api_vfs_read_write(void)
 	uassert(vfs_close(CONNECTION, fd) == 0);
 }
 
+/**
+ * @brief API Test: Get File Stats
+ */
+static void test_api_vfs_stat(void)
+{
+	struct nanvix_stat buffer;
+	const char *filename = "disk";
+
+	uassert(vfs_stat(CONNECTION, filename, &buffer) >= 0);
+}
+
 /*============================================================================*
  * Stress Tests                                                               *
  *============================================================================*/
@@ -180,13 +132,10 @@ static struct
 	void (*func)(void); /**< Test Function */
 	const char *name;   /**< Test Name     */
 } vfs_tests[] = {
+	{ test_api_vfs_stat,                 "[vfs][api] stat                " },
 	{ test_api_vfs_open_close,           "[vfs][api] open/close          " },
 	{ test_api_vfs_seek,                 "[vfs][api] seek                " },
 	{ test_api_vfs_read_write,           "[vfs][api] read/write          " },
-	{ test_api_vfs_stat,                 "[vfs][api] stat                " },
-	{ test_api_vfs_stat_file_not_exists, "[vfs][api] stat no file        " },
-	{ test_api_vfs_stat_file_invalid,    "[vfs][api] stat invalid file   " },
-	{ test_api_vfs_stat_buffer_invalid,  "[vfs][api] stat invalid buffer " },
 	{ NULL,                               NULL                             },
 };
 
