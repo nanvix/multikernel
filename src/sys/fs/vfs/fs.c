@@ -546,10 +546,8 @@ int fs_close(int fd)
 	curr_proc->ofiles[fd] = NULL;
 
 	/* File is opened by others. */
-	if (f->count > 1) {
-		f->count--;
+	if (f->count-- > 1)
 		return (0);
-	}
 
 	ip = f->inode;
 
@@ -564,7 +562,7 @@ int fs_close(int fd)
 	else if (S_ISREG(inode_disk_get(ip)->i_mode)) {
 		/* Inode is used by others */
 		if (inode_get_count(ip) > 1) {
-			inode_set_count(ip, inode_get_count(ip) - 1);
+			inode_decrease_count(ip);
 			return (0);
 		}
 	}
