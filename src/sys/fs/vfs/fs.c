@@ -615,7 +615,6 @@ int file_block_count(struct inode *ip)
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 
-	int ret;                    /* return value                 */
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
 	nanvix_dev_t rdev = 0;      /* dev id if special file       */
@@ -639,21 +638,19 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 		rdev = inode_get_dev(ip);
 		if (bdev_open(ino_data->i_zones[0]) < 0)
 			goto error;
-		}
 	}
-
 
 	/* Regular file. */
 	else if (S_ISREG(ino_data->i_mode))
 	{
-		ret = (curr_proc->errcode = -ENOTSUP);
+		curr_proc->errcode = -ENOTSUP;
 		goto error;
 	}
 
 	/* Directory. */
 	else if (S_ISDIR(ino_data->i_mode))
 	{
-		ret = (curr_proc->errcode = -ENOTSUP);
+		curr_proc->errcode = -ENOTSUP;
 		goto error;
 	}
 
