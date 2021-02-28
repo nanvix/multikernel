@@ -521,97 +521,6 @@ int file_block_count(struct inode *ip)
  * and writes it to the stat buffer @p buf.
  * @returns 0 in case it succeeds, a negative error code instead.
  */
-int file_block_count(struct inode *ip)
-{
-	struct inode *ip;           /* file inode                   */
-	struct d_inode *ino_data;   /* inode data                   */
-	nanvix_dev_t rdev = 0;      /* dev id if special file       */
-
-	/* invalid inode */
-	if (ip == NULL) {
-		return -EINVAL;
-	}
-
- 	ino_data = inode_disk_get(ip);
-
-	/* Count number of blocks */
-	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
-		if (i == MINIX_ZONE_DOUBLE) {
-			/* counting double indirect zones */
-
-			blk_buf = bread(inode_get_dev(ip), ino_data->i_zones[i]);
-			buf_data = buffer_get_data(blk_buf);
-
-			/* traverse first indirect zone */
-			for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
-
-				/* count zones if block is not null */
-				if (buf_data[j] != MINIX_BLOCK_NULL) {
-
-					blk_buf_di = bread(inode_get_dev(ip),buf_data[j]);
-					buf_data_di = buffer_get_data(blk_buf_di);
-					/* count number of zones inside each indirect zone */
-
-					/* traverse second indirect zone */
-					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
-
-						if (buf_data_di[k] != MINIX_BLOCK_NULL) {
-
-							++nr_blocks;
-
-						} else {
-							/* quit all loops */
-							i = MINIX_NR_ZONES;
-							j = MINIX_NR_DOUBLE;
-							break;
-						}
-					}
-				} else {
-					/* quit all loops */
-					j = MINIX_NR_DOUBLE;
-					break;
-				}
-
-			}
-
-		} else if (i == MINIX_ZONE_SINGLE) {
-			/* counting single indirect zones */
-
-			/* count zones if block is not null */
-			if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
-
-				blk_buf = bread(inode_get_dev(ip),ino_data->i_zones[i]);
-				buf_data = buffer_get_data(blk_buf);
-
-				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
-					if (buf_data[j] != MINIX_BLOCK_NULL) {
-						++nr_blocks;
-					} else {
-						/* quit both loops */
-						i = MINIX_NR_ZONES;
-						break;
-					}
-				}
-			}
-
-		} else if (ino_data->i_zones[i] != MINIX_BLOCK_NULL ) {
-			/* counting direct zones */
-			++nr_blocks;
-		} else {
-			/* found MINIX_BLOCK_NULL so last zone was counted */
-			break;
-		}
-	}
-
-	return nr_blocks;
-}
-
-/**
- * @brief Get stats about a file
- * The do_stat function retrieves information about the file @p filename
- * and writes it to the stat buffer @p buf.
- * @returns 0 in case it succeeds, a negative error code instead.
- */
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	struct inode *ip;           /* file inode                   */
@@ -620,7 +529,10 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 
 	/* Invalid filename. */
 	if (filename == NULL)
-		return (curr_proc->errcode = -EINVAL);
+	{
+		curr_proc->errcode = -EINVAL;
+		return -EINVAL;
+	}
 
 	/* Search file. */
 	if ((ip = inode_name(&fs_root, filename)) == NULL)
@@ -635,128 +547,6 @@ static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 	if (S_ISBLK(ino_data->i_mode))
 	{
 		rdev = inode_get_dev(ip);
-		if (bdev_open(ino_data->i_zones[0]) < 0)
-			goto error;
-	}
-
-	/* Regular file. */
-	else if (S_ISREG(ino_data->i_mode))
-	{
-		curr_proc->errcode = -ENOTSUP;
-		goto error;
-	}
-
-	/* Directory. */
-	else if (S_ISDIR(ino_data->i_mode))
-	{
-		curr_proc->errcode = -ENOTSUP;
-		goto error;
-	}
-
-	/* file stats */
-	/*TODO Update time related fields first */
-
-	/* Count number of blocks */
-	for (unsigned int i=0; i < MINIX_NR_ZONES; ++i) {
-		if (i == MINIX_ZONE_DOUBLE) {
-			/* counting double indirect zones */
-
-			/* count zones if block is not null */
-			buf_data = bread(ip->dev,ino_data->i_zones[i]);
-
-			if (buf_data->data[i] != MINIX_BLOCK_NULL) {
-				for (unsigned j=0; j < MINIX_NR_DOUBLE; ++j) {
-
-					buf_data_di = bread(ip->dev,buf_data->data[j]);
-
-					/* count number of zones inside each indirect zone */
-					for (unsigned k=0; k < MINIX_NR_SINGLE; ++k) {
-
-						buf_data_dd = bread(ip->dev,buf_data_di->data[k]);
-
-						if (buf_data_dd->data[j] != MINIX_BLOCK_NULL) {
-							//uint_16t
-							++nr_zones;
-						} else {
-							/* quit all loops */
-							i = MINIX_NR_ZONES;
-							j = MINIX_NR_DOUBLE;
-							break;
-						}
-					}
-				} else {
-					/* quit all loops */
-					j = MINIX_NR_DOUBLE;
-					break;
-				}
-
-			}
-
-		} else if (i == MINIX_ZONE_SINGLE) {
-			/* counting single indirect zones */
-
-			/* count zones if block is not null */
-			if (ino_data->i_zones[i] != MINIX_BLOCK_NULL) {
-
-				blk_buf = bread(inode_get_dev(ip),ino_data->i_zones[i]);
-				buf_data = buffer_get_data(blk_buf);
-
-				for (unsigned j=0; j < MINIX_NR_SINGLE; ++j) {
-					if (buf_data->data[j] != MINIX_BLOCK_NULL) {
-						//uint_16t
-						++nr_zones;
-					} else {
-						/* quit both loops */
-						i = MINIX_NR_ZONES;
-						break;
-					}
-				}
-			}
-
-		} else if (inode_disk_get(ip)->izones[i] != MINIX_BLOCK_NULL ) {
-			/* counting direct zones */
-			++nr_blocks;
-		} else {
-			/* found MINIX_BLOCK_NULL so last zone was counted */
-			break;
-		}
-	}
-
-	return nr_blocks;
-}
-
-/**
- * @brief Get stats about a file
- * The do_stat function retrieves information about the file @p filename
- * and writes it to the stat buffer @p buf.
- * @returns 0 in case it succeeds, a negative error code instead.
- */
-static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
-{
-	struct inode *ip;           /* file inode                   */
-	struct d_inode *ino_data;   /* inode data                   */
-	struct nanvix_stat aux_buf; /* auxiliar buffer              */
-
-	/* Invalid filename. */
-	if (filename == NULL)
-	{
-		curr_proc->errcode = -EINVAL;
-		return -EINVAL;
-	}
-
-	/* Search file. */
-	if ((ip = inode_name(&fs_root, filename)) == NULL)
-	{
-		/* File doesn't exist*/
-		curr_proc->errcode = -ENOENT;
-		goto error;
-	}
-
-	ino_data = inode_disk_get(ip);
-
-	/* Block special file. */
-	if (S_ISBLK(ino_data->i_mode))
-	{
 		if (bdev_open(ino_data->i_zones[0]) < 0)
 			goto error;
 	}
@@ -821,9 +611,8 @@ int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 	f->count = 1;
 
 	/* Get file stat. */
-	if ((ret = do_stat(filename, buf)) != 0)
+	if (do_stat(filename, buf) != 0)
 	{
-		curr_proc->errcode = ret;
 		f->count = 0;
 		return curr_proc->errcode;
 	}
