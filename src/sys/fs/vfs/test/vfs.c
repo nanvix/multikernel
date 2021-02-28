@@ -80,7 +80,7 @@ static void test_api_vfs_stat_file_not_exists(void)
 {
 	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
 	const char *filename = "inexistent";
-	
+
 	uassert(fs_stat(filename, buffer) == -ENOENT);
 }
 
@@ -91,7 +91,7 @@ static void test_api_vfs_stat_file_invalid(void)
 {
 	struct nanvix_stat *restrict buffer = nanvix_malloc(sizeof(struct nanvix_stat *restrict));
 	const char *filename = "";
-	
+
 	uassert(fs_stat(filename, buffer) == -EINVAL);
 }
 
@@ -102,7 +102,7 @@ static void test_api_vfs_stat_buffer_invalid(void)
 {
 	struct nanvix_stat *restrict buffer = NULL;
 	const char *filename = "disk";
-	
+
 	uassert(fs_stat(filename, buffer) == -1);
 }
 
@@ -132,7 +132,7 @@ static void test_api_vfs_creat_unlink(void)
 	int fd;
 	const char *filename = "new_file";
 
-	uassert((fd = vfs_open(CONNECTION, filename, (O_RDONLY | O_CREAT), (S_IRWXU | S_RGRP | S_ROTH))) >= 0);
+	uassert((fd = vfs_open(CONNECTION, filename, (O_RDONLY | O_CREAT), (S_IRWXU | S_IRGRP | S_IROTH))) >= 0);
 	uassert(vfs_unlink(CONNECTION, filename) == 0);
 }
 
@@ -195,8 +195,8 @@ static struct
 	{ test_api_vfs_open_close,           "[vfs][api] open/close          " },
 	{ test_api_vfs_seek,                 "[vfs][api] seek                " },
 	{ test_api_vfs_read_write,           "[vfs][api] read/write          " },
-	{ test_api_vfs_stat,                 "[vfs][api] stat                " },
 	{ test_api_vfs_creat_unlink,         "[vfs][api] create/unlink       " },
+	{ test_api_vfs_stat,                 "[vfs][api] stat                " },
 	{ test_api_vfs_stat_file_not_exists, "[vfs][api] stat no file        " },
 	{ test_api_vfs_stat_file_invalid,    "[vfs][api] stat invalid file   " },
 	{ test_api_vfs_stat_buffer_invalid,  "[vfs][api] stat invalid buffer " },
