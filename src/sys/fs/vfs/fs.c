@@ -344,7 +344,6 @@ int file_block_count(struct inode *ip)
 	struct buffer *blk_buf;     /* block buffer                 */
 	struct buffer *blk_buf_di;  /* block buffer double indirect */
 	struct d_inode *ino_data;   /* inode data                   */
-	int nr_zones = 0;           /* Total number of zones        */
 
 	/* invalid inode */
 	if (ip == NULL) {
@@ -433,7 +432,6 @@ int file_block_count(struct inode *ip)
  */
 static int do_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
-
 	struct inode *ip;           /* file inode                   */
 	struct d_inode *ino_data;   /* inode data                   */
 	nanvix_dev_t rdev = 0;      /* dev id if special file       */
