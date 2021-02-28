@@ -592,7 +592,6 @@ error:
 int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 {
 	int fd;           /* File Descriptor      */
-	int ret;          /* do_stat return value */
 	struct file *f;   /* File                 */
 
 	/* Get a free file descriptor. */
@@ -609,9 +608,8 @@ int fs_stat(const char *filename, struct nanvix_stat *restrict buf)
 	f->count = 1;
 
 	/* Get file stat. */
-	if ((ret = do_stat(filename, buf)) != 0)
+	if (do_stat(filename, buf) != 0)
 	{
-		curr_proc->errcode = ret;
 		f->count = 0;
 		return curr_proc->errcode;
 	}
