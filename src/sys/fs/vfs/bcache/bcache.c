@@ -64,6 +64,14 @@ struct buffer
 static struct buffer buffers[NANVIX_FS_NR_BUFFERS];
 
 /**
+ * @brief Returns the size in bytes of the buffer struct
+ */
+int buffer_get_size(void)
+{
+	return sizeof(struct buffer);
+}
+
+/**
  * The buffer_get_data() function gets a reference to the underlying
  * data of the block buffer pointed to by @p buf.
  */

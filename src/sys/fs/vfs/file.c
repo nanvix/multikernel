@@ -34,7 +34,7 @@
 /**
  * @brief Gets the block address for a file offset
  *
- * The get_blk_buf function writes in the @p buf 
+ * The get_blk_buf function writes in the @p buf
  * the block belonging to @p ip in which @p off is.
  *
  * @returns Upon success it returns the ordinal number of the block
@@ -57,40 +57,36 @@ block_t get_blk_buf(struct inode *ip, struct buffer *blk_buf, off_t off)
 	/* access the zones in a flat way so blk indexes the right block */
 	if (blk < MINIX_NR_ZONES_DIRECT) {
 		/* Read bytes directly */
-		blk_b = bread(ip->dev,ino_data->i_zones[blk]);
-
-		/* EOF */
-		if (blk_b == MINIX_BLOCK_NULL)
+		if ((blk_b = bread(ip->dev, ino_data->i_zones[blk])) == NULL)
 			return 0;
-
-	} else if (blk >= MINIX_ZONE_SINGLE && blk < (MINIX_ZONE_SINGLE + MINIX_NR_SINGLE)) {
-		/* Read bytes from single indirect blocks */
-		blk_i = blk - MINIX_ZONE_SINGLE;
-		blk_b = bread(ip->dev, ino_data->i_zones[blk]);
-
-		/* EOF */
-		if (blk_b == MINIX_BLOCK_NULL)
-			return 0;
-
-		blk_b_i = bread(ip->dev, blk_i);
-		/* EOF */
-		if (blk_b_i == MINIX_BLOCK_NULL)
-			return 0;
-
-		blk_b = blk_b_i;
-
-	} else if (blk >= (MINIX_ZONE_DOUBLE + MINIX_NR_SINGLE) && blk < MINIX_NR_DOUBLE) {
-		/* Read bytes from double indirect */
-		return -ENOTSUP;
-
-	} else {
-		/* offset invalid */
-		blk_b = NULL;
-		blk = 0;
 	}
 
-	blk_buf = blk_b;
+	/* indirect */
+	else if (blk >= MINIX_ZONE_SINGLE && blk < (MINIX_ZONE_SINGLE + MINIX_NR_SINGLE)) {
+		/* Read bytes from single indirect blocks */
+		blk_i = blk - MINIX_ZONE_SINGLE;
 
+		if ((blk_b = bread(ip->dev, ino_data->i_zones[blk])) == NULL)
+			return 0; /* EOF */
+
+		if ((blk_b_i = bread(ip->dev, blk_i)) == NULL)
+			return 0; /* EOF */
+
+		brelse(blk_b);
+		blk_b = blk_b_i;
+	}
+
+	/* Read bytes from double indirect */
+	else if (blk >= (MINIX_ZONE_DOUBLE + MINIX_NR_SINGLE) && blk < MINIX_NR_DOUBLE) {
+		return -ENOTSUP;
+	}
+
+	/* offset invalid */
+	else {
+		return MINIX_BLOCK_NULL;
+	}
+
+	umemcpy(blk_buf, blk_b, buffer_get_size());
 	return blk;
 }
 
@@ -117,6 +113,7 @@ ssize_t do_file_read(struct inode *ip, void *buf, size_t n, off_t off)
 
 	/* allocate n bytes to the buffer */
 	buf = umalloc(n);
+	blk_buf = umalloc(buffer_get_size());
 	/* calculate in block offset */
 	local_off = off%NANVIX_FS_BLOCK_SIZE;
 
@@ -125,7 +122,7 @@ ssize_t do_file_read(struct inode *ip, void *buf, size_t n, off_t off)
 	while ((size_t)count < n) {
 
 		/* gets block in which byte offset+count is */
-		if (get_blk_buf(ip,blk_buf,off+count) <= 0)
+		if (get_blk_buf(ip, blk_buf, off+count) <= 0)
 			goto endoffile;
 
 		buf_data = buffer_get_data(blk_buf);
@@ -135,7 +132,12 @@ ssize_t do_file_read(struct inode *ip, void *buf, size_t n, off_t off)
 			to_read = (local_off+n)-NANVIX_FS_BLOCK_SIZE;
 
 		/* copy bytes to buffer */
-		umemcpy(buf[count], &buf_data[local_off], to_read);
+		for (int i=0; i<count; ++i)
+			buf++;
+		for (int i=0; i<local_off; ++i)
+			buf_data++;
+
+		umemcpy(buf, buf_data, to_read);
 
 		/* count bytes read */
 		count+=to_read;
@@ -214,9 +216,14 @@ ssize_t do_file_write(struct inode *ip, void *buf, size_t n, off_t off)
 	count = 0;
 	to_write = n;
 	local_off = off%NANVIX_FS_BLOCK_SIZE;
+	blk_buf = umalloc(buffer_get_size());
 
 	/* TODO check if there is space left */
-	//if (inode_disk_get(ip)->i_size+n > )
+	if (inode_disk_get(ip)->i_size + n >
+			(NANVIX_FS_BLOCK_SIZE * MINIX_NR_ZONES_DIRECT +
+			 NANVIX_FS_BLOCK_SIZE * MINIX_NR_SINGLE * MINIX_NR_ZONES_DIRECT +
+			 NANVIX_FS_BLOCK_SIZE * MINIX_NR_SINGLE * MINIX_NR_DOUBLE * MINIX_NR_ZONES_DIRECT))
+		return -ENOSPC;
 
 	while((size_t)count < n) {
 
@@ -231,7 +238,11 @@ ssize_t do_file_write(struct inode *ip, void *buf, size_t n, off_t off)
 			to_write = (local_off+to_write)-NANVIX_FS_BLOCK_SIZE;
 
 		/* copy bytes from buf to buffer data */
-		umemcpy(&buf_data[local_off], buf[count], to_write);
+		for (int i=0; i<local_off; ++i)
+			buf_data++;
+		for (int i=0; i<count; ++i)
+			buf++;
+		umemcpy(buf_data, buf, to_write);
 
 		count+=to_write;
 		to_write = n-count;
@@ -240,7 +251,13 @@ ssize_t do_file_write(struct inode *ip, void *buf, size_t n, off_t off)
 		if ((size_t)count < n) {
 			local_off = 0;
 		}
-	} 
+	}
+
+	/* write block buffer to device */
+	bwrite(blk_buf);
+
+	/* free block buffer */
+	brelse(blk_buf);
 
 	return count;
 }

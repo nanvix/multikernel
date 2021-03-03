@@ -48,6 +48,11 @@
 	extern void binit(void);
 
 	/**
+	 * @brief Returns the size in bytes of the buffer struct
+	 */
+	extern int buffer_get_size(void);
+
+	/**
 	 * @brief Gets a refecente to the underlying data of a block buffer.
 	 *
 	 * @param buf Target block buffer.

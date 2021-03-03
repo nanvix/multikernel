@@ -52,7 +52,6 @@ int __main2(int argc, const char *argv[])
 		uprintf("[nanvix][test] server alive");
 
 		__runtime_setup(SPAWN_RING_LAST);
-		/*
 		test_name();
 		test_rmem_stub();
 		test_rmem_cache();
@@ -62,7 +61,6 @@ int __main2(int argc, const char *argv[])
 #endif
 		test_sysv();
 		test_shm();
-		*/
 		test_vfs();
 
 		uprintf("[nanvix][test] shutting down server");

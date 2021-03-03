@@ -113,6 +113,7 @@ static void test_api_nanvix_vfs_read_write(void)
 {
 	int fd;
 	const char *filename = "disk";
+	const char *regfilename = "rdwr_file";
 
 	uassert((fd = nanvix_vfs_open(filename, O_RDWR, 0)) >= 0);
 
@@ -131,6 +132,26 @@ static void test_api_nanvix_vfs_read_write(void)
 			uassert(data[i] == 1);
 
 	uassert(nanvix_vfs_close(fd) == 0);
+
+	uassert((fd = nanvix_vfs_open(regfilename, (O_RDWR | O_CREAT),
+					(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) >= 0);
+
+		/* Write */
+		umemset(data, 1, NANVIX_FS_BLOCK_SIZE);
+		uassert(nanvix_vfs_seek(fd, TEST_FILE_OFFSET, SEEK_SET) >= 0);
+		uassert(nanvix_vfs_write(fd, data, NANVIX_FS_BLOCK_SIZE) == NANVIX_FS_BLOCK_SIZE);
+
+		/* Read. */
+		umemset(data, 0, NANVIX_FS_BLOCK_SIZE);
+		uassert(nanvix_vfs_seek(fd, TEST_FILE_OFFSET, SEEK_SET) >= 0);
+		uassert(nanvix_vfs_read(fd, data, NANVIX_FS_BLOCK_SIZE) == NANVIX_FS_BLOCK_SIZE);
+
+		/* Checksum. */
+		for (size_t i = 0; i < sizeof(data); i++)
+			uassert(data[i] == 1);
+
+	uassert(nanvix_vfs_close(fd) == 0);
+	uassert(nanvix_vfs_unlink(regfilename) == 0);
 }
 
 /**
