@@ -358,12 +358,7 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 			goto error;
 	}
 
-	/* Regular file. */
-	else if (S_ISREG(inode_disk_get(ip)->i_mode))
-	{
-		curr_proc->errcode = -ENOTSUP;
-		goto error;
-	}
+	/* regular file already treated */
 
 	/* Directory. */
 	else if (S_ISDIR(inode_disk_get(ip)->i_mode))
@@ -371,6 +366,7 @@ static struct inode *do_open(const char *filename, int oflag, mode_t mode)
 		curr_proc->errcode = -ENOTSUP;
 		goto error;
 	}
+
 
 	return (ip);
 
