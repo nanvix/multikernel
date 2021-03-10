@@ -133,6 +133,7 @@ static void test_api_nanvix_vfs_read_write(void)
 
 	uassert(nanvix_vfs_close(fd) == 0);
 
+	/* Regular file */
 	uassert((fd = nanvix_vfs_open(regfilename, (O_RDWR | O_CREAT),
 					(S_IRUSR | S_IWUSR | S_IRGRP | S_IROTH))) >= 0);
 

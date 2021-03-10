@@ -125,6 +125,10 @@ ssize_t vfs_read(int connection, int fd, void *buf, size_t n)
 	if (buf == NULL)
 		return (-EINVAL);
 
+	/* n too big */
+	if (n > MINIX_BLOCK_SIZE)
+		return (-EINVAL);
+
 	/* Launch process. */
 	if (fprocess_launch(connection) < 0)
 		return (-EINVAL);
@@ -147,6 +151,10 @@ ssize_t vfs_write(int connection, int fd, void *buf, size_t n)
 
 	/* Invalid buffer. */
 	if (buf == NULL)
+		return (-EINVAL);
+
+	/* n too big */
+	if (n > MINIX_BLOCK_SIZE)
 		return (-EINVAL);
 
 	/* Launch process. */
