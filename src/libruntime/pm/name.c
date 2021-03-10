@@ -203,26 +203,26 @@ int nanvix_name_lookup(const char *name)
 
 	uassert(nanvix_mutex_lock(&_name_lock) == 0);
 
-	if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
-	{
-		uassert(nanvix_mutex_unlock(&_name_lock) == 0);
-		return (ret);
-	}
+		if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
+		{
+			uassert(nanvix_mutex_unlock(&_name_lock) == 0);
+			return (ret);
+		}
 
-	inbox = stdinbox_get();
+		inbox = stdinbox_get();
 
-	/**
-	 * @brief Sets the stdinbox remote to receive exclusively from the Name Server outbox.
-	 *
-	 * @todo Get further information about the necessity of a stronger message selection.
-	 */
-	uassert(kmailbox_set_remote(inbox, NAME_SERVER_NODE, MAILBOX_ANY_PORT) == 0);
+		/**
+		 * @brief Sets the stdinbox remote to receive exclusively from the Name Server outbox.
+		 *
+		 * @todo Get further information about the necessity of a stronger message selection.
+		 */
+		uassert(kmailbox_set_remote(inbox, NAME_SERVER_NODE, MAILBOX_ANY_PORT) == 0);
 
-	if ((ret = kmailbox_read(inbox, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
-	{
-		uassert(nanvix_mutex_unlock(&_name_lock) == 0);
-		return (ret);
-	}
+		if ((ret = kmailbox_read(inbox, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
+		{
+			uassert(nanvix_mutex_unlock(&_name_lock) == 0);
+			return (ret);
+		}
 
 	uassert(nanvix_mutex_unlock(&_name_lock) == 0);
 
@@ -260,26 +260,26 @@ int nanvix_name_link(int nodenum, const char *name)
 
 	uassert(nanvix_mutex_lock(&_name_lock) == 0);
 
-	if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
-	{
-		uassert(nanvix_mutex_unlock(&_name_lock) == 0);
-		return (ret);
-	}
+		if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
+		{
+			uassert(nanvix_mutex_unlock(&_name_lock) == 0);
+			return (ret);
+		}
 
-	inbox = stdinbox_get();
+		inbox = stdinbox_get();
 
-	/**
-	 * @brief Sets the stdinbox remote to receive exclusively from the Name Server outbox.
-	 *
-	 * @todo Get further information about the necessity of a stronger message selection.
-	 */
-	uassert(kmailbox_set_remote(inbox, NAME_SERVER_NODE, MAILBOX_ANY_PORT) == 0);
+		/**
+		 * @brief Sets the stdinbox remote to receive exclusively from the Name Server outbox.
+		 *
+		 * @todo Get further information about the necessity of a stronger message selection.
+		 */
+		uassert(kmailbox_set_remote(inbox, NAME_SERVER_NODE, MAILBOX_ANY_PORT) == 0);
 
-	if ((ret = kmailbox_read(inbox, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
-	{
-		uassert(nanvix_mutex_unlock(&_name_lock) == 0);
-		return (ret);
-	}
+		if ((ret = kmailbox_read(inbox, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
+		{
+			uassert(nanvix_mutex_unlock(&_name_lock) == 0);
+			return (ret);
+		}
 
 	uassert(nanvix_mutex_unlock(&_name_lock) == 0);
 
@@ -316,26 +316,26 @@ int nanvix_name_unlink(const char *name)
 
 	uassert(nanvix_mutex_lock(&_name_lock) == 0);
 
-	if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
-	{
-		uassert(nanvix_mutex_unlock(&_name_lock) == 0);
-		return (ret);
-	}
+		if ((ret = kmailbox_write(server, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
+		{
+			uassert(nanvix_mutex_unlock(&_name_lock) == 0);
+			return (ret);
+		}
 
-	inbox = stdinbox_get();
+		inbox = stdinbox_get();
 
-	/**
-	 * @brief Sets the stdinbox remote to receive exclusively from the Name Server outbox.
-	 *
-	 * @todo Get further information about the necessity of a stronger message selection.
-	 */
-	uassert(kmailbox_set_remote(inbox, NAME_SERVER_NODE, MAILBOX_ANY_PORT) == 0);
+		/**
+		 * @brief Sets the stdinbox remote to receive exclusively from the Name Server outbox.
+		 *
+		 * @todo Get further information about the necessity of a stronger message selection.
+		 */
+		uassert(kmailbox_set_remote(inbox, NAME_SERVER_NODE, MAILBOX_ANY_PORT) == 0);
 
-	if ((ret = kmailbox_read(inbox, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
-	{
-		uassert(nanvix_mutex_unlock(&_name_lock) == 0);
-		return (ret);
-	}
+		if ((ret = kmailbox_read(inbox, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
+		{
+			uassert(nanvix_mutex_unlock(&_name_lock) == 0);
+			return (ret);
+		}
 
 	uassert(nanvix_mutex_unlock(&_name_lock) == 0);
 
