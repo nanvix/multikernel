@@ -470,10 +470,6 @@ int nanvix_mailbox_get_port(int mbxid)
 	if (!resource_is_used(&mailboxes[mbxid].resource))
 		return (-EINVAL);
 
-	/*  Bad mailbox. */
-	if (!resource_is_wronly(&mailboxes[mbxid].resource))
-		return (-EINVAL);
-
 	return (kcomm_get_port(mailboxes[mbxid].fd, COMM_TYPE_MAILBOX));
 }
 
