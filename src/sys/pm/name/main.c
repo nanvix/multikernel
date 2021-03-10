@@ -226,10 +226,10 @@ found:
 	procs[index].nodenum = nodenum;
 	procs[index].port_nr = remote_port;
 
+	nr_registration++;
+
 connect:
 	procs[index].refcount++;
-
-	nr_registration++;
 
 	return (0);
 }
