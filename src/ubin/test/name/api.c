@@ -148,37 +148,6 @@ static void test_name_local_address_lookup(void)
 	ustrcpy(name, "cool-name");
 
 	TEST_ASSERT(nanvix_name_register(name, port_nr) == 0);
-	TEST_ASSERT(nanvix_name_address_lookup(name, &test_ret) == knode_get_num());
-	TEST_ASSERT(test_ret == port_nr);
-	TEST_ASSERT(nanvix_name_unregister(name) == 0);
-}
-
-/*============================================================================*
- * API Test: Remote Address Lookup                                            *
- *============================================================================*/
-
-/**
- * @brief API Test: Remote Address Lookup
- *
- * @note This function does not realize a real remote resolution request.
- * Instead, it forces the name client to communicate with the local name
- * daemon to inquire it about the address of the target process.
- *
- * @note2 For now this test is not supported since there is a single node
- * that executes the regression tests. However, it would be very interesting
- * to include this routine in the tests pool once more clients are spawned.
- */
-static void test_name_remote_address_lookup(void)
-{
-	int port_nr;
-	int test_ret;
-	char name[NANVIX_PROC_NAME_MAX];
-
-	port_nr = 0;
-	test_ret = -1;
-	ustrcpy(name, "cool-name");
-
-	TEST_ASSERT(nanvix_name_register(name, port_nr) == 0);
 
 	TEST_ASSERT(nanvix_name_address_lookup(name, &test_ret) == knode_get_num());
 	TEST_ASSERT(test_ret == port_nr);
