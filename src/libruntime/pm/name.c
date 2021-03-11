@@ -29,6 +29,7 @@
 #include <nanvix/kernel/mailbox.h>
 #include <nanvix/sys/condvar.h>
 #include <nanvix/sys/mutex.h>
+#include <nanvix/sys/semaphore.h>
 #include <nanvix/sys/thread.h>
 #include <nanvix/servers/name.h>
 #include <nanvix/runtime/pm.h>
@@ -74,21 +75,271 @@ PRIVATE struct nanvix_mutex _name_lock;
  */
 PRIVATE struct nanvix_mutex _local_lock;
 
-PRIVATE struct nanvix_cond_var _local_condvar;
+//PRIVATE struct nanvix_cond_var _local_condvar;
 
-PRIVATE struct
+/**
+ * @brief Number of address cache lines.
+ */
+#define ADDR_CACHE_ENTRIES 4
+
+struct addr_cache_value
 {
-	char name[NANVIX_PROC_NAME_MAX];
+	/*
+	 * XXX: Don't Touch! This Must Come First!
+	 */
+	struct resource resource;  /**< Generic resource information. */
+
+	int remote;
 	int port_nr;
-	int read;
-} _addr_lookup_result = {
-	.name    = "",
-	.port_nr = -1,
-	.read    =  1
+} _values[ADDR_CACHE_ENTRIES];
+
+/**
+ * @brief Pool of request nodes.
+ */
+PRIVATE const struct resource_pool pool_values = {
+	_values, ADDR_CACHE_ENTRIES, sizeof(struct addr_cache_value)
 };
 
+/**
+ * @brief Address cache structure.
+ */
+PRIVATE struct
+{
+	struct
+	{
+		struct
+		{
+			char name[NANVIX_PROC_NAME_MAX]; /**< Entry key.                     */
+			int value_id;                    /**< Entry value id in values pool. */
+		} entry;
+
+		int refcount;                        /**< Line refcounter. */
+		struct nanvix_mutex lock;            /**< Line lock.       */
+		struct nanvix_cond_var condvar;      /**< Line condvar.    */
+	} table[ADDR_CACHE_ENTRIES];
+
+	struct nanvix_mutex global_lock;
+	struct nanvix_semaphore counter;
+} _addr_cache;
+
 /*============================================================================*
- * LOCAL OPERATIONS                                                           *
+ * LOCAL CACHE OPERATIONS                                                     *
+ *============================================================================*/
+
+/**
+ * @brief Initializes the addr cache structure.
+ *
+ * @returns Upon successful completion, zero is returned. Upon failure, a
+ * negative error code is returned instead.
+ */
+PRIVATE int _addr_cache_init(void)
+{
+	/* Initializes the address cache entries. */
+	for (int i = 0; i < ADDR_CACHE_ENTRIES; ++i)
+	{
+		/* Initializes individual lock of the cache entry. */
+		uassert(nanvix_mutex_init(&_addr_cache.table[i].lock, NULL) == 0);
+
+		/* Initializes the inddividual condvar of each line. */
+		uassert(nanvix_cond_init(&_addr_cache.table[i].condvar) == 0);
+
+		/* Initializes the remaining entry attributes. */
+		ustrcpy(_addr_cache.table[i].entry.name, "");
+		_addr_cache.table[i].entry.value_id = -1;
+		_addr_cache.table[i].refcount       = -1;
+	}
+
+	/* Initializes the address cache global lock. */
+	uassert(nanvix_mutex_init(&_addr_cache.global_lock, NULL) == 0);
+
+	/* Initializes the structure semaphore used as counter. */
+	uassert(nanvix_semaphore_init(&_addr_cache.counter, 0) == 0);
+
+	return (0);
+}
+
+/**
+ * @brief Gets the cache entry value associated with a given name.
+ *
+ * @param name Process name to be used as key.
+ *
+ * @returns Upon successful completion, a struct containing the remote node
+ * number and the remote port associated with @p name is returned. Upon failure,
+ * the same struct is returned, but with a negative number in its internal
+ * attributes is returned instead.
+ *
+ * @note On a hit, this routine also updates the refcount of the found index.
+ */
+PRIVATE struct addr_cache_value _addr_cache_get(const char *name)
+{
+	struct addr_cache_value ret;
+
+	ret.remote  = -1;
+	ret.port_nr = -1;
+
+	//uprintf("Before global lock");
+
+	/* Acquire the cache global lock. */
+	uassert(nanvix_mutex_lock(&_addr_cache.global_lock) == 0);
+
+		//uprintf("Got the lock");
+
+		/* Sinalize that one more thread is searching for cache entries. */
+		uassert(nanvix_semaphore_up(&_addr_cache.counter) == 0);
+
+		//uprintf("Signalized an up in the semaphore");
+
+	uassert(nanvix_mutex_unlock(&_addr_cache.global_lock) == 0);
+
+	//uprintf("After global lock");
+
+	/* Traverses the addr_cache structure. */
+	for (int i = 0; i < ADDR_CACHE_ENTRIES; ++i)
+	{
+		/* Acquire the specific entry lock to consult its value. */
+		uassert(nanvix_mutex_lock(&_addr_cache.table[i].lock) == 0);
+
+			/* Valid entry? */
+			if (ustrcmp(_addr_cache.table[i].entry.name, "") == 0)
+				goto release;
+
+			/* Found? */
+			if (ustrcmp(_addr_cache.table[i].entry.name, name) != 0)
+			{
+				uassert(nanvix_mutex_unlock(&_addr_cache.table[i].lock) == 0);
+				continue;
+			}
+
+			/* Value being retrieved? */
+			if (_addr_cache.table[i].entry.value_id == -1)
+				uassert(nanvix_cond_wait(&_addr_cache.table[i].condvar, &_addr_cache.table[i].lock) == 0);
+
+			ret = _values[_addr_cache.table[i].entry.value_id];
+			_addr_cache.table[i].refcount++;
+
+	release:
+		uassert(nanvix_mutex_unlock(&_addr_cache.table[i].lock) == 0);
+
+		break;
+	}
+
+	//uprintf("Did not found an entry");
+
+	/* Sinalize that the current thread is no longer consulting the cache. */
+	uassert(nanvix_semaphore_down(&_addr_cache.counter) == 0);
+
+	//uprintf("Returning from cache_get");
+
+	return (ret);
+}
+
+/**
+ * @brief Inserts a new key in the address cache.
+ *
+ * @param name  Process name to be used as key.
+ * @param value Value to be associated with @p name.
+ *
+ * @returns Upon successful completion, the index where the given key was
+ * inserted is returned. Upon failure, a negative error code is returned
+ * instead.
+ */
+PRIVATE int _addr_cache_put(const char *name)
+{
+	int index;        /**< Index where the new entry will be stored. */
+	int min_refcount;
+
+	/* Acquire the cache global lock. */
+	uassert(nanvix_mutex_lock(&_addr_cache.global_lock) == 0);
+
+		/* Do some busy waiting here. */
+		while (nanvix_semaphore_trywait(&_addr_cache.counter) == 0)
+			uassert(nanvix_semaphore_up(&_addr_cache.counter) == 0);
+
+		/**
+		 * The busy waiting done in the last step guarantees that the current
+		 * thread is the only one manipulating the cache table. From now on,
+		 * we can manipulate it without worrying about concurrence.
+		 */
+
+		/* Traverses the cache table looking for a free or the least frequent entry. */
+		for (int i = 0; i < ADDR_CACHE_ENTRIES; ++i)
+		{
+			/* Free entry? */
+			if (ustrcmp(_addr_cache.table[i].entry.name, "") == 0)
+			{
+				index = i;
+				break;
+			}
+
+			/* Smallest refcount until now? */
+			if ((i == 0) || (_addr_cache.table[i].refcount < min_refcount))
+			{
+				index = i;
+				min_refcount = _addr_cache.table[i].refcount;
+			}
+
+			/* Resets the entry refcount. */
+			_addr_cache.table[i].refcount = 0;
+		}
+
+		/* Frees the resource allocated to the given index. */
+		resource_free(&pool_values, _addr_cache.table[index].entry.value_id);
+		_addr_cache.table[index].entry.value_id = -1;
+
+		/* Inserts the new key in the index found in the last step. */
+		ustrcpy(_addr_cache.table[index].entry.name, name);
+		//_addr_cache.table[index].refcount++;
+
+	/* Releases the global lock. */
+	uassert(nanvix_mutex_unlock(&_addr_cache.global_lock) == 0);
+
+	return (index);
+}
+
+/**
+ * @brief Updates an existing entry value in the address cache.
+ *
+ * @param name  Process name to be used as key.
+ * @param value Value to be associated with @p name.
+ *
+ * @returns Upón successful completion, the index that corresponds to the updated
+ * key is returned. Upon failure, a negative error code is returned instead.
+ *
+ * @note A failure case is when the system try to update an unexisting key value.
+ * Additionally, this routine can only be used to set the reference pointer
+ * of an entry pointing to a NULL value reference.
+ */
+PRIVATE int _addr_cache_update(const char *name, struct addr_cache_value value)
+{
+	int value_id; /**< Index where the new entry will be stored. */
+
+	/* Traverses the address cache looking for the given key. */
+	for (int i = 0; i < ADDR_CACHE_ENTRIES; ++i)
+	{
+		/* Found? */
+		if (ustrcmp(_addr_cache.table[i].entry.name, name) != 0)
+			continue;
+
+		/* This key already have a value associated? */
+		if (_addr_cache.table[i].entry.value_id != -1)
+			return (-EINVAL);
+
+		/* Allocates a free value holder. */
+		if ((value_id = resource_alloc(&pool_values)) < 0)
+			return (-EAGAIN);
+
+		_values[value_id] = value;
+		_addr_cache.table[i].entry.value_id = value_id;
+
+		return (i);
+	}
+
+	/* The given key does not exist in the addr_cache. */
+	return (-EINVAL);
+}
+
+/*============================================================================*
+ * LOCAL NAME OPERATIONS                                                      *
  *============================================================================*/
 
 /**
@@ -381,10 +632,16 @@ int nanvix_name_heartbeat(void)
  */
 PUBLIC int nanvix_name_address_lookup(const char *name, int *port)
 {
-	int ret; /* Function return and remote_node during routine execution. */
+	int ret;
+	int index;
+	int value_id;
 	int nodenum;
 	int outbox;
+	int may_be_local;
 	struct name_message msg;
+	struct addr_cache_value cache_value;
+
+	may_be_local = 1;
 
 	/* Initilize name client. */
 	if (!initialized)
@@ -398,22 +655,45 @@ PUBLIC int nanvix_name_address_lookup(const char *name, int *port)
 	if (port == NULL)
 		return (-EINVAL);
 
-	/* @p name is not associated with any cluster. */
-	if ((ret = nanvix_name_lookup(name)) < 0)
-		return (ret);
+again:
+	/* Checks local address cache first. */
+	//uprintf("Searching for address in cache.");
 
-	nodenum = ret;
+	cache_value = _addr_cache_get(name);
 
-	/* @p name is a local process. */
-	if (nodenum == knode_get_num())
+	/* Valid reference was found? */
+	if ((ret = cache_value.remote) > 0)
 	{
-		*port = _local_address_lookup(name);
-
-		if ((*port) < 0)
-			ret = (-ENOENT);
-
-		return (ret);
+		*port = cache_value.port_nr;
+		return (cache_value.remote);
 	}
+
+	//uprintf("No valid reference found");
+
+	/* Already testes if it is a local node? */
+	if (may_be_local)
+	{
+		/* @p name is not associated with any cluster. */
+		if ((nodenum = nanvix_name_lookup(name)) < 0)
+			return (nodenum);
+
+		/* @p name is a local process. */
+		if (nodenum == knode_get_num())
+		{
+			*port = _local_address_lookup(name);
+			ret   = nodenum;
+
+			if ((*port) < 0)
+				ret = (-ENOENT);
+
+			return (ret);
+		}
+
+		/* Sinalizes the thread to not inquire about locality anymore. */
+		may_be_local = 0;
+	}
+
+	//uprintf("Not a local process");
 
 	/**
 	 * Resolves @p name address consulting the remote cluster associated.
@@ -427,8 +707,16 @@ PUBLIC int nanvix_name_address_lookup(const char *name, int *port)
 	 * ensure the remote clusternum.
 	 */
 
-	/* Locks the port placeholder during an address lookup inquirement. */
-	nanvix_mutex_lock(&_local_lock);
+	/* Is there another thread already realizing an address requisition? */
+	if (nanvix_mutex_trylock(&_local_lock) != 0)
+	{
+		goto again;
+	}
+
+		/* From now on we have the local lock to send an address requisition. */
+
+		/* Puts the new key in the addr_cache. */
+		uassert((index = _addr_cache_put(name)) >= 0);
 
 		/* Opens an outbox to the local name client. */
 		if ((outbox = kmailbox_open(nodenum, NANVIX_NAME_SNOOPER_PORT_NUM)) < 0)
@@ -441,40 +729,55 @@ PUBLIC int nanvix_name_address_lookup(const char *name, int *port)
 		message_header_build(&msg.header, NAME_ADDR);
 		ustrcpy(msg.op.lookup.name, name);
 
-		/* Notifies the local name daemon about the address_lookup to be done. */
-		if ((ret = kmailbox_write(outbox, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
-			goto end;
+		/**
+		 * Acquire the specific entry lock to be released in cond_wait.
+		 *
+		 * @note This lock need to be before the mailbox_write to avoid the
+		 * address_lookup result to arrive before the current thread registers
+		 * itself to wait in the specific condition variable.
+		 */
+		uassert(nanvix_mutex_lock(&_addr_cache.table[index].lock) == 0);
 
-again:
-		/* Waits for the name snooper to sinalize that the remote lookup is done. */
-		uassert(nanvix_cond_wait(&_local_condvar, &_local_lock) == 0);
+			/* Notifies the local name daemon about the address_lookup to be done. */
+			if ((ret = kmailbox_write(outbox, &msg, sizeof(struct name_message))) != sizeof(struct name_message))
+				goto unlock_entry;
 
-		/* Not the expected process that was signaled? */
-		if (ustrcmp(_addr_lookup_result.name, name) != 0)
-		{
-			if (ustrcmp(_addr_lookup_result.name, "") == 0)
-			{
-				ret = (-EAGAIN);
-				goto end;
-			}
+			/* Waits for the name snooper to sinalize that the remote lookup is done. */
+			uassert(nanvix_cond_wait(&_addr_cache.table[index].condvar, &_addr_cache.table[index].lock) == 0);
 
-			/* Wakes the next thread. */
-			nanvix_cond_signal(&_local_condvar);
-			goto again;
-		}
+			/* Not the expected process that was signaled? */
+			// if (ustrcmp(_addr_lookup_result.name, name) != 0)
+			// {
+			// 	if (ustrcmp(_addr_lookup_result.name, "") == 0)
+			// 	{
+			// 		ret = (-EAGAIN);
+			// 		goto end;
+			// 	}
 
-		/* Retrieves the port number returned by the remote client. */
-		*port = _addr_lookup_result.port_nr;
-		ret = nodenum;
+			// 	/* Wakes the next thread. */
+			// 	nanvix_cond_signal(&_local_condvar);
+			// 	goto again;
+			// }
 
-		/* Remote lookup was successful? */
-		if ((*port) < 0)
-			ret = (-ENOENT);
+			/* Security check. */
+			uassert(ustrcmp(_addr_cache.table[index].entry.name, name) == 0);
+			value_id = _addr_cache.table[index].entry.value_id;
 
-		/* Resets the shared variable. */
-		_addr_lookup_result.port_nr = -1;
-		ustrcpy(_addr_lookup_result.name, "");
-		_addr_lookup_result.read    = 1;
+			/* Retrieves the port number returned by the remote client. */
+			*port = _values[value_id].port_nr;
+			ret   = _values[value_id].remote;
+
+			/* Remote lookup was successful? */
+			if ((*port) < 0)
+				ret = (-ENOENT);
+
+			/* Resets the shared variable. */
+			// _addr_lookup_result.port_nr = -1;
+			// ustrcpy(_addr_lookup_result.name, "");
+			// _addr_lookup_result.read    = 1;
+
+unlock_entry:
+		uassert(nanvix_mutex_unlock(&_addr_cache.table[index].lock) == 0);
 
 end:
 	nanvix_mutex_unlock(&_local_lock);
@@ -622,6 +925,8 @@ static void * nanvix_name_snooper(void *args)
 {
 	struct name_message request;
 	struct name_message response;
+	struct addr_cache_value value;
+	int index;
 	const char *name;
 	int port_nr;
 	int outbox;
@@ -654,24 +959,21 @@ static void * nanvix_name_snooper(void *args)
 #if DEBUG
 		uprintf("[nanvix][name] name resolution answer received");
 #endif /* DEBUG */
-		again1:
-				uassert(nanvix_mutex_lock(&_local_lock) == 0);
+				//uassert(nanvix_mutex_lock(&_local_lock) == 0);
 
-					/* Ensure that the last lookup was already consumed. */
-					if (!_addr_lookup_result.read)
-					{
-						nanvix_mutex_unlock(&_local_lock);
-						goto again1;
-					}
+				value.remote  = request.header.source;
+				value.port_nr = request.op.addr_ans.port_nr;
 
-					_addr_lookup_result.port_nr = request.op.addr_ans.port_nr;
-					ustrcpy(_addr_lookup_result.name, request.op.addr_ans.name);
-					_addr_lookup_result.read = 0;
+				/* Updates the key with its new valuein the addres cache. */
+				uassert((index = _addr_cache_update(request.op.addr_ans.name, value)) >= 0);
 
-				uassert(nanvix_mutex_unlock(&_local_lock) == 0);
+				// ustrcpy(_addr_lookup_result.name, );
+				// _addr_lookup_result.read = 0;
 
-				/* Wakes the requester up. */
-				uassert(nanvix_cond_signal(&_local_condvar) == 0);
+				/* Wakes all threads waiting for this result. */
+				uassert(nanvix_cond_broadcast(&_addr_cache.table[index].condvar) == 0);
+
+				//uassert(nanvix_mutex_unlock(&_local_lock) == 0);
 
 				break;
 
@@ -679,16 +981,14 @@ static void * nanvix_name_snooper(void *args)
 #if DEBUG
 		uprintf("[nanvix][name] name resolution answer failed");
 #endif /* DEBUG */
-				uassert(nanvix_mutex_lock(&_local_lock) == 0);
+				value.remote  = -1;
+				value.port_nr = -1;
 
-					_addr_lookup_result.port_nr = -1;
-					ustrcpy(_addr_lookup_result.name, "");
-					_addr_lookup_result.read = 0;
+				/* Updates the key with its new valuein the addres cache. */
+				uassert((index = _addr_cache_update(request.op.addr_ans.name, value)) >= 0);
 
-				uassert(nanvix_mutex_unlock(&_local_lock) == 0);
-
-				/* Wakes the requester up. */
-				uassert(nanvix_cond_signal(&_local_condvar) == 0);
+				/* Wakes all threads waiting for this result. */
+				uassert(nanvix_cond_broadcast(&_addr_cache.table[index].condvar) == 0);
 
 				break;
 
@@ -791,7 +1091,10 @@ int __nanvix_name_daemon_init(void)
 	 */
 	uassert(nanvix_mutex_init(&_local_lock, NULL) == 0);
 
-	uassert(nanvix_cond_init(&_local_condvar) == 0);
+	/* Initializes the address cache structure. */
+	uassert(_addr_cache_init() == 0);
+
+	//uassert(nanvix_cond_init(&_local_condvar) == 0);
 
 	/* Creates the name snooper thread. */
 	uassert(kthread_create(&nanvix_name_snooper_tid, &nanvix_name_snooper, NULL) == 0);
