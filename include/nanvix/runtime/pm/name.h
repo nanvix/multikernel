@@ -35,6 +35,8 @@
 
 #endif /* __NAME_SERVICE */
 
+	#include <nanvix/sys/task.h>
+
 	/**
 	 * @brief Initializes the Name Service client.
 	 *
@@ -90,6 +92,14 @@
 	 * failure, a negative error code is returned instead.
 	 */
 	extern int nanvix_name_heartbeat(void);
+
+	/**
+	 * @brief Updates the timestamp of a process.
+	 *
+	 * @returns Upons successful completion, zero is returned. Upon
+	 * failure, a negative error code is returned instead.
+	 */
+	extern ktask_t * nanvix_name_heartbeat_with_task(void);
 
 	/**
 	 * @brief Shutdowns the name server.

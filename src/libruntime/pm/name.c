@@ -30,6 +30,7 @@
 #include <nanvix/runtime/pm.h>
 #include <nanvix/config.h>
 #include <nanvix/ulib.h>
+#include <nanvix/sys/task.h>
 #include <posix/errno.h>
 #include <posix/stdbool.h>
 
@@ -221,6 +222,90 @@ int nanvix_name_heartbeat(void)
 		return (ret);
 
 	return (0);
+}
+
+/*============================================================================*
+ * nanvix_name_heartbeat()                                                    *
+ *============================================================================*/
+
+PRIVATE struct task_heartbeat
+{
+	ktask_t config;
+	ktask_t release;
+	ktask_t * write;
+	struct name_message msg;
+	bool busy;
+	spinlock_t lock;
+} task_heartbeat;
+
+PRIVATE int nanvix_name_heartbeat_config(ktask_args_t * args)
+{
+	struct name_message * msg = &task_heartbeat.msg;
+
+	/* Build operation header. */
+	message_header_build(&msg->header, NAME_ALIVE);
+	if ((args->ret = kernel_clock(&msg->op.heartbeat.timestamp)) < 0)
+		return (TASK_RET_ERROR);
+
+	return (TASK_RET_SUCCESS);
+}
+
+PRIVATE int nanvix_name_heartbeat_release(ktask_args_t * args)
+{
+	if ((args->ret = kmailbox_task_release(task_heartbeat.write)) == 0)
+		return (TASK_RET_ERROR);
+
+	spinlock_lock(&task_heartbeat.lock);
+		task_heartbeat.busy = false;
+	spinlock_unlock(&task_heartbeat.lock);
+
+	return (TASK_RET_SUCCESS);
+}
+
+/**
+ * @todo TODO: provide a detailed description for this function.
+ */
+ktask_t * nanvix_name_heartbeat_with_task(void)
+{
+	int busy;
+
+	/* Initilize name client. */
+	spinlock_lock(&task_heartbeat.lock);
+
+		busy = !initialized || task_heartbeat.busy;
+
+		if (!busy)
+			task_heartbeat.busy = true;
+
+	spinlock_unlock(&task_heartbeat.lock);
+
+	if (busy)
+		return (NULL);
+
+	task_heartbeat.write = kmailbox_write_task_alloc(
+		server,
+		&task_heartbeat.msg,
+		sizeof(struct name_message)
+	);
+
+	if (!task_heartbeat.write)
+		return (NULL);
+
+	if (ktask_create(&task_heartbeat.config, nanvix_name_heartbeat_config, NULL, 0) != 0)
+		return (NULL);
+
+	if (ktask_create(&task_heartbeat.release, nanvix_name_heartbeat_release, NULL, 0) != 0)
+		return (NULL);
+
+	if (ktask_connect(&task_heartbeat.config, task_heartbeat.write) != 0)
+		return (NULL);
+
+	if (ktask_connect(task_heartbeat.write, &task_heartbeat.release) != 0)
+		return (NULL);
+
+	KASSERT(ktask_dispatch(&task_heartbeat.config) == 0);
+
+	return (&task_heartbeat.release);
 }
 
 /*============================================================================*
