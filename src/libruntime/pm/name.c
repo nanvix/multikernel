@@ -44,6 +44,16 @@ static int server;
  */
 static bool initialized = false;
 
+PRIVATE struct task_heartbeat
+{
+	ktask_t config;
+	ktask_t release;
+	ktask_t * write;
+	struct name_message msg;
+	bool busy;
+	spinlock_t lock;
+} task_heartbeat;
+
 /*============================================================================*
  * __nanvix_name_setup()                                                      *
  *============================================================================*/
@@ -60,6 +70,9 @@ int __nanvix_name_setup(void)
 	/* Open connection with Name Server. */
 	if ((server = kmailbox_open(NAME_SERVER_NODE, NAME_SERVER_PORT_NUM)) < 0)
 		return (-1);
+
+	task_heartbeat.busy = false;
+	spinlock_init(&task_heartbeat.lock);
 
 	initialized = true;
 
@@ -228,16 +241,6 @@ int nanvix_name_heartbeat(void)
  * nanvix_name_heartbeat()                                                    *
  *============================================================================*/
 
-PRIVATE struct task_heartbeat
-{
-	ktask_t config;
-	ktask_t release;
-	ktask_t * write;
-	struct name_message msg;
-	bool busy;
-	spinlock_t lock;
-} task_heartbeat;
-
 PRIVATE int nanvix_name_heartbeat_config(ktask_args_t * args)
 {
 	struct name_message * msg = &task_heartbeat.msg;
@@ -252,7 +255,7 @@ PRIVATE int nanvix_name_heartbeat_config(ktask_args_t * args)
 
 PRIVATE int nanvix_name_heartbeat_release(ktask_args_t * args)
 {
-	if ((args->ret = kmailbox_task_release(task_heartbeat.write)) == 0)
+	if ((args->ret = kmailbox_task_release(task_heartbeat.write)) != 0)
 		return (TASK_RET_ERROR);
 
 	spinlock_lock(&task_heartbeat.lock);
